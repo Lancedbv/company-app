@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option 3 — Collapsible Compact Bar</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0eef6;display:flex;height:100vh;overflow:hidden}
+
+  /* Sidebar mock */
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e8e5f0;padding:20px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .sb-brand{font-weight:700;font-size:15px;color:#1a1a2e;margin-bottom:16px;padding:8px}
+  .sb-item{padding:10px 12px;border-radius:10px;font-size:13px;color:#666;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+  .sb-item:hover{background:#f5f3ff;color:#7A66FF}
+  .sb-item.active{background:#7A66FF;color:#fff;font-weight:600}
+  .sb-item .badge{margin-left:auto;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:8px;font-size:11px;font-weight:700}
+
+  /* Main area */
+  .main{flex:1;margin:12px 12px 12px 0;background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+  /* Breadcrumb */
+  .breadcrumb{padding:14px 24px;border-bottom:1px solid #f0eef0;display:flex;align-items:center;gap:8px;font-size:12px;color:#999;flex-shrink:0}
+  .breadcrumb span{color:#1a1a2e;font-weight:600}
+  .bc-actions{margin-left:auto;display:flex;gap:8px}
+  .bc-btn{padding:6px 14px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;font-size:11px;cursor:pointer;color:#666;transition:.15s}
+  .bc-btn:hover{border-color:#7A66FF;color:#7A66FF}
+  .bc-btn.green{background:#1DB954;color:#fff;border-color:#1DB954}
+
+  /* Content scroll area */
+  .content{flex:1;overflow-y:auto;padding:24px;position:relative}
+
+  /* Page header */
+  .pg-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+  .pg-header h1{font-size:28px;font-weight:800;color:#1a1a2e}
+  .pg-header p{font-size:13px;color:#888;margin-top:4px}
+  .btn-share{padding:10px 20px;border-radius:12px;background:#7A66FF;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer}
+
+  /* === OPTION 3: Collapsible Toolbar === */
+  .toolbar-wrap{position:sticky;top:0;z-index:40;transition:all .3s cubic-bezier(.4,0,.2,1)}
+
+  /* Expanded state */
+  .toolbar{background:rgba(255,255,255,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 20px;margin:0 -24px 20px;border-bottom:1px solid rgba(0,0,0,.04);display:flex;flex-direction:column;gap:10px;transition:all .3s ease}
+
+  .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  .search-box{display:flex;align-items:center;gap:8px;background:#f5f3ff;border:1px solid #e8e5f0;border-radius:10px;padding:8px 14px;flex:1;max-width:400px;transition:all .3s}
+  .search-box svg{color:#999;flex-shrink:0}
+  .search-box input{border:none;background:none;outline:none;font-size:13px;width:100%}
+
+  .status-pills{display:flex;gap:6px;flex-wrap:wrap;transition:all .3s}
+  .pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #e8e5f0;background:#fff;color:#666;transition:.15s;white-space:nowrap}
+  .pill:hover{border-color:#7A66FF;color:#7A66FF}
+  .pill.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+  .pill .count{font-weight:700;margin-left:3px;opacity:.6}
+
+  .view-controls{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .view-btn{width:32px;height:32px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#999;transition:.15s}
+  .view-btn:hover,.view-btn.active{background:#7A66FF;color:#fff;border-color:#7A66FF}
+  .sort-select{padding:6px 12px;border-radius:8px;border:1px solid #e8e5f0;font-size:12px;background:#fff;color:#666;cursor:pointer}
+  .filter-btn{padding:6px 14px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;font-size:12px;color:#666;cursor:pointer;display:flex;align-items:center;gap:4px}
+
+  /* Collapsed / compact state */
+  .toolbar.compact{padding:8px 20px;gap:0}
+  .toolbar.compact .toolbar-row.row-expand{max-height:0;overflow:hidden;opacity:0;margin:0;gap:0}
+  .toolbar.compact .search-box{max-width:180px;padding:6px 10px}
+  .toolbar.compact .status-pills .pill:not(.active){display:none}
+  .toolbar.compact .view-controls{gap:6px}
+
+  .toolbar-expand-hint{display:none;font-size:10px;color:#999;cursor:pointer;padding:2px 8px;border-radius:6px;background:rgba(122,102,255,.06);margin-left:8px;white-space:nowrap}
+  .toolbar.compact .toolbar-expand-hint{display:flex;align-items:center;gap:4px}
+
+  /* Card grid */
+  .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid #f0eef0}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .card-img{width:100%;aspect-ratio:3/4;object-fit:cover;background:linear-gradient(135deg,#ddd,#eee);position:relative}
+  .card-img-placeholder{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:#fff}
+  .card-info{padding:12px 14px}
+  .card-name{font-weight:700;font-size:14px;color:#1a1a2e}
+  .card-tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .card-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:#f5f3ff;color:#7A66FF}
+  .card-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase}
+  .card-num{position:absolute;top:10px;left:10px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.4)}
+
+  .colors-1{background:linear-gradient(135deg,#FF6B6B,#ee5a24)}
+  .colors-2{background:linear-gradient(135deg,#7A66FF,#4A35E0)}
+  .colors-3{background:linear-gradient(135deg,#1DB954,#0d8a3e)}
+  .colors-4{background:linear-gradient(135deg,#FF9F43,#ee7600)}
+  .colors-5{background:linear-gradient(135deg,#00B4D8,#0077B6)}
+  .colors-6{background:linear-gradient(135deg,#E84393,#c0392b)}
+
+  .badge-selected{background:#1DB954}
+  .badge-shortlisted{background:#7A66FF}
+  .badge-potential{background:#FF9F43}
+  .badge-new{background:#999}
+  .badge-not_selected{background:#e74c3c}
+
+  /* Annotation */
+  .annotation{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;z-index:100;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+  .annotation strong{color:#7A66FF}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-brand">← Back to workspace</div>
+  <div class="sb-item">🏠 Overview</div>
+  <div class="sb-item active">👥 Candidates <span class="badge">13</span></div>
+  <div class="sb-item">💬 Communication</div>
+  <div class="sb-item">⚙️ Settings</div>
+  <div class="sb-item">📢 Promote</div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb">
+    Workspace › Rooms › <span>Nike 'Move As One'</span>
+    <div class="bc-actions">
+      <button class="bc-btn">↗ Share</button>
+      <button class="bc-btn green">● Published</button>
+      <button class="bc-btn">◎ Preview</button>
+    </div>
+  </div>
+
+  <div class="content" id="scrollContent">
+    <div class="pg-header">
+      <div>
+        <h1>Candidates</h1>
+        <p>48 applicants for Nike 'Move As One' — Lead Dancers</p>
+      </div>
+      <button class="btn-share">📤 Share Results</button>
+    </div>
+
+    <div class="toolbar-wrap">
+      <div class="toolbar" id="toolbar">
+        <div class="toolbar-row">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input placeholder="Search candidates..." id="searchInput"/>
+          </div>
+          <div class="status-pills">
+            <button class="pill" data-filter="new">New <span class="count">13</span></button>
+            <button class="pill active" data-filter="all">All <span class="count">48</span></button>
+            <button class="pill" data-filter="selected">Selected <span class="count">8</span></button>
+            <button class="pill" data-filter="shortlisted">Shortlisted <span class="count">10</span></button>
+            <button class="pill" data-filter="potential">Potential <span class="count">10</span></button>
+            <button class="pill" data-filter="not_selected">Not Selected <span class="count">7</span></button>
+          </div>
+          <span class="toolbar-expand-hint" id="expandHint">⌄ Show all filters</span>
+        </div>
+        <div class="toolbar-row row-expand">
+          <div class="view-controls" style="margin-left:0">
+            <button class="view-btn active">▦</button>
+            <button class="view-btn">☰</button>
+            <select class="sort-select"><option>Newest</option><option>Oldest</option><option>A → Z</option></select>
+            <button class="filter-btn">⚙ Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+</main>
+
+<div class="annotation">
+  <strong>Option 3:</strong> Scroll down → toolbar collapses to compact mode. Click to expand.
+</div>
+
+<script>
+const candidates = [
+  {name:"Amara Osei",tags:["Full Time","Contemporary"],status:"selected",color:1},
+  {name:"Kai Tanaka",tags:["Full Time","Hip-Hop"],status:"selected",color:2},
+  {name:"Lena Moreau",tags:["Internship","Jazz"],status:"shortlisted",color:3},
+  {name:"Elena Rossi",tags:["Freelance","Ballet"],status:"shortlisted",color:4},
+  {name:"Sofia Reyes",tags:["Freelance","Ballet"],status:"potential",color:5},
+  {name:"Marcus Webb",tags:["Contemporary","Release"],status:"new",color:6},
+  {name:"Tom Richards",tags:["Breaking","Street"],status:"not_selected",color:1},
+  {name:"Yuki Tanaka",tags:["Jazz","Contemporary"],status:"selected",color:2},
+  {name:"Dante Williams",tags:["R&B","Soul"],status:"potential",color:3},
+  {name:"Isla Chen",tags:["Contemporary","Jazz"],status:"shortlisted",color:4},
+  {name:"Chloe Nguyen",tags:["Ballet","Partnering"],status:"new",color:5},
+  {name:"Oliver Jensen",tags:["Contemporary","Floor"],status:"new",color:6},
+];
+
+const grid = document.getElementById('cardGrid');
+candidates.forEach((c, i) => {
+  grid.innerHTML += `
+    <div class="card">
+      <div style="position:relative">
+        <div class="card-img-placeholder colors-${c.color}">${c.name[0]}</div>
+        <div class="card-num">#${i+1}</div>
+        <div class="card-badge badge-${c.status}">${c.status.replace('_',' ')}</div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${c.name}</div>
+        <div class="card-tags">${c.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>`;
+});
+
+// Collapsible behavior
+const content = document.getElementById('scrollContent');
+const toolbar = document.getElementById('toolbar');
+const expandHint = document.getElementById('expandHint');
+let lastScroll = 0;
+let isCompact = false;
+let manualExpand = false;
+
+content.addEventListener('scroll', () => {
+  const scrollY = content.scrollTop;
+  if (scrollY > 120 && !manualExpand) {
+    if (!isCompact) { toolbar.classList.add('compact'); isCompact = true; }
+  } else {
+    if (isCompact && !manualExpand) { toolbar.classList.remove('compact'); isCompact = false; }
+  }
+  lastScroll = scrollY;
+});
+
+expandHint.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toolbar.classList.remove('compact');
+  isCompact = false;
+  manualExpand = true;
+  setTimeout(() => { manualExpand = false; }, 2000);
+});
+
+// Pill clicks
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(pp => pp.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

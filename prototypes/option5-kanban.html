@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option 5 — Kanban Status Columns</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0eef6;display:flex;height:100vh;overflow:hidden}
+
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e8e5f0;padding:20px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .sb-brand{font-weight:700;font-size:15px;color:#1a1a2e;margin-bottom:16px;padding:8px}
+  .sb-item{padding:10px 12px;border-radius:10px;font-size:13px;color:#666;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+  .sb-item:hover{background:#f5f3ff;color:#7A66FF}
+  .sb-item.active{background:#7A66FF;color:#fff;font-weight:600}
+  .sb-item .badge{margin-left:auto;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:8px;font-size:11px;font-weight:700}
+
+  .main{flex:1;margin:12px 12px 12px 0;background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden}
+
+  .breadcrumb{padding:14px 24px;border-bottom:1px solid #f0eef0;display:flex;align-items:center;gap:8px;font-size:12px;color:#999;flex-shrink:0}
+  .breadcrumb strong{color:#1a1a2e}
+  .bc-actions{margin-left:auto;display:flex;gap:8px}
+  .bc-btn{padding:6px 14px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;font-size:11px;cursor:pointer;color:#666}
+  .bc-btn.green{background:#1DB954;color:#fff;border-color:#1DB954}
+
+  /* Top action bar (compact) */
+  .action-bar{display:flex;align-items:center;padding:12px 24px;border-bottom:1px solid #f0eef0;flex-shrink:0;gap:12px}
+  .action-bar h2{font-size:16px;font-weight:700;color:#1a1a2e;margin-right:4px}
+  .action-bar .count-label{font-size:12px;color:#888;margin-right:auto}
+  .search-compact{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;border:1px solid #e8e5f0;background:#faf9ff;width:220px}
+  .search-compact svg{color:#999;flex-shrink:0}
+  .search-compact input{border:none;background:none;outline:none;font-size:12px;width:100%}
+  .ab-btn{padding:7px 14px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;font-size:12px;cursor:pointer;color:#666;display:flex;align-items:center;gap:5px;transition:.15s}
+  .ab-btn:hover{border-color:#7A66FF;color:#7A66FF}
+  .ab-btn.active{background:#7A66FF;color:#fff;border-color:#7A66FF}
+  .view-toggle{display:flex;border:1px solid #e8e5f0;border-radius:8px;overflow:hidden}
+  .vt-btn{padding:7px 12px;font-size:12px;cursor:pointer;background:#fff;border:none;color:#666;transition:.15s}
+  .vt-btn:not(:last-child){border-right:1px solid #e8e5f0}
+  .vt-btn.active{background:#7A66FF;color:#fff}
+  .btn-share-sm{padding:7px 16px;border-radius:8px;background:#7A66FF;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer}
+
+  /* === OPTION 5: Kanban columns === */
+  .kanban{flex:1;display:flex;gap:12px;padding:16px 20px;overflow-x:auto;overflow-y:hidden}
+
+  .kanban-col{flex:1;min-width:200px;display:flex;flex-direction:column;background:#faf9ff;border-radius:14px;border:1px solid #f0eef0;overflow:hidden}
+
+  .col-header{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0eef0;flex-shrink:0}
+  .col-dot{width:10px;height:10px;border-radius:50%}
+  .col-title{font-size:13px;font-weight:700;color:#1a1a2e}
+  .col-count{font-size:11px;color:#999;margin-left:auto;background:#fff;padding:2px 8px;border-radius:6px}
+
+  .col-cards{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+
+  /* Kanban cards (compact) */
+  .k-card{background:#fff;border-radius:12px;padding:10px;cursor:grab;border:1px solid #f0eef0;transition:transform .15s,box-shadow .15s}
+  .k-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
+  .k-card:active{cursor:grabbing;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+  .k-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .k-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+  .k-name{font-size:13px;font-weight:600;color:#1a1a2e}
+  .k-num{font-size:10px;color:#999;margin-left:auto;font-family:monospace}
+  .k-tags{display:flex;gap:3px;flex-wrap:wrap}
+  .k-tag{font-size:9px;padding:2px 6px;border-radius:4px;background:#f0eef6;color:#666}
+
+  /* Drop target animation */
+  .kanban-col.drag-over{background:#f0edff;border-color:#7A66FF}
+  .kanban-col.drag-over .col-header{background:rgba(122,102,255,.05)}
+
+  .colors-1{background:linear-gradient(135deg,#FF6B6B,#ee5a24)}
+  .colors-2{background:linear-gradient(135deg,#7A66FF,#4A35E0)}
+  .colors-3{background:linear-gradient(135deg,#1DB954,#0d8a3e)}
+  .colors-4{background:linear-gradient(135deg,#FF9F43,#ee7600)}
+  .colors-5{background:linear-gradient(135deg,#00B4D8,#0077B6)}
+  .colors-6{background:linear-gradient(135deg,#E84393,#c0392b)}
+
+  .annotation{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;z-index:100;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.2);max-width:600px}
+  .annotation strong{color:#7A66FF}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-brand">← Back to workspace</div>
+  <div class="sb-item">🏠 Overview</div>
+  <div class="sb-item active">👥 Candidates <span class="badge">13</span></div>
+  <div class="sb-item">💬 Communication</div>
+  <div class="sb-item">⚙️ Settings</div>
+  <div class="sb-item">📢 Promote</div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb">
+    Workspace › Rooms › <strong>Nike 'Move As One'</strong>
+    <div class="bc-actions">
+      <button class="bc-btn">↗ Share</button>
+      <button class="bc-btn green">● Published</button>
+      <button class="bc-btn">◎ Preview</button>
+    </div>
+  </div>
+
+  <!-- Compact action bar -->
+  <div class="action-bar">
+    <h2>Candidates</h2>
+    <span class="count-label">48 applicants</span>
+    <div class="search-compact">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input placeholder="Search candidates..."/>
+    </div>
+    <div class="view-toggle">
+      <button class="vt-btn">▦ Grid</button>
+      <button class="vt-btn active">⊞ Board</button>
+      <button class="vt-btn">☰ List</button>
+    </div>
+    <button class="ab-btn">⚙ Filters</button>
+    <button class="btn-share-sm">📤 Share Results</button>
+  </div>
+
+  <!-- Kanban board -->
+  <div class="kanban">
+    <div class="kanban-col" data-status="new" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event, this)">
+      <div class="col-header">
+        <div class="col-dot" style="background:#999"></div>
+        <div class="col-title">New</div>
+        <span class="col-count">13</span>
+      </div>
+      <div class="col-cards" id="col-new"></div>
+    </div>
+
+    <div class="kanban-col" data-status="shortlisted" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event, this)">
+      <div class="col-header">
+        <div class="col-dot" style="background:#7A66FF"></div>
+        <div class="col-title">Shortlisted</div>
+        <span class="col-count">10</span>
+      </div>
+      <div class="col-cards" id="col-shortlisted"></div>
+    </div>
+
+    <div class="kanban-col" data-status="selected" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event, this)">
+      <div class="col-header">
+        <div class="col-dot" style="background:#1DB954"></div>
+        <div class="col-title">Selected</div>
+        <span class="col-count">8</span>
+      </div>
+      <div class="col-cards" id="col-selected"></div>
+    </div>
+
+    <div class="kanban-col" data-status="potential" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event, this)">
+      <div class="col-header">
+        <div class="col-dot" style="background:#FF9F43"></div>
+        <div class="col-title">Potential</div>
+        <span class="col-count">10</span>
+      </div>
+      <div class="col-cards" id="col-potential"></div>
+    </div>
+
+    <div class="kanban-col" data-status="not_selected" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event, this)">
+      <div class="col-header">
+        <div class="col-dot" style="background:#e74c3c"></div>
+        <div class="col-title">Not Selected</div>
+        <span class="col-count">7</span>
+      </div>
+      <div class="col-cards" id="col-not_selected"></div>
+    </div>
+  </div>
+</main>
+
+<div class="annotation">
+  <strong>Option 5:</strong> Kanban board — see all statuses at once. Drag cards between columns to change status. Search/sort/filters in compact top bar.
+</div>
+
+<script>
+const candidates = [
+  {name:"Marcus Webb",tags:["Contemporary","Release"],status:"new",color:6,num:6},
+  {name:"Chloe Nguyen",tags:["Ballet","Partnering"],status:"new",color:5,num:11},
+  {name:"Oliver Jensen",tags:["Contemporary","Floor"],status:"new",color:1,num:12},
+  {name:"Lena Moreau",tags:["Internship","Jazz"],status:"shortlisted",color:3,num:3},
+  {name:"Elena Rossi",tags:["Freelance","Ballet"],status:"shortlisted",color:4,num:4},
+  {name:"Isla Chen",tags:["Contemporary","Jazz"],status:"shortlisted",color:2,num:10},
+  {name:"Amara Osei",tags:["Full Time","Contemporary"],status:"selected",color:1,num:1},
+  {name:"Kai Tanaka",tags:["Full Time","Hip-Hop"],status:"selected",color:2,num:2},
+  {name:"Yuki Tanaka",tags:["Jazz","Contemporary"],status:"selected",color:3,num:8},
+  {name:"Sofia Reyes",tags:["Freelance","Ballet"],status:"potential",color:5,num:5},
+  {name:"Dante Williams",tags:["R&B","Soul"],status:"potential",color:4,num:9},
+  {name:"Tom Richards",tags:["Breaking","Street"],status:"not_selected",color:6,num:7},
+];
+
+function renderCard(c) {
+  return `
+    <div class="k-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${c.name}')" data-name="${c.name}">
+      <div class="k-card-top">
+        <div class="k-avatar colors-${c.color}">${c.name[0]}</div>
+        <div class="k-name">${c.name}</div>
+        <div class="k-num">#${c.num}</div>
+      </div>
+      <div class="k-tags">${c.tags.map(t => `<span class="k-tag">${t}</span>`).join('')}</div>
+    </div>`;
+}
+
+// Render into columns
+const groups = {new:[], shortlisted:[], selected:[], potential:[], not_selected:[]};
+candidates.forEach(c => groups[c.status]?.push(c));
+
+Object.entries(groups).forEach(([status, items]) => {
+  const col = document.getElementById('col-' + status);
+  col.innerHTML = items.map(renderCard).join('');
+});
+
+function handleDrop(e, col) {
+  e.preventDefault();
+  col.classList.remove('drag-over');
+  const name = e.dataTransfer.getData('text/plain');
+  const card = document.querySelector(`.k-card[data-name="${name}"]`);
+  if (card) {
+    col.querySelector('.col-cards').appendChild(card);
+    // Update counts
+    document.querySelectorAll('.kanban-col').forEach(c => {
+      const count = c.querySelector('.col-cards').children.length;
+      c.querySelector('.col-count').textContent = count;
+    });
+  }
+}
+</script>
+</body>
+</html>

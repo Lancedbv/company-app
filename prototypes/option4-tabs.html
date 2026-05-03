@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option 4 — Status Tabs + Dropdown Actions</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0eef6;display:flex;height:100vh;overflow:hidden}
+
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e8e5f0;padding:20px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .sb-brand{font-weight:700;font-size:15px;color:#1a1a2e;margin-bottom:16px;padding:8px}
+  .sb-item{padding:10px 12px;border-radius:10px;font-size:13px;color:#666;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+  .sb-item:hover{background:#f5f3ff;color:#7A66FF}
+  .sb-item.active{background:#7A66FF;color:#fff;font-weight:600}
+  .sb-item .badge{margin-left:auto;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:8px;font-size:11px;font-weight:700}
+
+  .main{flex:1;margin:12px 12px 12px 0;background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden}
+
+  /* Breadcrumb */
+  .breadcrumb{padding:14px 24px;border-bottom:1px solid #f0eef0;display:flex;align-items:center;gap:8px;font-size:12px;color:#999;flex-shrink:0}
+  .breadcrumb strong{color:#1a1a2e}
+  .bc-actions{margin-left:auto;display:flex;gap:8px}
+  .bc-btn{padding:6px 14px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;font-size:11px;cursor:pointer;color:#666}
+  .bc-btn.green{background:#1DB954;color:#fff;border-color:#1DB954}
+
+  /* === OPTION 4: Tab bar below breadcrumb === */
+  .tab-bar{display:flex;align-items:center;padding:0 24px;border-bottom:1px solid #f0eef0;flex-shrink:0;background:#fff;gap:0}
+  .tab{position:relative;padding:12px 18px;font-size:13px;font-weight:500;color:#888;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .tab:hover{color:#1a1a2e}
+  .tab.active{color:#1a1a2e;font-weight:700;border-bottom-color:#7A66FF}
+  .tab .count{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;background:#f0eef6;color:#666}
+  .tab.active .count{background:#7A66FF;color:#fff}
+
+  /* Status dot on tabs */
+  .tab .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-new{background:#999}
+  .dot-selected{background:#1DB954}
+  .dot-shortlisted{background:#7A66FF}
+  .dot-potential{background:#FF9F43}
+  .dot-rejected{background:#e74c3c}
+
+  /* Actions area (right side of tabs) */
+  .tab-actions{margin-left:auto;display:flex;align-items:center;gap:8px;padding:8px 0}
+  .search-mini{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid #e8e5f0;background:#faf9ff;cursor:pointer;transition:.2s;width:36px;overflow:hidden}
+  .search-mini.open{width:200px}
+  .search-mini svg{flex-shrink:0;color:#999}
+  .search-mini input{border:none;background:none;outline:none;font-size:12px;width:100%;display:none}
+  .search-mini.open input{display:block}
+
+  .action-btn{width:34px;height:34px;border-radius:8px;border:1px solid #e8e5f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;transition:.15s;position:relative}
+  .action-btn:hover{border-color:#7A66FF;color:#7A66FF;background:#faf9ff}
+
+  /* Sort dropdown */
+  .dropdown{position:absolute;top:100%;right:0;margin-top:6px;background:#fff;border:1px solid #e8e5f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.1);padding:6px;min-width:160px;z-index:50;display:none}
+  .dropdown.show{display:block}
+  .dropdown-item{padding:8px 12px;border-radius:8px;font-size:12px;color:#666;cursor:pointer;transition:.1s}
+  .dropdown-item:hover{background:#f5f3ff;color:#7A66FF}
+  .dropdown-item.active{color:#7A66FF;font-weight:600}
+
+  /* Content */
+  .content{flex:1;overflow-y:auto;padding:24px}
+
+  /* Card grid */
+  .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid #f0eef0}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .card-img-placeholder{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:#fff;position:relative}
+  .card-info{padding:12px 14px}
+  .card-name{font-weight:700;font-size:14px;color:#1a1a2e}
+  .card-tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .card-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:#f5f3ff;color:#7A66FF}
+  .card-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase}
+  .card-num{position:absolute;top:10px;left:10px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.4)}
+
+  .colors-1{background:linear-gradient(135deg,#FF6B6B,#ee5a24)}
+  .colors-2{background:linear-gradient(135deg,#7A66FF,#4A35E0)}
+  .colors-3{background:linear-gradient(135deg,#1DB954,#0d8a3e)}
+  .colors-4{background:linear-gradient(135deg,#FF9F43,#ee7600)}
+  .colors-5{background:linear-gradient(135deg,#00B4D8,#0077B6)}
+  .colors-6{background:linear-gradient(135deg,#E84393,#c0392b)}
+
+  .badge-selected{background:#1DB954}
+  .badge-shortlisted{background:#7A66FF}
+  .badge-potential{background:#FF9F43}
+  .badge-new{background:#999}
+  .badge-not_selected{background:#e74c3c}
+
+  /* Tab transition indicator */
+  .tab-content-header{padding:0 0 16px;display:flex;align-items:center;justify-content:space-between}
+  .tab-content-header h2{font-size:18px;font-weight:700;color:#1a1a2e}
+  .tab-content-header span{font-size:13px;color:#888}
+
+  .annotation{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;z-index:100;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+  .annotation strong{color:#7A66FF}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-brand">← Back to workspace</div>
+  <div class="sb-item">🏠 Overview</div>
+  <div class="sb-item active">👥 Candidates <span class="badge">13</span></div>
+  <div class="sb-item">💬 Communication</div>
+  <div class="sb-item">⚙️ Settings</div>
+  <div class="sb-item">📢 Promote</div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb">
+    Workspace › Rooms › <strong>Nike 'Move As One'</strong>
+    <div class="bc-actions">
+      <button class="bc-btn">↗ Share</button>
+      <button class="bc-btn green">● Published</button>
+      <button class="bc-btn">◎ Preview</button>
+    </div>
+  </div>
+
+  <!-- Tab bar with status as tabs -->
+  <div class="tab-bar">
+    <div class="tab active" data-filter="all">All <span class="count">48</span></div>
+    <div class="tab" data-filter="new"><span class="dot dot-new"></span>New <span class="count">13</span></div>
+    <div class="tab" data-filter="selected"><span class="dot dot-selected"></span>Selected <span class="count">8</span></div>
+    <div class="tab" data-filter="shortlisted"><span class="dot dot-shortlisted"></span>Shortlisted <span class="count">10</span></div>
+    <div class="tab" data-filter="potential"><span class="dot dot-potential"></span>Potential <span class="count">10</span></div>
+    <div class="tab" data-filter="not_selected"><span class="dot dot-rejected"></span>Rejected <span class="count">7</span></div>
+
+    <div class="tab-actions">
+      <div class="search-mini" id="searchMini" onclick="this.classList.toggle('open'); if(this.classList.contains('open')) this.querySelector('input').focus()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input placeholder="Search..." onclick="event.stopPropagation()"/>
+      </div>
+      <div class="action-btn" id="sortBtn" onclick="document.getElementById('sortDrop').classList.toggle('show')">
+        ↕
+        <div class="dropdown" id="sortDrop">
+          <div class="dropdown-item active">Newest</div>
+          <div class="dropdown-item">Oldest</div>
+          <div class="dropdown-item">A → Z</div>
+          <div class="dropdown-item">Z → A</div>
+          <div class="dropdown-item"># Rank</div>
+        </div>
+      </div>
+      <div class="action-btn" onclick="document.getElementById('filterDrop').classList.toggle('show')">
+        ⚙
+        <div class="dropdown" id="filterDrop" style="min-width:200px">
+          <div class="dropdown-item">Role: All</div>
+          <div class="dropdown-item">Gender: All</div>
+          <div class="dropdown-item">Age range</div>
+          <div class="dropdown-item">Nationality</div>
+          <div class="dropdown-item">Location</div>
+          <div class="dropdown-item" style="color:#7A66FF;font-weight:600;border-top:1px solid #f0eef0;margin-top:4px;padding-top:10px">Clear all filters</div>
+        </div>
+      </div>
+      <div class="action-btn" id="viewGrid" style="background:#7A66FF;color:#fff;border-color:#7A66FF">▦</div>
+      <div class="action-btn" id="viewList">☰</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+</main>
+
+<div class="annotation">
+  <strong>Option 4:</strong> Status as tabs (navigation), actions as compact icons/dropdowns on the right
+</div>
+
+<script>
+const candidates = [
+  {name:"Amara Osei",tags:["Full Time","Contemporary"],status:"selected",color:1},
+  {name:"Kai Tanaka",tags:["Full Time","Hip-Hop"],status:"selected",color:2},
+  {name:"Lena Moreau",tags:["Internship","Jazz"],status:"shortlisted",color:3},
+  {name:"Elena Rossi",tags:["Freelance","Ballet"],status:"shortlisted",color:4},
+  {name:"Sofia Reyes",tags:["Freelance","Ballet"],status:"potential",color:5},
+  {name:"Marcus Webb",tags:["Contemporary","Release"],status:"new",color:6},
+  {name:"Tom Richards",tags:["Breaking","Street"],status:"not_selected",color:1},
+  {name:"Yuki Tanaka",tags:["Jazz","Contemporary"],status:"selected",color:2},
+  {name:"Dante Williams",tags:["R&B","Soul"],status:"potential",color:3},
+  {name:"Isla Chen",tags:["Contemporary","Jazz"],status:"shortlisted",color:4},
+  {name:"Chloe Nguyen",tags:["Ballet","Partnering"],status:"new",color:5},
+  {name:"Oliver Jensen",tags:["Contemporary","Floor"],status:"new",color:6},
+];
+
+const grid = document.getElementById('cardGrid');
+candidates.forEach((c, i) => {
+  grid.innerHTML += `
+    <div class="card" data-status="${c.status}">
+      <div style="position:relative">
+        <div class="card-img-placeholder colors-${c.color}">${c.name[0]}</div>
+        <div class="card-num">#${i+1}</div>
+        <div class="card-badge badge-${c.status}">${c.status.replace('_',' ')}</div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${c.name}</div>
+        <div class="card-tags">${c.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>`;
+});
+
+// Tab click
+document.querySelectorAll('.tab[data-filter]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const filter = tab.dataset.filter;
+    document.querySelectorAll('.card').forEach(card => {
+      if (filter === 'all' || card.dataset.status === filter) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+
+// Close dropdowns on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#sortBtn')) document.getElementById('sortDrop').classList.remove('show');
+  if (!e.target.closest('.action-btn')) document.getElementById('filterDrop').classList.remove('show');
+});
+</script>
+</body>
+</html>
