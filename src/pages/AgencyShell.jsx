@@ -642,8 +642,10 @@ const getCompanyProfile = (id, mockAgency, allArtists = []) => {
     tiktok: null, linkedin: null, twitter: null,
     styles: c.styles || [],
     team: [
-      { name: "Artistic Director", role: "Artistic Director", photo: "/demo/artists/4.jpg" },
-      { name: "Casting Director", role: "Casting", photo: "/demo/artists/5.jpg" },
+      { name: "Eleanor Voss", role: "Artistic Director", photo: "/demo/artists/4.jpg" },
+      { name: "Marco Beltrán", role: "Casting Director", photo: "/demo/artists/5.jpg" },
+      { name: "Sara Lindgren", role: "Senior Producer", photo: "/demo/artists/jessica-lane.jpg" },
+      { name: "Dorian Akhtar", role: "Rehearsal Director", photo: "/demo/artists/joel-lewis.jpg" },
     ],
     artists: allArtists.slice(0, 6),
     media: [
@@ -1350,14 +1352,6 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-artist-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .pcp-artist-tags span{font-size:9px;font-weight:500;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.18);color:rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .dark .pcp-artist{border-color:var(--g2)}
-.pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:24px 18px}
-.pcp-team-member{text-align:center;cursor:pointer;transition:transform .15s}
-.pcp-team-member:hover{transform:translateY(-2px)}
-.pcp-team-avatar{width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s,box-shadow .2s}
-.pcp-team-member:hover .pcp-team-avatar{filter:grayscale(0);box-shadow:0 6px 20px rgba(96,77,255,.12)}
-.pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25;letter-spacing:-.005em}
-.pcp-team-role{font-size:11px;color:var(--g4);margin-top:3px;line-height:1.35}
-@media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 /* Embed jobs modal */
 .share-modal.embed-modal{max-width:1480px;width:96vw;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
@@ -1480,7 +1474,6 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
   .pcp-id-card-info .pcp-name{font-size:17px}
   .pcp-id-card-info .pcp-tagline{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:none}
   .pcp-id-card-actions{display:none}
-  .pcp-team{grid-template-columns:repeat(3,1fr);gap:18px 14px}
   .pcp-media-grid{grid-template-columns:repeat(3,1fr)}
   .pcp-section-header h2{font-size:16px}
   .pcp-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px env(safe-area-inset-bottom,12px);background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--g2);z-index:25}
@@ -1495,8 +1488,6 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
   .pcp-opp-cta{width:100%;order:3}
 }
 @media (max-width:560px){
-  .pcp-team{grid-template-columns:repeat(2,1fr);gap:16px 12px}
-  .pcp-team-avatar{width:74px;height:74px}
   .pcp-media-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .pcp-topbar{padding:8px 12px;gap:8px}
   .pcp-topbar-title{display:none}
@@ -5375,12 +5366,18 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                     </div>
                     {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
                   </div>
-                  <div className="pcp-team">
+                  <div className="pcp-artists-grid">
                     {(profile.team || []).map((t, i) => (
-                      <div key={i} className="pcp-team-member" onClick={() => showToast?.(`Opening ${t.name}'s profile`)}>
-                        <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
-                        <div className="pcp-team-name">{t.name}</div>
-                        <div className="pcp-team-role">{t.role}</div>
+                      <div key={i} className="pcp-artist" onClick={() => showToast?.(`Opening ${t.name}'s profile`)}>
+                        <div className="pcp-artist-img-wrap">
+                          <div className="pcp-artist-img" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
+                          <div className="pcp-artist-overlay">
+                            <div className="pcp-artist-name">{t.name}</div>
+                            <div className="pcp-artist-tags">
+                              {t.role && <span>{t.role}</span>}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
