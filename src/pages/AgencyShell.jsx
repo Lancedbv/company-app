@@ -497,13 +497,21 @@ const MOCK_NETWORK_PEOPLE = [
   { id:"p5", name:"Yuki Tanaka", role:"Butoh Artist", company:"Independent", location:"Tokyo, JP", lat:35.68, lng:139.69, photo:"/demo/artists/5.jpg", styles:["Butoh","Contemporary"], mutual:1 },
   { id:"p6", name:"Aisha Diallo", role:"Afro-Contemporary Dancer", company:"Compagnie Käfig", location:"Paris, FR", lat:48.86, lng:2.35, photo:"/demo/artists/nisha-huizing.jpg", styles:["Afro-fusion","Contemporary"], mutual:7 },
 ];
+/* Generates an inline SVG data URI: black square with white initials.
+   Used as a fallback when a company hasn't uploaded a logo. */
+const initialsLogo = (name = "") => {
+  const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase() || "•";
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='#0A0A0A'/><text x='50' y='52' font-family='Inter,system-ui,-apple-system,sans-serif' font-size='38' font-weight='600' fill='white' text-anchor='middle' dominant-baseline='central' letter-spacing='-1'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
 const MOCK_NETWORK_COMPANIES = [
-  { id:"c1", name:"Ballett Zürich", type:"Company", location:"Zürich, CH", lat:47.37, lng:8.54, logo:"/demo/artists/1.jpg", styles:["Classical","Contemporary"], openPositions:2 },
-  { id:"c2", name:"Theater Regensburg", type:"Company", location:"Regensburg, DE", lat:49.02, lng:12.10, logo:"/demo/artists/2.jpg", styles:["Contemporary","Classical"], openPositions:3 },
-  { id:"c3", name:"The Movers", type:"Casting Agency", location:"Berlin, DE", lat:52.52, lng:13.41, logo:"/demo/artists/3.jpg", styles:["Contemporary","Physical Theatre"], openPositions:1 },
-  { id:"c4", name:"Tanz Luzern", type:"Company", location:"Luzern, CH", lat:47.05, lng:8.31, logo:"/demo/artists/4.jpg", styles:["Contemporary"], openPositions:1 },
-  { id:"c5", name:"Pina Bausch Tanztheater", type:"Company", location:"Wuppertal, DE", lat:51.26, lng:7.17, logo:"/demo/artists/5.jpg", styles:["Tanztheater"], openPositions:1 },
-  { id:"c6", name:"Royal Ballet", type:"Company", location:"London, UK", lat:51.51, lng:-0.13, logo:"/demo/artists/nisha-huizing.jpg", styles:["Classical","Contemporary"], openPositions:2 },
+  { id:"c1", name:"Ballett Zürich", type:"Company", location:"Zürich, CH", lat:47.37, lng:8.54, logo:null, banner:"/demo/banners/pexels-mart-production-7319706.jpg", styles:["Classical","Contemporary"], openPositions:2 },
+  { id:"c2", name:"Theater Regensburg", type:"Company", location:"Regensburg, DE", lat:49.02, lng:12.10, logo:null, banner:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", styles:["Contemporary","Classical"], openPositions:3 },
+  { id:"c3", name:"The Movers", type:"Casting Agency", location:"Berlin, DE", lat:52.52, lng:13.41, logo:null, banner:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", styles:["Contemporary","Physical Theatre"], openPositions:1 },
+  { id:"c4", name:"Tanz Luzern", type:"Company", location:"Luzern, CH", lat:47.05, lng:8.31, logo:null, banner:"/demo/banners/shutterstock_1234830199.jpg", styles:["Contemporary"], openPositions:1 },
+  { id:"c5", name:"Pina Bausch Tanztheater", type:"Company", location:"Wuppertal, DE", lat:51.26, lng:7.17, logo:null, banner:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", styles:["Tanztheater"], openPositions:0 },
+  { id:"c6", name:"Royal Ballet", type:"Company", location:"London, UK", lat:51.51, lng:-0.13, logo:null, banner:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg", styles:["Classical","Contemporary"], openPositions:2 },
 ];
 
 /* ━━━ OPEN BOARD + BOOSTS ━━━ */
@@ -1014,7 +1022,9 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .app-card .ac-status{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:4px 12px;border-radius:40px;flex-shrink:0}
 .dark .app-card{background:var(--sf);border-color:var(--g2)}
 /* Network cards */
-.network-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.network-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:1100px){.network-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.network-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 .network-card{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:16px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 1px 3px rgba(96,77,255,.03);transition:all .2s}
 .network-card:hover{border-color:rgba(96,77,255,.16);transform:translateY(-1px);box-shadow:0 4px 16px rgba(96,77,255,.06)}
 @supports not (backdrop-filter:blur(1px)){.network-card{background:var(--sf)}}
@@ -1029,6 +1039,26 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .nc-styles span{font-size:9px;padding:2px 8px;border-radius:40px;background:rgba(96,77,255,.1);color:var(--ac)}
 .nc-footer{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--g4);gap:6px}
 .dark .network-card{border-color:var(--g2)}
+/* Network — Company variant: banner + circular logo + meta */
+.network-card-co{display:flex;flex-direction:column}
+.ncc-banner{position:relative;width:100%;aspect-ratio:16/7;background-size:cover;background-position:center;background-color:var(--g1)}
+.ncc-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.18) 100%)}
+.ncc-hiring{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:5px;padding:4px 9px 4px 8px;border-radius:40px;background:rgba(255,255,255,.94);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:var(--green);font-size:10px;font-weight:600;z-index:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ncc-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);position:relative;flex-shrink:0}
+.ncc-pulse::after{content:"";position:absolute;inset:-3px;border-radius:50%;background:var(--green);opacity:.4;animation:nccPulse 1.6s ease-out infinite}
+@keyframes nccPulse{0%{transform:scale(1);opacity:.4}100%{transform:scale(2.4);opacity:0}}
+.ncc-logo-wrap{margin:-26px 0 0 14px;width:54px;height:54px;border-radius:50%;background:var(--sf);padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.08);position:relative;z-index:1;flex-shrink:0}
+.ncc-logo{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.ncc-body{padding:8px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.ncc-name{font-size:14px;font-weight:600;color:var(--tx);line-height:1.2}
+.ncc-meta{font-size:11.5px;color:var(--g4);line-height:1.3}
+.ncc-meta .ncc-type{color:var(--tx);font-weight:500}
+.ncc-styles{display:flex;gap:4px;flex-wrap:wrap}
+.ncc-styles span{font-size:9px;padding:2px 8px;border-radius:40px;background:rgba(96,77,255,.1);color:var(--ac)}
+.ncc-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:4px;font-size:10px;color:var(--g4)}
+.dark .ncc-hiring{background:rgba(20,20,30,.85);color:#5fffa7}
+.dark .ncc-logo-wrap{background:var(--sf)}
+@media (prefers-reduced-motion:reduce){.ncc-pulse::after{animation:none}}
 /* Aria — AI casting assistant */
 .aria-page{max-width:780px;margin:0 auto;padding:32px 16px 80px;animation:fadeIn .3s ease;position:relative;z-index:1}
 .aria-bg{position:fixed;top:0;left:var(--sb-w);right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -1297,7 +1327,6 @@ textarea.wiz-input{min-height:110px;resize:vertical;font-family:var(--sans)}
   .wiz-tile-grid{grid-template-columns:repeat(2,1fr)}
   .an-grid{grid-template-columns:repeat(2,1fr)}
   .an-panels{grid-template-columns:1fr}
-  .network-cards{grid-template-columns:1fr 1fr}
   .network-map{height:340px}
   .wiz-kv{grid-template-columns:1fr}
 }
@@ -1405,6 +1434,11 @@ textarea.wiz-input{min-height:110px;resize:vertical;font-family:var(--sans)}
 .afm-range{display:flex;align-items:center;gap:6px}
 .afm-range input{flex:1;min-width:0}
 .afm-range span{font-size:12px;color:var(--g4)}
+.afm-chips{display:flex;flex-wrap:wrap;gap:6px}
+.afm-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-family:var(--sans);font-size:12px;color:var(--g5);cursor:pointer;transition:all .15s;user-select:none}
+.afm-chip:hover{border-color:var(--g3);color:var(--tx)}
+.afm-chip.on{background:rgba(96,77,255,.08);border-color:rgba(96,77,255,.32);color:var(--ac);font-weight:500}
+.dark .afm-chip{background:var(--sf);border-color:var(--g2)}
 .dark .afm-section{border-bottom-color:var(--g2)}
 @media (max-width:520px){.afm-grid{grid-template-columns:1fr}}
 
@@ -3728,7 +3762,7 @@ function NetworkMap({ items, networkTab, darkMode }) {
       const icon = L.divIcon({
         className: "network-map-pin",
         html: `<div style="display:flex;flex-direction:column;align-items:center">
-          <img src="${item.photo || item.logo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:3px solid #604DFF;box-shadow:0 2px 10px rgba(0,0,0,.2)" />
+          <img src="${item.photo || item.logo || initialsLogo(item.name)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:3px solid #604DFF;box-shadow:0 2px 10px rgba(0,0,0,.2)" />
           <div style="width:2px;height:8px;background:#604DFF"></div>
           <div style="width:6px;height:6px;border-radius:50%;background:#604DFF"></div>
         </div>`,
@@ -3737,7 +3771,7 @@ function NetworkMap({ items, networkTab, darkMode }) {
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapInstanceRef.current);
       const popupContent = networkTab === "people"
         ? `<div style="text-align:center"><img src="${item.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:6px" /><div style="font-weight:600;font-size:13px">${item.name}</div><div style="font-size:11px;color:#888;margin-top:2px">${item.role}${item.company ? ' · ' + item.company : ''}</div><div style="font-size:10px;color:#aaa;margin-top:4px">📍 ${item.location}</div><div style="margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap">${(item.styles || []).map(s => '<span style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(96,77,255,.1);color:#604DFF">' + s + '</span>').join('')}</div></div>`
-        : `<div style="text-align:center"><img src="${item.logo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:6px" /><div style="font-weight:600;font-size:13px">${item.name}</div><div style="font-size:11px;color:#888;margin-top:2px">${item.type}</div><div style="font-size:10px;color:#aaa;margin-top:4px">📍 ${item.location}</div>${item.openPositions ? '<div style="font-size:10px;color:#604DFF;margin-top:4px;font-weight:600">' + item.openPositions + ' open positions</div>' : ''}</div>`;
+        : `<div style="text-align:center"><img src="${item.logo || initialsLogo(item.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:6px" /><div style="font-weight:600;font-size:13px">${item.name}</div><div style="font-size:11px;color:#888;margin-top:2px">${item.type}</div><div style="font-size:10px;color:#aaa;margin-top:4px">📍 ${item.location}</div>${item.openPositions ? '<div style="font-size:10px;color:#604DFF;margin-top:4px;font-weight:600">' + item.openPositions + ' open positions</div>' : ''}</div>`;
       marker.bindPopup(popupContent, { maxWidth: 220, closeButton: true });
       markersRef.current.push(marker);
     });
@@ -3855,9 +3889,13 @@ function BoostPackages({ onSelect, selectedRoomLabel, includeFreeOption, isPremi
 }
 
 /* ━━━ SHARED FILTER PANEL (right-anchored overlay, used by Network / Artists DB / Candidates) ━━━ */
-function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClear, styleOptions = [], roleOptions = null, showCastingExtras = false }) {
+function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClear, styleOptions = [], roleOptions = null, showCastingExtras = false, mode = "artist", companyTypeOptions = [] }) {
   if (!open) return null;
   const f = filters || {};
+  const toggleStyle = (s) => {
+    const cur = f.companyStyles || [];
+    onChange("companyStyles", cur.includes(s) ? cur.filter(x => x !== s) : [...cur, s]);
+  };
   return createPortal(
     <>
       <div className="filter-side-backdrop" onClick={onClose} />
@@ -3870,6 +3908,63 @@ function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClea
           <button className="fsp-close" onClick={onClose} aria-label="Close filters"><I n="x" s={18}/></button>
         </div>
 
+        {mode === "company" ? (
+          <>
+          <div className="fsp-body">
+            <div className="afm-section">
+              <h3>Type</h3>
+              <div className="afm-grid">
+                <div className="field afm-full">
+                  <label>Company type</label>
+                  <select value={f.companyType || "all"} onChange={e => onChange("companyType", e.target.value)}>
+                    <option value="all">Any type</option>
+                    {companyTypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="afm-section">
+              <h3>Hiring</h3>
+              <div className="afm-chips">
+                {[{k:"all",l:"All"},{k:"yes",l:"Currently hiring"},{k:"no",l:"Not hiring"}].map(o => (
+                  <button key={o.k} type="button" className={`afm-chip${(f.hiring || "all") === o.k ? " on" : ""}`} onClick={() => onChange("hiring", o.k)}>
+                    {o.k === "yes" && <span className="ncc-pulse" style={{width:6,height:6}}/>}{o.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="afm-section">
+              <h3>Location</h3>
+              <div className="afm-grid">
+                <div className="field afm-full">
+                  <label>City or country</label>
+                  <input placeholder="e.g. Berlin, Germany" value={f.location || ""} onChange={e => onChange("location", e.target.value)}/>
+                </div>
+              </div>
+            </div>
+
+            <div className="afm-section">
+              <h3>Styles &amp; genres</h3>
+              <div className="afm-chips">
+                {styleOptions.map(s => (
+                  <button key={s} type="button" className={`afm-chip${(f.companyStyles || []).includes(s) ? " on" : ""}`} onClick={() => toggleStyle(s)}>
+                    {s}
+                  </button>
+                ))}
+                {styleOptions.length === 0 && <div style={{fontSize:12,color:"var(--g4)"}}>No styles available.</div>}
+              </div>
+            </div>
+
+          </div>
+            <div className="fsp-actions">
+              <button className="btn-clear" onClick={onClear}>Clear All</button>
+              <button className="btn-apply" onClick={onClose}>Done</button>
+            </div>
+          </>
+        ) : (
+        <>
         <div className="fsp-body">
           <div className="afm-section">
             <h3>Role &amp; Skills</h3>
@@ -3993,6 +4088,8 @@ function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClea
           <button className="btn-clear" onClick={onClear}>Clear All</button>
           <button className="btn-apply" onClick={onClose}>Done</button>
         </div>
+        </>
+        )}
       </aside>
     </>,
     document.body
@@ -4482,6 +4579,7 @@ export default function AgencyShell() {
   const [networkView, setNetworkView] = useState("cards");
   const [networkSearch, setNetworkSearch] = useState("");
   const [networkFilters, setNetworkFilters] = useState({
+    // Artist mode
     artistType: "all",
     style: "all",
     skills: "",
@@ -4493,6 +4591,10 @@ export default function AgencyShell() {
     ageMax: "",
     heightMin: "",
     heightMax: "",
+    // Company mode
+    companyType: "all",
+    hiring: "all",
+    companyStyles: [],
   });
   const [showNetworkFilters, setShowNetworkFilters] = useState(false);
   // Promote tab state
@@ -7210,13 +7312,23 @@ export default function AgencyShell() {
             const networkItems = safeTab === "people" ? MOCK_NETWORK_PEOPLE : MOCK_NETWORK_COMPANIES;
             const filteredNetworkItems = networkItems.filter(item => {
               const matchesSearch = !networkSearch || item.name.toLowerCase().includes(networkSearch.toLowerCase()) || item.location.toLowerCase().includes(networkSearch.toLowerCase());
+              const matchesLocation = !networkFilters.location || item.location.toLowerCase().includes(networkFilters.location.toLowerCase());
+              if (safeTab === "companies") {
+                const matchesType = networkFilters.companyType === "all" || item.type === networkFilters.companyType;
+                const matchesHiring = networkFilters.hiring === "all" || (networkFilters.hiring === "yes" ? (item.openPositions || 0) > 0 : (item.openPositions || 0) === 0);
+                const selectedStyles = networkFilters.companyStyles || [];
+                const matchesStyles = selectedStyles.length === 0 || selectedStyles.some(s => (item.styles || []).includes(s));
+                return matchesSearch && matchesType && matchesHiring && matchesLocation && matchesStyles;
+              }
               const matchesArtistType = networkFilters.artistType === "all" || (item.role && item.role.toLowerCase().includes(networkFilters.artistType.toLowerCase()));
               const matchesStyle = networkFilters.style === "all" || (item.styles && item.styles.includes(networkFilters.style));
-              const matchesLocation = !networkFilters.location || item.location.toLowerCase().includes(networkFilters.location.toLowerCase());
               return matchesSearch && matchesArtistType && matchesStyle && matchesLocation;
             });
             const allStyles = [...new Set(networkItems.flatMap(i => i.styles || []))];
-            const networkFilterCount = Object.entries(networkFilters).filter(([k,v]) => (k === "artistType" || k === "style" || k === "gender") ? v !== "all" : !!v).length;
+            const allCompanyTypes = [...new Set(MOCK_NETWORK_COMPANIES.map(c => c.type))];
+            const networkFilterCount = safeTab === "companies"
+              ? ((networkFilters.companyType !== "all" ? 1 : 0) + (networkFilters.hiring !== "all" ? 1 : 0) + (networkFilters.location ? 1 : 0) + ((networkFilters.companyStyles || []).length > 0 ? 1 : 0))
+              : Object.entries(networkFilters).filter(([k,v]) => (k === "artistType" || k === "style" || k === "gender") ? v !== "all" : (k === "skills" || k === "location" || k === "ethnicity" || k === "nationality" || k === "ageMin" || k === "ageMax" || k === "heightMin" || k === "heightMax") ? !!v : false).length;
             return (
               <div>
                 <div className="pg-header">
@@ -7245,19 +7357,21 @@ export default function AgencyShell() {
                 <FilterPanel
                   open={showNetworkFilters}
                   onClose={() => setShowNetworkFilters(false)}
-                  title="Who are you looking for?"
-                  subtitle="Define your perfect artists and start searching."
+                  mode={safeTab === "companies" ? "company" : "artist"}
+                  title={safeTab === "companies" ? "Find companies & agencies" : "Who are you looking for?"}
+                  subtitle={safeTab === "companies" ? "Filter by type, hiring status, location and styles." : "Define your perfect artists and start searching."}
                   filters={networkFilters}
                   onChange={(k, v) => setNetworkFilters(p => ({ ...p, [k]: v }))}
-                  onClear={() => setNetworkFilters({ artistType:"all", style:"all", skills:"", location:"", gender:"all", ethnicity:"", nationality:"", ageMin:"", ageMax:"", heightMin:"", heightMax:"" })}
+                  onClear={() => setNetworkFilters(p => ({ ...p, artistType:"all", style:"all", skills:"", location:"", gender:"all", ethnicity:"", nationality:"", ageMin:"", ageMax:"", heightMin:"", heightMax:"", companyType:"all", hiring:"all", companyStyles:[] }))}
                   styleOptions={allStyles}
+                  companyTypeOptions={allCompanyTypes}
                 />
 
                 {networkView === "list" && (
                   <div className="app-list">
                     {filteredNetworkItems.map(item => (
                       <div key={item.id} className="app-card" onClick={() => showToast(`${item.name} — Profile coming soon`)}>
-                        <img className="ac-logo" src={item.photo || item.logo} alt="" />
+                        <img className="ac-logo" src={item.photo || item.logo || initialsLogo(item.name)} alt="" />
                         <div className="ac-info">
                           <div className="ac-title">{item.name}</div>
                           <div className="ac-company">{safeTab === "people" ? `${item.role}${item.company ? ` · ${item.company}` : ""}` : item.type}</div>
@@ -7277,13 +7391,39 @@ export default function AgencyShell() {
 
                 {networkView === "cards" && (
                   <div className="network-cards">
-                    {filteredNetworkItems.map(item => (
+                    {filteredNetworkItems.map(item => safeTab === "companies" ? (
+                      <div key={item.id} className="network-card network-card-co" onClick={() => showToast(`${item.name} — Profile coming soon`)}>
+                        <div className="ncc-banner" style={{ backgroundImage: item.banner ? `url(${item.banner})` : "linear-gradient(135deg,#7A66FF,#A294FF)" }}>
+                          {item.openPositions > 0 && (
+                            <span className="ncc-hiring"><span className="ncc-pulse"/>Active Hiring</span>
+                          )}
+                        </div>
+                        <div className="ncc-logo-wrap">
+                          <img className="ncc-logo" src={item.logo || initialsLogo(item.name)} alt={item.name}/>
+                        </div>
+                        <div className="ncc-body">
+                          <div>
+                            <div className="ncc-name">{item.name}</div>
+                            <div className="ncc-meta"><span className="ncc-type">{item.type}</span> · {item.location}</div>
+                          </div>
+                          {(item.styles || []).length > 0 && (
+                            <div className="ncc-styles">
+                              {(item.styles || []).slice(0,2).map(s => <span key={s}>{s}</span>)}
+                            </div>
+                          )}
+                          <div className="ncc-footer">
+                            <span>{item.openPositions > 0 ? `${item.openPositions} open ${item.openPositions === 1 ? "role" : "roles"}` : "No open roles"}</span>
+                            <button className="btn btn-p btn-sm" style={{ fontSize:10, padding:"4px 12px" }} onClick={e => { e.stopPropagation(); showToast(`Following ${item.name}`); }}>Follow</button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
                       <div key={item.id} className="network-card" onClick={() => showToast(`${item.name} — Profile coming soon`)}>
                         <div className="nc-img-wrap">
                           <img src={item.photo || item.logo} alt={item.name}/>
                           <div className="nc-overlay">
                             <div className="nc-name">{item.name}</div>
-                            <div className="nc-role">{safeTab === "people" ? `${item.role}${item.company ? ` · ${item.company}` : ""}` : item.type}</div>
+                            <div className="nc-role">{`${item.role}${item.company ? ` · ${item.company}` : ""}`}</div>
                             <div className="nc-location">{item.location}</div>
                           </div>
                         </div>
@@ -7292,8 +7432,8 @@ export default function AgencyShell() {
                             {(item.styles || []).map(s => <span key={s}>{s}</span>)}
                           </div>
                           <div className="nc-footer">
-                            <span>{item.mutual !== undefined ? `${item.mutual} mutual` : item.openPositions !== undefined ? `${item.openPositions} open roles` : ""}</span>
-                            <button className="btn btn-p btn-sm" style={{ fontSize:10, padding:"4px 12px" }} onClick={e => { e.stopPropagation(); showToast(`Connection request sent to ${item.name}`); }}>{safeTab === "people" ? "Connect" : "Follow"}</button>
+                            <span>{item.mutual !== undefined ? `${item.mutual} mutual` : ""}</span>
+                            <button className="btn btn-p btn-sm" style={{ fontSize:10, padding:"4px 12px" }} onClick={e => { e.stopPropagation(); showToast(`Connection request sent to ${item.name}`); }}>Connect</button>
                           </div>
                         </div>
                       </div>
