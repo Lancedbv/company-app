@@ -1309,18 +1309,47 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-artist-tags span{font-size:9px;font-weight:500;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.18);color:rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .dark .pcp-artist{border-color:var(--g2)}
 .pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:24px 18px}
-.pcp-team-member{text-align:center;cursor:default;transition:transform .15s}
-.pcp-team-member.linked{cursor:pointer}
-.pcp-team-member.linked:hover{transform:translateY(-2px)}
-.pcp-team-avatar{position:relative;width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s,box-shadow .2s}
-.pcp-team-member:hover .pcp-team-avatar{filter:grayscale(0)}
-.pcp-team-member.linked:hover .pcp-team-avatar{box-shadow:0 6px 20px rgba(96,77,255,.16)}
-.pcp-team-link-mark{position:absolute;bottom:0;right:2px;width:22px;height:22px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--sf);box-shadow:0 2px 6px rgba(96,77,255,.3)}
+.pcp-team-member{text-align:center;cursor:pointer;transition:transform .15s}
+.pcp-team-member:hover{transform:translateY(-2px)}
+.pcp-team-avatar{width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s,box-shadow .2s}
+.pcp-team-member:hover .pcp-team-avatar{filter:grayscale(0);box-shadow:0 6px 20px rgba(96,77,255,.12)}
 .pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25;letter-spacing:-.005em}
-.pcp-team-linked-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);margin-left:5px;vertical-align:middle}
 .pcp-team-role{font-size:11px;color:var(--g4);margin-top:3px;line-height:1.35}
 @media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+/* Embed jobs modal */
+.embed-modal{max-width:920px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
+.embed-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;padding:24px 28px 28px;overflow-y:auto;flex:1}
+@media (max-width:760px){.embed-body{grid-template-columns:1fr;padding:18px}.embed-modal{border-radius:20px 20px 0 0;max-height:94vh}}
+.embed-preview{margin-right:18px;border-radius:14px;overflow:hidden;border:1px solid var(--g2);display:flex;flex-direction:column}
+@media (max-width:760px){.embed-preview{margin-right:0;margin-bottom:18px}}
+.embed-preview-light{background:#FFFFFF;color:#1A1A1E}
+.embed-preview-dark{background:#0F0E16;color:#fff;border-color:rgba(255,255,255,.08)}
+.embed-preview-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid currentColor;border-bottom-color:var(--g2)}
+.embed-preview-dark .embed-preview-head{border-bottom-color:rgba(255,255,255,.08)}
+.embed-preview-mark{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;letter-spacing:-.5px;flex-shrink:0}
+.embed-preview-title{font-size:14px;font-weight:600;line-height:1.2}
+.embed-preview-sub{font-size:11px;opacity:.6;margin-top:2px}
+.embed-preview-pulse{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(29,185,84,.14)}
+.embed-preview-pulse > span{width:8px;height:8px;border-radius:50%;background:var(--green);animation:nccPulse 1.6s ease-out infinite}
+.embed-preview-list{display:flex;flex-direction:column}
+.embed-preview-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--g2);cursor:pointer}
+.embed-preview-dark .embed-preview-row{border-bottom-color:rgba(255,255,255,.06)}
+.embed-preview-row:last-child{border-bottom:none}
+.embed-preview-row-title{font-size:12.5px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.embed-preview-row-meta{font-size:10.5px;opacity:.55;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.embed-preview-cta{font-size:11px;font-weight:600;color:#7A66FF;flex-shrink:0}
+.embed-preview-empty{padding:28px;text-align:center;font-size:12px;opacity:.5}
+.embed-preview-foot{font-size:10px;opacity:.4;text-align:center;padding:10px;border-top:1px solid var(--g2);font-weight:500}
+.embed-preview-dark .embed-preview-foot{border-top-color:rgba(255,255,255,.06)}
+.embed-config .embed-controls{display:grid;grid-template-columns:1fr;gap:14px}
+.embed-label{font-size:11px;font-weight:600;color:var(--g5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.embed-tabs{display:flex;gap:2px;background:var(--g1);padding:3px;border-radius:10px;margin-bottom:10px;width:fit-content}
+.embed-tab{padding:7px 14px;border:none;background:transparent;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
+.embed-tab.on{background:var(--sf);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.embed-snippet{margin:0;padding:14px;background:#0F0E16;color:#E6E5F0;border-radius:12px;font-family:var(--mono);font-size:11.5px;line-height:1.5;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-word;border:1px solid #1F1D2E}
+.embed-snippet code{font-family:inherit}
+
 /* News & updates */
 .pcp-news{display:flex;flex-direction:column;gap:14px}
 .pcp-news-card{display:grid;grid-template-columns:200px 1fr;gap:0;background:var(--sf);border:1px solid var(--g2);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .18s}
@@ -1460,6 +1489,14 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .rav-kv dd{margin:0;color:var(--tx);font-weight:500;line-height:1.5}
 .rav-offer{padding:16px 18px;background:rgba(96,77,255,.05);border:1px solid rgba(96,77,255,.12);border-radius:14px;gap:6px}
 .rav-offer h3{color:var(--ac)}
+/* AI fit suggestion */
+.rav-fit{padding:16px 18px;background:linear-gradient(140deg,rgba(96,77,255,.07),rgba(122,102,255,.03));border:1px solid rgba(96,77,255,.18);border-radius:14px;gap:10px}
+.rav-fit-head{display:flex;align-items:center;gap:10px}
+.rav-fit-mark{width:30px;height:30px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(96,77,255,.3)}
+.rav-fit-sub{font-size:11px;color:var(--g4);margin-top:2px;font-weight:500}
+.rav-fit-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rav-fit-list li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--tx);line-height:1.5}
+.rav-fit-list li svg{margin-top:3px;color:var(--ac);flex-shrink:0}
 .rav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .rav-list li{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--g1);border-radius:10px;font-size:13px;color:var(--tx)}
 .rav-list-icon{width:28px;height:28px;border-radius:8px;background:var(--sf);color:var(--g5);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -4946,7 +4983,7 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, onFollow, showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
@@ -4954,6 +4991,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
   const [lightboxIndex, setLightboxIndex] = useState(null); // null | number — index into profile.media
   const [applicationOpp, setApplicationOpp] = useState(null); // opportunity being viewed in popup
   const [savedOppIds, setSavedOppIds] = useState(() => new Set()); // saved/bookmarked opportunities
+  const [embedOpen, setEmbedOpen] = useState(false); // owner-only "Embed jobs" modal
   const rootRef = useRef(null);
   const bannerRef = useRef(null);
   const cardRef = useRef(null);
@@ -5031,7 +5069,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           {isOwner ? (
             <button className="btn btn-p btn-sm" onClick={() => setEditPane("settings")}><I n="settings" s={12}/> Edit profile</button>
           ) : (
-            <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => { setFollowed(f=>!f); showToast?.(followed ? `Unfollowed ${profile.name}` : `Following ${profile.name}`); }}>
+            <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => { const next = !followed; setFollowed(next); showToast?.(next ? `Following ${profile.name}` : `Unfollowed ${profile.name}`); onFollow?.(profile, next); }}>
               {followed ? <><I n="check" s={12}/> Following</> : <><I n="plus" s={12}/> Follow{isHiring ? " for alerts" : ""}</>}
             </button>
           )}
@@ -5110,14 +5148,19 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
             return (
               <section className="pcp-section">
                 <div className="pcp-section-header">
-                  <h2>Open roles &amp; opportunities</h2>
-                  <span className="pcp-section-count">{openCount}</span>
+                  <div style={{display:"flex",alignItems:"baseline",gap:10}}>
+                    <h2>Open roles &amp; opportunities</h2>
+                    <span className="pcp-section-count">{openCount}</span>
+                  </div>
+                  {isOwner && openCount > 0 && (
+                    <button className="pcp-edit-chip" onClick={() => setEmbedOpen(true)}><I n="link" s={12}/> Embed on your site</button>
+                  )}
                 </div>
                 {openCount === 0 ? (
                   <div className="pcp-empty">
                     <I n="inbox" s={24}/>
                     <div>No open opportunities right now.</div>
-                    {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
+                    {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); onFollow?.(profile, true); }}><I n="bell" s={12}/> Follow for alerts</button>}
                   </div>
                 ) : (
                   <>
@@ -5219,23 +5262,13 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                     {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
                   </div>
                   <div className="pcp-team">
-                    {(profile.team || []).map((t, i) => {
-                      const linked = !!t.artistId;
-                      return (
-                        <div
-                          key={i}
-                          className={`pcp-team-member${linked ? " linked" : ""}`}
-                          onClick={linked ? () => showToast?.(`Opening ${t.name}'s profile`) : undefined}
-                          title={linked ? "View Lanced profile" : undefined}
-                        >
-                          <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}>
-                            {linked && <span className="pcp-team-link-mark" aria-hidden="true"><I n="check" s={9}/></span>}
-                          </div>
-                          <div className="pcp-team-name">{t.name}{linked && <span className="pcp-team-linked-dot" title="On Lanced"/>}</div>
-                          <div className="pcp-team-role">{t.role}</div>
-                        </div>
-                      );
-                    })}
+                    {(profile.team || []).map((t, i) => (
+                      <div key={i} className="pcp-team-member" onClick={() => showToast?.(`Opening ${t.name}'s profile`)}>
+                        <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
+                        <div className="pcp-team-name">{t.name}</div>
+                        <div className="pcp-team-role">{t.role}</div>
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}
@@ -5347,6 +5380,12 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
         </aside>
       </div>
 
+      {/* Embed widget modal */}
+      {embedOpen && createPortal(
+        <EmbedJobsModal profile={profile} opportunities={opportunities} onClose={() => setEmbedOpen(false)} showToast={showToast}/>,
+        document.body
+      )}
+
       {/* About read-more modal */}
       {showAboutModal && createPortal(
         <div className="overlay" onClick={() => setShowAboutModal(false)}>
@@ -5396,7 +5435,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           <div className="pcp-bottom-info">
             {isHiring ? <><span className="ncc-pulse"/>{openCount} open {openCount === 1 ? "role" : "roles"}</> : "Follow for alerts"}
           </div>
-          <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => setFollowed(f=>!f)}>{followed ? "Following" : "Follow"}</button>
+          <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => { const next = !followed; setFollowed(next); onFollow?.(profile, next); }}>{followed ? "Following" : "Follow"}</button>
         </div>
       )}
 
@@ -5415,6 +5454,122 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
 }
 
 /* Right-anchored edit pane — same idiom as FilterPanel. */
+/* "Embed on your site" modal — gives the owner a copyable HTML snippet
+   that renders an iframe widget showing their open opportunities. */
+function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
+  const slug = (profile.name || "company").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const [theme, setTheme] = useState("light"); // "light" | "dark"
+  const [size, setSize] = useState("compact"); // "compact" | "full"
+  const [copied, setCopied] = useState(false);
+
+  const widgetHeight = size === "compact" ? 360 : 560;
+  const embedSrc = `https://lanced.app/embed/jobs/${slug}?theme=${theme}&size=${size}`;
+  const iframeSnippet = `<iframe
+  src="${embedSrc}"
+  width="100%"
+  height="${widgetHeight}"
+  frameborder="0"
+  style="border:0;border-radius:14px;display:block"
+  title="${profile.name} — Open roles on Lanced">
+</iframe>`;
+  const scriptSnippet = `<div data-lanced-jobs="${slug}" data-theme="${theme}" data-size="${size}"></div>
+<script async src="https://lanced.app/embed.js"></script>`;
+  const [tab, setTab] = useState("iframe");
+
+  const copy = (txt) => {
+    navigator.clipboard?.writeText(txt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+    showToast?.("Embed code copied");
+  };
+
+  const open = opportunities.filter(o => o.status === "published");
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div className="overlay app-form-overlay" onClick={onClose}>
+      <div className="share-modal embed-modal" onClick={e => e.stopPropagation()}>
+        <button className="app-form-close" style={{background:"var(--g1)",color:"var(--g6)",border:"1px solid var(--g2)",backdropFilter:"none"}} onClick={onClose} aria-label="Close"><I n="x" s={18}/></button>
+        <div style={{padding:"28px 28px 0"}}>
+          <h2 style={{margin:"0 0 6px",fontSize:22,fontWeight:600,letterSpacing:"-.02em"}}>Embed your open roles</h2>
+          <p style={{margin:0,fontSize:13,color:"var(--g5)",lineHeight:1.55}}>Paste this widget on your own website. It updates automatically as you publish new opportunities on Lanced.</p>
+        </div>
+
+        <div className="embed-body">
+          {/* Live preview */}
+          <div className={`embed-preview embed-preview-${theme}`}>
+            <div className="embed-preview-head">
+              <div className="embed-preview-mark" style={{background:profile.accentColor || "#7A66FF"}}>{(profile.name || "•").split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div className="embed-preview-title">{profile.name}</div>
+                <div className="embed-preview-sub">{open.length} open {open.length === 1 ? "role" : "roles"} on Lanced</div>
+              </div>
+              <span className="embed-preview-pulse"><span/></span>
+            </div>
+            <div className="embed-preview-list">
+              {open.slice(0, size === "compact" ? 3 : 5).map(o => (
+                <div key={o.id} className="embed-preview-row">
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="embed-preview-row-title">{o.title}</div>
+                    <div className="embed-preview-row-meta">{(o.opportunityType || "Audition").replace(/_/g," ")}{o.location ? ` · ${o.location}` : ""}{o.deadline ? ` · ${o.deadline}` : ""}</div>
+                  </div>
+                  <span className="embed-preview-cta">View →</span>
+                </div>
+              ))}
+              {open.length === 0 && <div className="embed-preview-empty">No open roles right now.</div>}
+            </div>
+            <div className="embed-preview-foot">Powered by Lanced</div>
+          </div>
+
+          {/* Controls + snippet */}
+          <div className="embed-config">
+            <div className="afm-section" style={{borderBottom:"1px solid var(--g2)",paddingBottom:14,marginBottom:14}}>
+              <h3 style={{margin:"0 0 10px"}}>Style</h3>
+              <div className="embed-controls">
+                <div>
+                  <div className="embed-label">Theme</div>
+                  <div className="afm-chips">
+                    {[{k:"light",l:"Light"},{k:"dark",l:"Dark"}].map(o => (
+                      <button key={o.k} type="button" className={`afm-chip${theme===o.k?" on":""}`} onClick={() => setTheme(o.k)}>{o.l}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="embed-label">Size</div>
+                  <div className="afm-chips">
+                    {[{k:"compact",l:"Compact (3 roles)"},{k:"full",l:"Full (5 roles)"}].map(o => (
+                      <button key={o.k} type="button" className={`afm-chip${size===o.k?" on":""}`} onClick={() => setSize(o.k)}>{o.l}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="afm-section">
+              <div className="embed-tabs">
+                <button className={`embed-tab${tab==="iframe"?" on":""}`} onClick={() => setTab("iframe")}>iframe</button>
+                <button className={`embed-tab${tab==="script"?" on":""}`} onClick={() => setTab("script")}>JS widget</button>
+              </div>
+              <pre className="embed-snippet"><code>{tab === "iframe" ? iframeSnippet : scriptSnippet}</code></pre>
+              <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center",flexWrap:"wrap"}}>
+                <button className="btn btn-p btn-sm" onClick={() => copy(tab === "iframe" ? iframeSnippet : scriptSnippet)}>
+                  <I n={copied ? "check" : "share"} s={12}/> {copied ? "Copied!" : "Copy code"}
+                </button>
+                <span style={{fontSize:11,color:"var(--g4)"}}>{tab === "iframe" ? "Works in any HTML page or CMS." : "Wordpress, Webflow, Framer, custom — drops in anywhere."}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ━━━ Shared Application Form / room preview view ━━━
    Single source of truth for what an artist sees when they look at an
    opportunity. Used in three places:
@@ -5560,6 +5715,41 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
                 </ol>
               </section>
             )}
+
+            {!isOwner && (() => {
+              // Demo "AI fit" — explain why this opportunity matches the artist.
+              // Hardcoded plausible reasons drawn from room attributes.
+              const reasons = [];
+              if (room.location) reasons.push(`Based in ${room.location.split(",")[0]} — same as the casting`);
+              if (room.roles && room.roles.length) {
+                const r = Array.isArray(room.roles) ? room.roles[0] : room.roles;
+                reasons.push(`Your training in ${r.toLowerCase()} fits the brief`);
+              } else if (room.artistType) {
+                reasons.push(`You're listed as a ${room.artistType.toLowerCase()}`);
+              }
+              if (room.contracts && room.contracts.length) {
+                reasons.push(`Open to ${(Array.isArray(room.contracts) ? room.contracts : [room.contracts]).join(" / ").toLowerCase()} work`);
+              } else {
+                reasons.push("You've worked with similar companies recently");
+              }
+              if (reasons.length === 0) return null;
+              return (
+                <section className="rav-section rav-fit">
+                  <div className="rav-fit-head">
+                    <span className="rav-fit-mark"><I n="aria" s={13}/></span>
+                    <div>
+                      <h3 style={{margin:0,color:"var(--ac)"}}>Why this matches you</h3>
+                      <div className="rav-fit-sub">Aria · AI suggestion based on your Lanced profile</div>
+                    </div>
+                  </div>
+                  <ul className="rav-fit-list">
+                    {reasons.slice(0,3).map((r, i) => (
+                      <li key={i}><I n="check" s={12}/> <span>{r}</span></li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })()}
 
             <div className="rav-cta">
               {isOwner ? (
@@ -6894,6 +7084,17 @@ export default function AgencyShell() {
           roomProfileReqs={publicCompany === "self" ? roomProfileReqs : {}}
           onClose={() => setPublicCompany(null)}
           onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
+          onFollow={(company, isFollowing) => {
+            if (!isFollowing) return;
+            const id = "nf-" + Date.now();
+            setNotifications(p => [
+              { id, cat:"system", icon:"bell", color:"var(--ac)",
+                title:`Following ${company.name}`,
+                body:`You'll get notified when ${company.name} posts new opportunities or news.`,
+                time:"Just now", read:false, link:null },
+              ...p,
+            ]);
+          }}
           showToast={showToast}
         />
       </>
