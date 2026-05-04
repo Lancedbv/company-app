@@ -1168,8 +1168,12 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .dark .app-card{background:var(--sf);border-color:var(--g2)}
 /* Network cards */
 .network-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-@media (max-width:1100px){.network-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:760px){.network-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+.network-cards-people{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.network-cards-companies{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:1280px){.network-cards-people{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:1100px){.network-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.network-cards-people{grid-template-columns:repeat(3,minmax(0,1fr))}.network-cards-companies{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.network-cards,.network-cards-people,.network-cards-companies{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media (max-width:480px){.network-cards-companies{grid-template-columns:1fr}}
 .network-card{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:16px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 1px 3px rgba(96,77,255,.03);transition:all .2s}
 .network-card:hover{border-color:rgba(96,77,255,.16);transform:translateY(-1px);box-shadow:0 4px 16px rgba(96,77,255,.06)}
 @supports not (backdrop-filter:blur(1px)){.network-card{background:var(--sf)}}
@@ -1356,15 +1360,16 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 @media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 /* Embed jobs modal */
-.embed-modal{max-width:1180px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
-.embed-head{padding:32px 36px 0}
-.embed-head h2{margin:0 0 8px;font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--tx)}
-.embed-head p{margin:0;font-size:13.5px;color:var(--g5);line-height:1.6;max-width:680px}
-.embed-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:28px 36px 36px;overflow-y:auto;flex:1}
-@media (max-width:880px){.embed-body{grid-template-columns:1fr;padding:22px;gap:24px}.embed-modal{border-radius:20px 20px 0 0;max-height:94vh}.embed-head{padding:24px 22px 0}}
-.embed-preview-wrap{display:flex;flex-direction:column;gap:10px}
+.share-modal.embed-modal{max-width:1480px;width:96vw;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
+.embed-head{padding:36px 44px 0}
+.embed-head h2{margin:0 0 8px;font-size:26px;font-weight:600;letter-spacing:-.02em;color:var(--tx)}
+.embed-head p{margin:0;font-size:14px;color:var(--g5);line-height:1.6;max-width:720px}
+.embed-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;padding:32px 44px 44px;overflow-y:auto;flex:1}
+@media (max-width:1100px){.embed-body{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:28px 32px 32px}.embed-head{padding:28px 32px 0}}
+@media (max-width:880px){.embed-body{grid-template-columns:1fr;padding:22px;gap:24px}.share-modal.embed-modal{border-radius:20px 20px 0 0;max-height:94vh;width:100%;max-width:100%}.embed-head{padding:24px 22px 0}}
+.embed-preview-wrap{display:flex;flex-direction:column;gap:12px}
 .embed-preview-caption{font-size:11px;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;font-weight:500;text-align:center}
-.embed-preview{border-radius:16px;overflow:hidden;border:1px solid var(--g2);display:flex;flex-direction:column;box-shadow:0 4px 18px rgba(0,0,0,.04)}
+.embed-preview{border-radius:18px;overflow:hidden;border:1px solid var(--g2);display:flex;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,.06)}
 .embed-preview-light{background:#FFFFFF;color:#1A1A1E}
 .embed-preview-dark{background:#0F0E16;color:#fff;border-color:rgba(255,255,255,.08)}
 .embed-preview-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid currentColor;border-bottom-color:var(--g2)}
@@ -9338,7 +9343,7 @@ export default function AgencyShell() {
                 )}
 
                 {networkView === "cards" && (
-                  <div className="network-cards">
+                  <div className={`network-cards network-cards-${safeTab}`}>
                     {filteredNetworkItems.map(item => safeTab === "companies" ? (
                       <div key={item.id} className="network-card network-card-co" onClick={() => setPublicCompany(item.id)}>
                         <div className="ncc-banner" style={{ backgroundImage: item.banner ? `url(${item.banner})` : "linear-gradient(135deg,#7A66FF,#A294FF)" }}>
