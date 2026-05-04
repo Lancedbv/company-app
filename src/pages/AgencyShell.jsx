@@ -29,8 +29,12 @@ const MOCK_AGENCY = {
   team: [
     { name: "Mira Ostrowska", role: "Artistic Director", photo: "/demo/artists/lara-knoop.jpg" },
     { name: "Daniel Frey", role: "Casting Director", photo: "/demo/artists/kevin-lao.jpg" },
-    { name: "Anya Petrov", role: "Producer", photo: "/demo/artists/melissa-nuys.jpg" },
+    { name: "Anya Petrov", role: "Senior Producer", photo: "/demo/artists/melissa-nuys.jpg" },
     { name: "Joel Asare", role: "Rehearsal Director", photo: "/demo/artists/rob-fischer.jpg" },
+    { name: "Lina Tomović", role: "Company Manager", photo: "/demo/artists/jessica-lane.jpg" },
+    { name: "Theo Beauchamp", role: "Resident Choreographer", photo: "/demo/artists/joel-lewis.jpg" },
+    { name: "Sasha Aleyev", role: "Movement Coach", photo: "/demo/artists/noah-silver.jpg" },
+    { name: "Naomi Ortega", role: "Communications Lead", photo: "/demo/artists/simone-mckenna.jpg" },
   ],
   media: [
     { type:"photo", url:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", title:"Spring season opening", description:"Opening night of our 2026 spring programme — three world premieres on a single bill.", tags:["Performance","Season Opening"], location:"Sadler's Wells, London" },
@@ -1172,14 +1176,15 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 @media (prefers-reduced-motion:reduce){.ncc-pulse::after{animation:none}}
 
 /* ━━━ Public Company Profile ━━━ */
-.pcp-root{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:100;animation:fadeIn .25s ease}
-.pcp-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 24px;background:rgba(255,255,255,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border)}
+.pcp-root{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:100;animation:fadeIn .25s ease;--pcp-topbar-h:52px}
+.pcp-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 24px;background:rgba(255,255,255,.78);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--glass-border);min-height:52px;box-sizing:border-box}
 .dark .pcp-topbar{background:rgba(20,20,30,.7)}
 .pcp-topbar-title{flex:1;font-size:14px;font-weight:600;color:var(--tx);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pcp-topbar-actions{display:flex;gap:8px}
-.pcp-hero{position:relative;background:var(--bg)}
-.pcp-banner{position:relative;width:100%;aspect-ratio:16/5;background-size:cover;background-position:center;background-color:var(--g1)}
+.pcp-hero{position:relative;background:var(--bg);overflow:hidden}
+.pcp-banner{position:relative;width:100%;aspect-ratio:16/5;background-size:cover;background-position:center;background-color:var(--g1);will-change:transform,opacity}
 .pcp-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.15) 100%)}
+.pcp-id-card{will-change:transform,opacity}
 .pcp-edit-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-family:var(--sans);font-size:11px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
 .pcp-edit-chip:hover{border-color:var(--pcp-accent,var(--ac));color:var(--pcp-accent,var(--ac))}
 .pcp-edit-chip-banner{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:1;color:var(--tx);border-color:rgba(255,255,255,.5)}
@@ -1202,7 +1207,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-hiring-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;border:none;border-radius:40px;background:rgba(29,185,84,.16);color:var(--green);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s}
 .pcp-hiring-pill:hover{background:rgba(29,185,84,.26)}
 .pcp-id-card-actions{flex-shrink:0;padding-top:2px}
-.pcp-tabs{position:sticky;top:56px;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--g2)}
+.pcp-tabs{position:sticky;top:var(--pcp-topbar-h,52px);z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--g2);margin-top:-1px}
 .dark .pcp-tabs{background:rgba(20,20,30,.78)}
 .pcp-tabs-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 .pcp-tabs-inner::-webkit-scrollbar{display:none}
@@ -1235,19 +1240,27 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-opp-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--g4);margin-top:6px}
 .pcp-opp-meta span{display:inline-flex;align-items:center;gap:3px}
 .pcp-opp-cta{flex-shrink:0}
-.pcp-artists-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
-@media (max-width:980px){.pcp-artists-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
-@media (max-width:560px){.pcp-artists-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
-.pcp-artist{cursor:pointer;transition:transform .15s}
-.pcp-artist:hover{transform:translateY(-2px)}
-.pcp-artist-photo{width:100%;aspect-ratio:3/4;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);margin-bottom:8px}
-.pcp-artist-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25}
-.pcp-artist-role{font-size:11px;color:var(--g4);margin-top:2px;line-height:1.3}
-.pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.pcp-team-member{text-align:center}
-.pcp-team-avatar{width:84px;height:84px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 10px;background-color:var(--g1)}
-.pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25}
-.pcp-team-role{font-size:11px;color:var(--g4);margin-top:2px}
+.pcp-artists-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:980px){.pcp-artists-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}
+@media (max-width:560px){.pcp-artists-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.pcp-artist{cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);border-radius:14px;overflow:hidden;border:1px solid var(--glass-border);background:var(--glass-bg);box-shadow:0 1px 3px rgba(96,77,255,.03)}
+.pcp-artist:hover{border-color:rgba(96,77,255,.16);transform:translateY(-1px);box-shadow:0 4px 16px rgba(96,77,255,.06)}
+.pcp-artist:active{transform:scale(.98)}
+.pcp-artist-img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden}
+.pcp-artist-img{width:100%;height:100%;background-size:cover;background-position:center;background-color:var(--g1);filter:grayscale(10%);transition:filter .3s,transform .4s}
+.pcp-artist:hover .pcp-artist-img{filter:grayscale(0);transform:scale(1.03)}
+.pcp-artist-overlay{position:absolute;left:0;right:0;bottom:0;padding:38px 12px 12px;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,.55) 35%,rgba(0,0,0,.2) 70%,transparent 100%);color:#fff}
+.pcp-artist-name{font-size:13px;font-weight:600;color:#fff;line-height:1.25;letter-spacing:-.005em}
+.pcp-artist-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.pcp-artist-tags span{font-size:9px;font-weight:500;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.18);color:rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.dark .pcp-artist{border-color:var(--g2)}
+.pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:24px 18px}
+.pcp-team-member{text-align:center;cursor:default}
+.pcp-team-avatar{width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s}
+.pcp-team-member:hover .pcp-team-avatar{filter:grayscale(0)}
+.pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25;letter-spacing:-.005em}
+.pcp-team-role{font-size:11px;color:var(--g4);margin-top:3px;line-height:1.35}
+@media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .pcp-media-tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--g1);transition:transform .15s}
 .pcp-media-tile:hover{transform:scale(1.02)}
@@ -1316,6 +1329,48 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-about-modal-text{font-size:14px;line-height:1.7;color:var(--tx);margin:0;white-space:pre-wrap}
 .pcp-about-modal .fsp-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--g2);background:var(--sf);display:flex;align-items:center;justify-content:center;color:var(--g5);cursor:pointer;flex-shrink:0;transition:all .15s}
 .pcp-about-modal .fsp-close:hover{border-color:var(--ac);color:var(--ac)}
+
+/* Application form modal — opens in-place over the public profile when an
+   artist clicks an opportunity card. */
+.app-form-overlay{padding:0!important}
+.app-form-modal{max-width:720px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;background:var(--sf);position:relative;display:flex;flex-direction:column}
+.app-form-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;z-index:2}
+.app-form-close:hover{background:rgba(0,0,0,.55)}
+.app-form-banner{position:relative;width:100%;aspect-ratio:16/6;background-size:cover;background-position:center;background-color:var(--g1);flex-shrink:0}
+.app-form-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.4) 100%)}
+.app-form-banner-grad-only{aspect-ratio:16/4}
+.app-form-body{padding:24px 28px 28px;overflow-y:auto;flex:1}
+.app-form-head{margin-bottom:14px}
+.app-form-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ac);margin-bottom:6px}
+.app-form-title{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--tx);margin:0 0 10px}
+.app-form-company{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--g5);font-weight:500}
+.app-form-company-mark{width:22px;height:22px;border-radius:6px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:-.5px}
+.app-form-desc{font-size:14px;line-height:1.65;color:var(--tx);margin:14px 0 18px;white-space:pre-wrap}
+.app-form-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g2);border-radius:14px;overflow:hidden;border:1px solid var(--g2);margin-bottom:18px}
+.app-form-meta-i{padding:12px 14px;background:var(--sf);display:flex;flex-direction:column;gap:3px}
+.app-form-meta-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--g4)}
+.app-form-meta-v{font-size:13px;font-weight:600;color:var(--tx);line-height:1.3}
+.app-form-meta-v.accent{color:var(--red)}
+.app-form-offer{padding:14px 16px;background:rgba(96,77,255,.05);border:1px solid rgba(96,77,255,.12);border-radius:12px;font-size:13px;color:var(--tx);line-height:1.55;margin-bottom:18px}
+.app-form-offer .app-form-meta-l{margin-bottom:4px}
+.app-form-preview-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(96,77,255,.08);border:1px solid rgba(96,77,255,.2);border-radius:40px;font-size:12px;color:var(--ac);font-weight:500;margin-top:8px}
+.app-form-form{margin-top:6px;padding-top:20px;border-top:1px solid var(--g2)}
+.app-form-form-head{margin-bottom:14px}
+.app-form-form-head h3{font-size:15px;font-weight:600;color:var(--tx);margin:0 0 4px}
+.app-form-form-head p{font-size:12px;color:var(--g4);margin:0;line-height:1.5}
+.app-form-form .afm-grid{grid-template-columns:1fr 1fr}
+.app-form-form .field{margin-bottom:0}
+.app-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid var(--g2)}
+.app-form-success{padding:24px 0;text-align:center}
+.app-form-success-icon{width:48px;height:48px;border-radius:50%;background:#E6FFF0;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--green)}
+.app-form-success h3{font-size:18px;font-weight:600;color:var(--tx);margin:0 0 8px}
+.app-form-success p{font-size:13px;color:var(--g5);margin:0 0 18px;line-height:1.6}
+@media (max-width:680px){
+  .app-form-modal{max-width:100%;border-radius:20px 20px 0 0}
+  .app-form-meta{grid-template-columns:repeat(2,1fr)}
+  .app-form-body{padding:20px 18px 22px}
+  .app-form-form .afm-grid{grid-template-columns:1fr}
+}
 .pcp-edit-banner-preview{width:100%;aspect-ratio:16/5;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);border:1px solid var(--g2)}
 .pcp-dropzone{border:2px dashed var(--g2);border-radius:12px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--g4);cursor:pointer;transition:all .15s}
 .pcp-dropzone:hover{border-color:var(--ac);color:var(--ac);background:rgba(96,77,255,.03)}
@@ -4765,12 +4820,50 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, onOpenOpportunity, showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null); // null | number — index into profile.media
+  const [applicationOpp, setApplicationOpp] = useState(null); // opportunity being viewed in popup
+  const rootRef = useRef(null);
+  const bannerRef = useRef(null);
+  const cardRef = useRef(null);
+  const topbarRef = useRef(null);
+
+  // Measure topbar height once so tabs can stick flush to it (no gap).
+  useEffect(() => {
+    if (!topbarRef.current || !rootRef.current) return;
+    const set = () => {
+      const h = topbarRef.current.offsetHeight;
+      rootRef.current.style.setProperty("--pcp-topbar-h", `${h}px`);
+    };
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(topbarRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Parallax: banner scrolls slower + fades; floating card fades out early.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const onScroll = () => {
+      const y = root.scrollTop;
+      if (bannerRef.current) {
+        bannerRef.current.style.transform = `translateY(${y * 0.4}px)`;
+        bannerRef.current.style.opacity = Math.max(0, 1 - y / 320);
+      }
+      if (cardRef.current) {
+        const fade = Math.max(0, 1 - y / 220);
+        cardRef.current.style.opacity = String(fade);
+        cardRef.current.style.transform = `translateY(${y * -0.15}px)`;
+      }
+    };
+    root.addEventListener("scroll", onScroll, { passive: true });
+    return () => root.removeEventListener("scroll", onScroll);
+  }, []);
 
   const isOwner = viewerMode === "owner";
   const isHiring = (opportunities || []).some(o => o.status === "published");
@@ -4793,9 +4886,9 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
   return (
-    <div className="pcp-root" style={{ "--pcp-accent": profile.accentColor || "#7A66FF" }}>
+    <div ref={rootRef} className="pcp-root" style={{ "--pcp-accent": profile.accentColor || "#7A66FF" }}>
       {/* Top bar */}
-      <div className="pcp-topbar">
+      <div ref={topbarRef} className="pcp-topbar">
         <button className="btn btn-s btn-sm" onClick={onClose}><I n="arrow-left" s={12}/> {isOwner ? "Exit preview" : "Back"}</button>
         <div className="pcp-topbar-title">{profile.name}</div>
         <div className="pcp-topbar-actions">
@@ -4810,15 +4903,15 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
         </div>
       </div>
 
-      {/* Hero banner with floating identity card */}
+      {/* Hero banner with floating identity card (parallax on scroll) */}
       <div className="pcp-hero">
-        <div className="pcp-banner" style={{ backgroundImage: profile.banner ? `url(${profile.banner})` : `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}>
+        <div ref={bannerRef} className="pcp-banner" style={{ backgroundImage: profile.banner ? `url(${profile.banner})` : `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}>
           {isOwner && (
             <button className="pcp-edit-chip pcp-edit-chip-banner" onClick={() => setEditPane("banner")}><I n="edit" s={12}/> Edit banner</button>
           )}
         </div>
         <div className="pcp-id-card-anchor">
-          <div className="pcp-id-card">
+          <div ref={cardRef} className="pcp-id-card">
             <div className="pcp-id-card-logo">
               {profile.logo ? <img src={profile.logo} alt={profile.name}/> : <div className="pcp-logo-initials">{initials || "•"}</div>}
             </div>
@@ -4880,7 +4973,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
               ) : (
                 <div className="pcp-opps">
                   {(opportunities || []).filter(o => o.status === "published").map(o => (
-                    <div key={o.id} className="pcp-opp" onClick={() => onOpenOpportunity?.(o)}>
+                    <div key={o.id} className="pcp-opp" onClick={() => setApplicationOpp(o)}>
                       <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
                       <div className="pcp-opp-body">
                         <div className="pcp-opp-type">{(o.opportunityType || o.type || "Audition").replace(/_/g," ")}</div>
@@ -4890,7 +4983,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
                           {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
                         </div>
                       </div>
-                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); onOpenOpportunity?.(o); }}>{isOwner ? "View" : "Application form"}</button>
+                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); setApplicationOpp(o); }}>View</button>
                     </div>
                   ))}
                 </div>
@@ -4959,13 +5052,23 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
                     {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("artists")}><I n="edit" s={12}/> Edit</button>}
                   </div>
                   <div className="pcp-artists-grid">
-                    {(profile.artists || []).map(a => (
-                      <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
-                        <div className="pcp-artist-photo" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
-                        <div className="pcp-artist-name">{a.name}</div>
-                        <div className="pcp-artist-role">{a.role || a.speciality}</div>
-                      </div>
-                    ))}
+                    {(profile.artists || []).map(a => {
+                      const artistType = a.role || a.speciality || (a.styles && a.styles[0]) || "Artist";
+                      return (
+                        <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
+                          <div className="pcp-artist-img-wrap">
+                            <div className="pcp-artist-img" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
+                            <div className="pcp-artist-overlay">
+                              <div className="pcp-artist-name">{a.name}</div>
+                              <div className="pcp-artist-tags">
+                                <span>{artistType}</span>
+                                {a.location && <span>{a.location.split(",")[0]}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -5035,6 +5138,18 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
         document.body
       )}
 
+      {/* Application form popup */}
+      {applicationOpp && createPortal(
+        <ApplicationFormModal
+          opp={applicationOpp}
+          profile={profile}
+          isOwner={isOwner}
+          onClose={() => setApplicationOpp(null)}
+          showToast={showToast}
+        />,
+        document.body
+      )}
+
       {/* Mobile bottom action bar */}
       {!isOwner && (
         <div className="pcp-bottom-bar">
@@ -5060,6 +5175,115 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
 }
 
 /* Right-anchored edit pane — same idiom as FilterPanel. */
+/* Application form popup — shown when an artist clicks an opportunity card on
+   the public profile. Centered modal overlay; doesn't redirect away from the
+   profile context. Owners see the same modal in preview mode. */
+function ApplicationFormModal({ opp, profile, isOwner, onClose, showToast }) {
+  const [form, setForm] = useState({ name: "", email: "", motivation: "", video: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const submit = () => {
+    if (!form.name || !form.email) { showToast?.("Please fill in your name and email."); return; }
+    setSubmitted(true);
+  };
+
+  const formatLabel = (k) => (k || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const meta = [
+    opp.deadline && { label: "Deadline", value: opp.deadline, accent: true },
+    opp.location && { label: "Location", value: opp.location },
+    opp.format && { label: "Format", value: opp.format === "in_person" ? "In Person" : opp.format === "online" ? "Online" : opp.format === "self_tape" ? "Self-tape" : formatLabel(opp.format) },
+    opp.opportunityType && { label: "Type", value: formatLabel(opp.opportunityType) },
+    (opp.roles || opp.artistType) && { label: "Roles", value: Array.isArray(opp.roles) ? opp.roles.join(", ") : (opp.roles || opp.artistType) },
+    opp.castingDate && { label: "Casting", value: opp.castingDate },
+    opp.rehearsalDates && { label: "Rehearsals", value: opp.rehearsalDates },
+    opp.shootingDates && { label: "Period", value: opp.shootingDates },
+    opp.whenIs && !opp.shootingDates && { label: "When", value: opp.whenIs },
+  ].filter(Boolean);
+
+  return (
+    <div className="overlay app-form-overlay" onClick={onClose}>
+      <div className="share-modal app-form-modal" onClick={e => e.stopPropagation()}>
+        <button className="app-form-close" onClick={onClose} aria-label="Close"><I n="x" s={18}/></button>
+        {(opp.coverImage || opp.banner) ? (
+          <div className="app-form-banner" style={{ backgroundImage: `url(${opp.coverImage || opp.banner})` }}>
+            <div className="app-form-banner-grad"/>
+          </div>
+        ) : (
+          <div className="app-form-banner app-form-banner-grad-only" style={{ background: `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}/>
+        )}
+
+        <div className="app-form-body">
+          <div className="app-form-head">
+            <div className="app-form-type">{formatLabel(opp.opportunityType || opp.type || "Audition")}</div>
+            <h2 className="app-form-title">{opp.title}</h2>
+            <div className="app-form-company">
+              <div className="app-form-company-mark">{(profile.name.split(/\s+/).slice(0,2).map(w=>w[0]).join("") || "•").toUpperCase()}</div>
+              <span>{profile.name}</span>
+              {profile.verified && <span className="pcp-verified" style={{width:14,height:14}}><I n="check" s={9}/></span>}
+            </div>
+          </div>
+
+          {opp.description && <p className="app-form-desc">{opp.description}</p>}
+
+          {meta.length > 0 && (
+            <div className="app-form-meta">
+              {meta.map((m, i) => (
+                <div key={i} className="app-form-meta-i">
+                  <div className="app-form-meta-l">{m.label}</div>
+                  <div className={`app-form-meta-v${m.accent ? " accent" : ""}`}>{m.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {opp.offer && (
+            <div className="app-form-offer">
+              <div className="app-form-meta-l">Offer</div>
+              <div>{opp.offer}</div>
+            </div>
+          )}
+
+          {isOwner ? (
+            <div className="app-form-preview-tag">
+              <I n="eye" s={12}/> Preview — this is what artists see when applying.
+            </div>
+          ) : submitted ? (
+            <div className="app-form-success">
+              <div className="app-form-success-icon"><I n="check" s={22}/></div>
+              <h3>Application submitted</h3>
+              <p>Thanks for applying to {opp.title}. {profile.name} will review your application and get back to you.</p>
+              <button className="btn btn-s btn-sm" onClick={onClose}>Close</button>
+            </div>
+          ) : (
+            <div className="app-form-form">
+              <div className="app-form-form-head">
+                <h3>Apply now</h3>
+                <p>Submit your application directly. We'll match it to your Lanced profile if you have one.</p>
+              </div>
+              <div className="afm-grid">
+                <div className="field"><label>Full name</label><input placeholder="Your name" value={form.name} onChange={e => setForm(p => ({...p, name:e.target.value}))}/></div>
+                <div className="field"><label>Email</label><input placeholder="your@email.com" type="email" value={form.email} onChange={e => setForm(p => ({...p, email:e.target.value}))}/></div>
+                <div className="field afm-full"><label>Motivation</label><textarea placeholder="Tell them why you're a great fit…" value={form.motivation} onChange={e => setForm(p => ({...p, motivation:e.target.value}))} style={{minHeight:120}}/></div>
+                <div className="field afm-full"><label>Showreel / Video link (optional)</label><input placeholder="https://vimeo.com/…" value={form.video} onChange={e => setForm(p => ({...p, video:e.target.value}))}/></div>
+              </div>
+              <div className="app-form-actions">
+                <button className="btn btn-s btn-sm" onClick={onClose}>Cancel</button>
+                <button className="btn btn-p" onClick={submit}><I n="send" s={12}/> Submit application</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* Full-screen lightbox for the Discover gallery: shows a single photo or
    video tile with prev/next arrows, caption, and basic metadata. */
 function MediaLightbox({ items = [], index = 0, onIndex, onClose }) {
@@ -6228,7 +6452,7 @@ export default function AgencyShell() {
     const overrides = companyProfileEdits[publicCompany] || {};
     const profile = { ...baseProfile, ...overrides };
     const profileOpps = publicCompany === "self"
-      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, _roomId:r.id }))
+      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, description:r.description, format:r.format, roles:r.roles, castingDate:r.castingDate, rehearsalDates:r.rehearsalDates, shootingDates:r.shootingDates, offer:r.offer, _roomId:r.id }))
       : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
     return (
       <>
@@ -6239,10 +6463,6 @@ export default function AgencyShell() {
           opportunities={profileOpps}
           onClose={() => setPublicCompany(null)}
           onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
-          onOpenOpportunity={(opp) => {
-            if (opp._roomId) { setPublicCasting(opp._roomId); }
-            else { showToast(`Application form for "${opp.title}" — connect via Lanced to apply.`); }
-          }}
           showToast={showToast}
         />
       </>
