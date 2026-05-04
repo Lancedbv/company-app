@@ -1461,7 +1461,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
   .pcp-lb-next{right:8px}
   .pcp-lb-close{width:34px;height:34px;top:14px;right:14px}
 }
-.pcp-rail{position:sticky;top:108px;align-self:start;height:fit-content}
+.pcp-rail{position:sticky;top:108px;align-self:start;height:fit-content;display:flex;flex-direction:column;gap:16px}
 .pcp-rail-card{background:var(--sf);border:1px solid var(--g2);border-radius:16px;padding:20px}
 .pcp-rail-section + .pcp-rail-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--g2)}
 .pcp-rail-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--g4);margin-bottom:12px}
@@ -5517,7 +5517,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           {!isOwner && (similarCompanies || []).length > 0 && (
             <div className="pcp-rail-card">
               <div className="pcp-rail-section">
-                <div className="pcp-rail-title">Similar companies</div>
+                <div className="pcp-rail-title">You might also like</div>
                 <div className="pcp-rail-similar">
                   {similarCompanies.map(c => (
                     <button key={c.id} className="pcp-similar-row" onClick={() => onOpenCompany?.(c.id)}>
