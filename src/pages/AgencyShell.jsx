@@ -8,7 +8,42 @@ import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 
 /* ━━━ MOCK DATA ━━━ */
-const MOCK_AGENCY = { name: "Theater Lanced", type: "Theater", email: "team@theaterlanced.com", logo: null, address: "12 Stage Lane, London, UK", website: "https://theaterlanced.com", instagram: "@theaterlanced", tiktok: "@theaterlanced" };
+const MOCK_AGENCY = {
+  name: "Theater Lanced",
+  type: "Theater",
+  email: "team@theaterlanced.com",
+  logo: null,
+  banner: "/demo/banners/pexels-mart-production-7319706.jpg",
+  accentColor: "#7A66FF",
+  tagline: "London's home for contemporary movement and bold theatre.",
+  founded: 2014,
+  about: "Theater Lanced is an internationally touring company that creates evening-length contemporary performance work. We commission new choreography from emerging and established voices, run a year-round ensemble of 12 artists, and host a six-week summer residency for movement artists in development.",
+  followerCount: 2420,
+  verified: true,
+  address: "12 Stage Lane, London, UK",
+  website: "https://theaterlanced.com",
+  instagram: "@theaterlanced",
+  tiktok: "@theaterlanced",
+  linkedin: "theater-lanced",
+  twitter: "@theaterlanced",
+  team: [
+    { name: "Mira Ostrowska", role: "Artistic Director", photo: "/demo/artists/lara-knoop.jpg" },
+    { name: "Daniel Frey", role: "Casting Director", photo: "/demo/artists/kevin-lao.jpg" },
+    { name: "Anya Petrov", role: "Producer", photo: "/demo/artists/melissa-nuys.jpg" },
+    { name: "Joel Asare", role: "Rehearsal Director", photo: "/demo/artists/rob-fischer.jpg" },
+  ],
+  media: [
+    { type:"photo", url:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", caption:"Spring season opening" },
+    { type:"photo", url:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", caption:"Summer residency 2025" },
+    { type:"photo", url:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", caption:"Studio rehearsal" },
+    { type:"photo", url:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg", caption:"Touring – Berlin" },
+    { type:"photo", url:"/demo/banners/shutterstock_1234830199.jpg", caption:"Costume fittings" },
+    { type:"photo", url:"/demo/banners/shutterstock_1505137721.jpg", caption:"Premiere night" },
+  ],
+  hideArtists: false,
+  hideTeam: false,
+  hideMedia: false,
+};
 
 const COMPANY_TYPES = ["Studio","Theater","Dance Company","Theater Company","Opera","Ballet Company","Performing Arts Company","Production Company","Casting Agency","Other"];
 
@@ -513,6 +548,82 @@ const MOCK_NETWORK_COMPANIES = [
   { id:"c5", name:"Pina Bausch Tanztheater", type:"Company", location:"Wuppertal, DE", lat:51.26, lng:7.17, logo:null, banner:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", styles:["Tanztheater"], openPositions:0 },
   { id:"c6", name:"Royal Ballet", type:"Company", location:"London, UK", lat:51.51, lng:-0.13, logo:null, banner:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg", styles:["Classical","Contemporary"], openPositions:2 },
 ];
+
+/* Builds a unified profile shape for the public profile page.
+   id === "self" → the logged-in agency's own profile (MOCK_AGENCY).
+   Otherwise → look up a company in MOCK_NETWORK_COMPANIES and pad the shape. */
+const getCompanyProfile = (id, mockAgency, allArtists = []) => {
+  if (!id) return null;
+  if (id === "self") {
+    const m = mockAgency;
+    return {
+      id: "self",
+      name: m.name,
+      type: m.type || "Company",
+      location: (m.address || "").split(",").slice(-2).join(",").trim() || m.address || "",
+      logo: m.logo,
+      banner: m.banner,
+      accentColor: m.accentColor || "#7A66FF",
+      tagline: m.tagline || "",
+      founded: m.founded,
+      about: m.about || "",
+      followerCount: m.followerCount || 0,
+      verified: !!m.verified,
+      website: m.website,
+      email: m.email,
+      instagram: m.instagram,
+      tiktok: m.tiktok,
+      linkedin: m.linkedin,
+      twitter: m.twitter,
+      styles: m.styles || ["Contemporary","Ballet","Devised"],
+      team: m.team || [],
+      artists: allArtists.slice(0, 8),
+      media: m.media || [],
+      openPositions: 0, // computed by caller from rooms
+      hideArtists: !!m.hideArtists,
+      hideTeam: !!m.hideTeam,
+      hideMedia: !!m.hideMedia,
+      isSelf: true,
+    };
+  }
+  const c = MOCK_NETWORK_COMPANIES.find(x => x.id === id);
+  if (!c) return null;
+  // Pad with reasonable defaults for the demo
+  const fakeAbout = `${c.name} is an internationally recognised ${c.type.toLowerCase()} based in ${c.location}, working across ${(c.styles || []).slice(0,2).join(" and ").toLowerCase() || "contemporary performance"}.`;
+  return {
+    id: c.id,
+    name: c.name,
+    type: c.type,
+    location: c.location,
+    logo: c.logo,
+    banner: c.banner,
+    accentColor: "#7A66FF",
+    tagline: "",
+    founded: 2008 + (c.id.charCodeAt(1) % 12),
+    about: fakeAbout,
+    followerCount: 800 + (c.id.charCodeAt(1) * 137 % 4000),
+    verified: true,
+    website: `https://${c.name.toLowerCase().replace(/[^a-z]/g,"")}.com`,
+    email: `info@${c.name.toLowerCase().replace(/[^a-z]/g,"")}.com`,
+    instagram: `@${c.name.toLowerCase().replace(/[^a-z]/g,"")}`,
+    tiktok: null, linkedin: null, twitter: null,
+    styles: c.styles || [],
+    team: [
+      { name: "Artistic Director", role: "Artistic Director", photo: "/demo/artists/4.jpg" },
+      { name: "Casting Director", role: "Casting", photo: "/demo/artists/5.jpg" },
+    ],
+    artists: allArtists.slice(0, 6),
+    media: [
+      { type:"photo", url:c.banner, caption:"" },
+      { type:"photo", url:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", caption:"" },
+      { type:"photo", url:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", caption:"" },
+      { type:"photo", url:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", caption:"" },
+    ],
+    openPositions: c.openPositions || 0,
+    hideArtists: false, hideTeam: false, hideMedia: false,
+    isSelf: false,
+  };
+};
 
 /* ━━━ OPEN BOARD + BOOSTS ━━━ */
 const MOCK_OPEN_BOARD_LISTINGS = [
@@ -1059,6 +1170,138 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .dark .ncc-hiring{background:rgba(20,20,30,.85);color:#5fffa7}
 .dark .ncc-logo-wrap{background:var(--sf)}
 @media (prefers-reduced-motion:reduce){.ncc-pulse::after{animation:none}}
+
+/* ━━━ Public Company Profile ━━━ */
+.pcp-root{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:100;animation:fadeIn .25s ease}
+.pcp-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 24px;background:rgba(255,255,255,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border)}
+.dark .pcp-topbar{background:rgba(20,20,30,.7)}
+.pcp-topbar-title{flex:1;font-size:14px;font-weight:600;color:var(--tx);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcp-topbar-actions{display:flex;gap:8px}
+.pcp-hero{position:relative;background:var(--bg)}
+.pcp-banner{position:relative;width:100%;aspect-ratio:16/5;background-size:cover;background-position:center;background-color:var(--g1)}
+.pcp-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.15) 100%)}
+.pcp-edit-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-family:var(--sans);font-size:11px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
+.pcp-edit-chip:hover{border-color:var(--pcp-accent,var(--ac));color:var(--pcp-accent,var(--ac))}
+.pcp-edit-chip-banner{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:1;color:var(--tx);border-color:rgba(255,255,255,.5)}
+.pcp-id-strip{display:flex;align-items:flex-end;gap:18px;max-width:1280px;margin:0 auto;padding:0 32px 24px;position:relative;margin-top:-46px}
+.pcp-logo{width:96px;height:96px;border-radius:24px;background:var(--sf);padding:5px;box-shadow:0 4px 16px rgba(0,0,0,.1);flex-shrink:0;position:relative;z-index:1}
+.pcp-logo img{width:100%;height:100%;border-radius:20px;object-fit:cover;display:block}
+.pcp-logo-initials{width:100%;height:100%;border-radius:20px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:600;letter-spacing:-1px}
+.pcp-id-info{flex:1;min-width:0;padding-bottom:6px}
+.pcp-name-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.pcp-name{font-size:24px;font-weight:600;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin:0}
+.pcp-verified{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ac);color:#fff}
+.pcp-meta{font-size:13px;color:var(--g5);line-height:1.4}
+.pcp-meta-type{color:var(--tx);font-weight:500}
+.pcp-tagline{margin-top:6px;font-size:14px;color:var(--g5);line-height:1.45;max-width:640px}
+.pcp-id-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pcp-hiring-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 10px;border:none;border-radius:40px;background:rgba(29,185,84,.12);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.pcp-hiring-pill:hover{background:rgba(29,185,84,.2)}
+.pcp-id-actions{display:flex;gap:8px;flex-shrink:0;padding-bottom:6px}
+.pcp-subnav{position:sticky;top:56px;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--g2)}
+.dark .pcp-subnav{background:rgba(20,20,30,.78)}
+.pcp-subnav-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.pcp-subnav-inner::-webkit-scrollbar{display:none}
+.pcp-subnav-btn{padding:14px 16px;border:none;background:none;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--g5);cursor:pointer;position:relative;white-space:nowrap;transition:color .15s}
+.pcp-subnav-btn:hover{color:var(--tx)}
+.pcp-subnav-btn.active{color:var(--pcp-accent,var(--ac));font-weight:600}
+.pcp-subnav-btn.active::after{content:"";position:absolute;bottom:0;left:16px;right:16px;height:2px;background:var(--pcp-accent,var(--ac));border-radius:2px 2px 0 0}
+.pcp-stats{max-width:1280px;margin:0 auto;padding:24px 32px;display:flex;gap:48px;border-bottom:1px solid var(--g2);flex-wrap:wrap}
+.pcp-stat{display:flex;flex-direction:column;gap:2px}
+.pcp-stat-v{font-size:22px;font-weight:600;color:var(--tx);font-family:var(--sans);letter-spacing:-.02em;line-height:1.1}
+.pcp-stat-l{font-size:11px;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.pcp-grid{max-width:1280px;margin:0 auto;padding:32px;display:grid;grid-template-columns:1fr 320px;gap:48px}
+.pcp-main{min-width:0;display:flex;flex-direction:column;gap:48px}
+.pcp-section{scroll-margin-top:120px}
+.pcp-section-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--g2)}
+.pcp-section-header h2{font-size:18px;font-weight:600;color:var(--tx);letter-spacing:-.01em;line-height:1.2;margin:0}
+.pcp-section-sub{font-size:12px;color:var(--g4);margin-top:3px}
+.pcp-section-count{font-size:13px;color:var(--g4);font-weight:500;font-family:var(--mono);background:var(--g1);padding:2px 10px;border-radius:40px}
+.pcp-about p{font-size:14px;color:var(--tx);line-height:1.65;margin:0 0 16px;max-width:720px;white-space:pre-wrap}
+.pcp-quick-facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pcp-qf{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-size:12px;color:var(--g5);text-decoration:none;transition:all .15s}
+.pcp-qf:hover{border-color:var(--pcp-accent,var(--ac));color:var(--pcp-accent,var(--ac))}
+.pcp-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;color:var(--g4);font-size:13px;border:1px dashed var(--g2);border-radius:16px;text-align:center}
+.pcp-opps{display:flex;flex-direction:column;gap:10px}
+.pcp-opp{display:flex;align-items:center;gap:14px;padding:12px;background:var(--sf);border:1px solid var(--g2);border-radius:14px;cursor:pointer;transition:all .15s}
+.pcp-opp:hover{border-color:rgba(96,77,255,.3);transform:translateY(-1px);box-shadow:0 4px 14px rgba(96,77,255,.06)}
+.pcp-opp-thumb{width:72px;height:72px;border-radius:10px;background-size:cover;background-position:center;flex-shrink:0;background-color:var(--g1)}
+.pcp-opp-body{flex:1;min-width:0}
+.pcp-opp-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--pcp-accent,var(--ac))}
+.pcp-opp-title{font-size:14px;font-weight:600;color:var(--tx);margin-top:3px;line-height:1.3}
+.pcp-opp-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--g4);margin-top:6px}
+.pcp-opp-meta span{display:inline-flex;align-items:center;gap:3px}
+.pcp-opp-cta{flex-shrink:0}
+.pcp-rail-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.pcp-rail-scroll::-webkit-scrollbar{height:6px}
+.pcp-rail-scroll::-webkit-scrollbar-thumb{background:var(--g2);border-radius:3px}
+.pcp-artist{flex:0 0 150px;cursor:pointer;transition:transform .15s}
+.pcp-artist:hover{transform:translateY(-2px)}
+.pcp-artist-photo{width:100%;aspect-ratio:3/4;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);margin-bottom:8px}
+.pcp-artist-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25}
+.pcp-artist-role{font-size:11px;color:var(--g4);margin-top:2px;line-height:1.3}
+.pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.pcp-team-member{text-align:center}
+.pcp-team-avatar{width:84px;height:84px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 10px;background-color:var(--g1)}
+.pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25}
+.pcp-team-role{font-size:11px;color:var(--g4);margin-top:2px}
+.pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pcp-media-tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--g1);transition:transform .15s}
+.pcp-media-tile:hover{transform:scale(1.02)}
+.pcp-media-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.pcp-media-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3}
+.pcp-rail{position:sticky;top:108px;align-self:start;height:fit-content}
+.pcp-rail-card{background:var(--sf);border:1px solid var(--g2);border-radius:16px;padding:20px}
+.pcp-rail-section + .pcp-rail-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--g2)}
+.pcp-rail-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--g4);margin-bottom:12px}
+.pcp-rail-empty{font-size:12px;color:var(--g4)}
+.pcp-rail-opp{padding:10px 12px;border:1px solid var(--g2);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.pcp-rail-opp:hover{border-color:var(--pcp-accent,var(--ac));background:rgba(96,77,255,.04)}
+.pcp-rail-opp-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.3}
+.pcp-rail-opp-meta{font-size:10px;color:var(--g4);margin-top:3px}
+.pcp-rail-links{display:flex;flex-direction:column;gap:4px}
+.pcp-rail-links a{display:inline-flex;align-items:center;gap:8px;padding:7px 8px;font-size:12px;color:var(--g5);text-decoration:none;border-radius:8px;transition:all .15s}
+.pcp-rail-links a:hover{background:var(--g1);color:var(--pcp-accent,var(--ac))}
+.pcp-bottom-bar{display:none}
+@media (max-width:980px){
+  .pcp-grid{grid-template-columns:1fr}
+  .pcp-rail{display:none}
+  .pcp-stats{padding:18px 20px;gap:32px}
+  .pcp-id-strip{padding:0 20px 20px;gap:14px;margin-top:-38px}
+  .pcp-logo{width:78px;height:78px;border-radius:20px}
+  .pcp-name{font-size:20px}
+  .pcp-team{grid-template-columns:repeat(3,1fr)}
+  .pcp-media-grid{grid-template-columns:repeat(3,1fr)}
+  .pcp-grid{padding:20px}
+  .pcp-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--g2);z-index:25}
+  .dark .pcp-bottom-bar{background:rgba(20,20,30,.85)}
+  .pcp-bottom-info{font-size:12px;color:var(--tx);font-weight:500;display:inline-flex;align-items:center;gap:8px}
+}
+@media (max-width:560px){
+  .pcp-team{grid-template-columns:repeat(2,1fr)}
+  .pcp-media-grid{grid-template-columns:repeat(2,1fr)}
+  .pcp-id-actions{display:none}
+  .pcp-topbar{padding:10px 14px}
+  .pcp-topbar-title{display:none}
+}
+.pcp-edit-banner-preview{width:100%;aspect-ratio:16/5;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);border:1px solid var(--g2)}
+.pcp-dropzone{border:2px dashed var(--g2);border-radius:12px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--g4);cursor:pointer;transition:all .15s}
+.pcp-dropzone:hover{border-color:var(--ac);color:var(--ac);background:rgba(96,77,255,.03)}
+.pcp-dropzone-t{font-size:13px;font-weight:600;color:var(--tx);margin-top:4px}
+.pcp-dropzone-s{font-size:11px;color:var(--g4)}
+.pcp-pending{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--g2);border-radius:10px;margin-top:12px}
+.pcp-pending-thumb{width:48px;height:48px;border-radius:8px;background:var(--g1);background-size:cover;background-position:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--g4)}
+.pcp-pending-name{font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px}
+.pcp-pending-caption{width:100%;font-size:12px;padding:6px 10px;border:1px solid var(--g2);border-radius:8px;background:var(--sf);color:var(--tx)}
+.pcp-pending-x{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--g4);cursor:pointer;border-radius:6px;flex-shrink:0}
+.pcp-pending-x:hover{background:var(--g1);color:var(--red)}
+.pcp-media-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.pcp-media-row{display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px}
+.pcp-media-row:hover{background:var(--g1)}
+.pcp-media-row-thumb{width:40px;height:40px;border-radius:6px;background-size:cover;background-position:center;flex-shrink:0}
+.pcp-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx)}
+.pcp-toggle input{margin:0}
+
 /* Aria — AI casting assistant */
 .aria-page{max-width:780px;margin:0 auto;padding:32px 16px 80px;animation:fadeIn .3s ease;position:relative;z-index:1}
 .aria-bg{position:fixed;top:0;left:var(--sb-w);right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -4487,6 +4730,482 @@ function downloadQR(containerSelector, filename) {
   URL.revokeObjectURL(url);
 }
 
+/* ━━━ Public Company Profile ━━━
+   Full-screen overlay shown when viewing a company's public profile.
+   Used for both the agency's own preview ("self") and any company in the network. */
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, showToast }) {
+  const [activeSection, setActiveSection] = useState("about");
+  const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
+  const [followed, setFollowed] = useState(false);
+  const sectionRefs = useRef({});
+  const subnavRef = useRef(null);
+
+  const isOwner = viewerMode === "owner";
+  const isHiring = (opportunities || []).some(o => o.status === "published");
+  const openCount = (opportunities || []).filter(o => o.status === "published").length;
+  const hasArtists = !profile.hideArtists && (profile.artists || []).length > 0;
+  const hasTeam = !profile.hideTeam && (profile.team || []).length > 0;
+  const hasMedia = !profile.hideMedia && (profile.media || []).length > 0;
+
+  const sections = useMemo(() => [
+    { id:"about", label:"About" },
+    { id:"opportunities", label:"Opportunities" },
+    ...(hasArtists ? [{ id:"artists", label:"Artists" }] : []),
+    ...(hasTeam ? [{ id:"team", label:"Team" }] : []),
+    ...(hasMedia ? [{ id:"media", label:"Media" }] : []),
+  ], [hasArtists, hasTeam, hasMedia]);
+
+  // Active section via scroll position
+  useEffect(() => {
+    const obs = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible[0]) setActiveSection(visible[0].target.id);
+    }, { rootMargin: "-30% 0px -55% 0px", threshold: [0, .25, .5, .75, 1] });
+    sections.forEach(s => { const el = sectionRefs.current[s.id]; if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  }, [sections]);
+
+  const scrollTo = (id) => {
+    const el = sectionRefs.current[id];
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  const initials = profile.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+  return (
+    <div className="pcp-root" style={{ "--pcp-accent": profile.accentColor || "#7A66FF" }}>
+      {/* Top bar */}
+      <div className="pcp-topbar">
+        <button className="btn btn-s btn-sm" onClick={onClose}><I n="arrow-left" s={12}/> {isOwner ? "Exit preview" : "Back"}</button>
+        <div className="pcp-topbar-title">{profile.name}</div>
+        <div className="pcp-topbar-actions">
+          {!isOwner && <button className="btn btn-s btn-sm" onClick={() => showToast?.("Link copied to clipboard")}><I n="share" s={12}/> Share</button>}
+          {isOwner ? (
+            <button className="btn btn-p btn-sm" onClick={() => setEditPane("settings")}><I n="settings" s={12}/> Edit profile</button>
+          ) : (
+            <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => { setFollowed(f=>!f); showToast?.(followed ? `Unfollowed ${profile.name}` : `Following ${profile.name}`); }}>
+              {followed ? <><I n="check" s={12}/> Following</> : <><I n="plus" s={12}/> Follow{isHiring ? " for alerts" : ""}</>}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Hero banner */}
+      <div className="pcp-hero">
+        <div className="pcp-banner" style={{ backgroundImage: profile.banner ? `url(${profile.banner})` : `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}>
+          {isOwner && (
+            <button className="pcp-edit-chip pcp-edit-chip-banner" onClick={() => setEditPane("banner")}><I n="edit" s={12}/> Edit banner</button>
+          )}
+        </div>
+        <div className="pcp-id-strip">
+          <div className="pcp-logo">
+            {profile.logo ? <img src={profile.logo} alt={profile.name}/> : <div className="pcp-logo-initials">{initials || "•"}</div>}
+          </div>
+          <div className="pcp-id-info">
+            <div className="pcp-name-row">
+              <h1 className="pcp-name">{profile.name}</h1>
+              {profile.verified && <span className="pcp-verified" title="Verified"><I n="check" s={11}/></span>}
+            </div>
+            <div className="pcp-meta">
+              <span className="pcp-meta-type">{profile.type}</span>
+              {profile.location && <span> · {profile.location}</span>}
+              {profile.followerCount > 0 && <span> · {profile.followerCount.toLocaleString()} followers</span>}
+            </div>
+            {profile.tagline && <div className="pcp-tagline">{profile.tagline}</div>}
+            <div className="pcp-id-row">
+              {isHiring && (
+                <button className="pcp-hiring-pill" onClick={() => scrollTo("opportunities")}>
+                  <span className="ncc-pulse"/>Hiring · {openCount} open {openCount === 1 ? "role" : "roles"}
+                </button>
+              )}
+            </div>
+          </div>
+          {!isOwner && (
+            <div className="pcp-id-actions">
+              <button className="btn btn-s btn-sm" onClick={() => showToast?.(`Message sent to ${profile.name}`)}><I n="chat" s={12}/> Message</button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sticky sub-nav */}
+      <nav className="pcp-subnav" ref={subnavRef}>
+        <div className="pcp-subnav-inner">
+          {sections.map(s => (
+            <button key={s.id} className={`pcp-subnav-btn${activeSection === s.id ? " active" : ""}`} onClick={() => scrollTo(s.id)}>{s.label}</button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Stat strip */}
+      <div className="pcp-stats">
+        <div className="pcp-stat">
+          <div className="pcp-stat-v">{openCount}</div>
+          <div className="pcp-stat-l">Open {openCount === 1 ? "role" : "roles"}</div>
+        </div>
+        {hasArtists && (
+          <div className="pcp-stat">
+            <div className="pcp-stat-v">{(profile.artists || []).length}</div>
+            <div className="pcp-stat-l">{profile.type === "Casting Agency" || profile.type === "Talent Agency" ? "Artists represented" : "In ensemble"}</div>
+          </div>
+        )}
+        {profile.founded && (
+          <div className="pcp-stat">
+            <div className="pcp-stat-v">{profile.founded}</div>
+            <div className="pcp-stat-l">Founded</div>
+          </div>
+        )}
+        <div className="pcp-stat">
+          <div className="pcp-stat-v">{(profile.followerCount || 0).toLocaleString()}</div>
+          <div className="pcp-stat-l">Followers</div>
+        </div>
+      </div>
+
+      {/* Two-column grid: main + right rail */}
+      <div className="pcp-grid">
+        <main className="pcp-main">
+
+          {/* About */}
+          <section id="about" ref={el => sectionRefs.current.about = el} className="pcp-section">
+            <div className="pcp-section-header">
+              <h2>About</h2>
+              {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("about")}><I n="edit" s={12}/> Edit</button>}
+            </div>
+            <div className="pcp-about">
+              <p>{profile.about || (isOwner ? "Add a short description of your company." : "")}</p>
+              <div className="pcp-quick-facts">
+                {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="pcp-qf"><I n="globe" s={12}/> Website</a>}
+                {profile.email && <a href={`mailto:${profile.email}`} className="pcp-qf"><I n="email" s={12}/> {profile.email}</a>}
+                {profile.instagram && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="instagram" s={12}/> {profile.instagram}</a>}
+                {profile.tiktok && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="tiktok" s={12}/> {profile.tiktok}</a>}
+                {profile.linkedin && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="link" s={12}/> LinkedIn</a>}
+              </div>
+            </div>
+          </section>
+
+          {/* Opportunities */}
+          <section id="opportunities" ref={el => sectionRefs.current.opportunities = el} className="pcp-section">
+            <div className="pcp-section-header">
+              <h2>Open opportunities</h2>
+              <span className="pcp-section-count">{openCount}</span>
+            </div>
+            {openCount === 0 ? (
+              <div className="pcp-empty">
+                <I n="inbox" s={24}/>
+                <div>No open opportunities right now.</div>
+                {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
+              </div>
+            ) : (
+              <div className="pcp-opps">
+                {(opportunities || []).filter(o => o.status === "published").map(o => (
+                  <div key={o.id} className="pcp-opp" onClick={() => showToast?.(`Opening ${o.title}`)}>
+                    <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
+                    <div className="pcp-opp-body">
+                      <div className="pcp-opp-type">{o.opportunityType || o.type || "Audition"}</div>
+                      <div className="pcp-opp-title">{o.title}</div>
+                      <div className="pcp-opp-meta">
+                        {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
+                        {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
+                      </div>
+                    </div>
+                    <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); showToast?.("Apply flow coming soon."); }}>{isOwner ? "View" : "Apply"}</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Artists */}
+          {hasArtists && (
+            <section id="artists" ref={el => sectionRefs.current.artists = el} className="pcp-section">
+              <div className="pcp-section-header">
+                <div>
+                  <h2>Artists</h2>
+                  <div className="pcp-section-sub">{profile.type === "Casting Agency" || profile.type === "Talent Agency" ? "Currently represented" : "Currently in our ensemble"}</div>
+                </div>
+                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("artists")}><I n="edit" s={12}/> Edit</button>}
+              </div>
+              <div className="pcp-rail-scroll">
+                {(profile.artists || []).map(a => (
+                  <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
+                    <div className="pcp-artist-photo" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
+                    <div className="pcp-artist-name">{a.name}</div>
+                    <div className="pcp-artist-role">{a.role || a.speciality}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Team */}
+          {hasTeam && (
+            <section id="team" ref={el => sectionRefs.current.team = el} className="pcp-section">
+              <div className="pcp-section-header">
+                <h2>Team</h2>
+                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
+              </div>
+              <div className="pcp-team">
+                {(profile.team || []).map((t, i) => (
+                  <div key={i} className="pcp-team-member">
+                    <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
+                    <div className="pcp-team-name">{t.name}</div>
+                    <div className="pcp-team-role">{t.role}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Media */}
+          {hasMedia && (
+            <section id="media" ref={el => sectionRefs.current.media = el} className="pcp-section">
+              <div className="pcp-section-header">
+                <h2>Media</h2>
+                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("media-add")}><I n="plus" s={12}/> Add</button>}
+              </div>
+              <div className="pcp-media-grid">
+                {(profile.media || []).map((m, i) => (
+                  <div key={i} className="pcp-media-tile" onClick={() => showToast?.("Lightbox coming soon")}>
+                    <img src={m.url} alt={m.caption || ""}/>
+                    {m.caption && <div className="pcp-media-caption">{m.caption}</div>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+        </main>
+
+        {/* Right rail (desktop) */}
+        <aside className="pcp-rail">
+          <div className="pcp-rail-card">
+            <div className="pcp-rail-section">
+              <div className="pcp-rail-title">Open roles</div>
+              {openCount === 0 ? (
+                <div className="pcp-rail-empty">No open roles right now.</div>
+              ) : (
+                (opportunities || []).filter(o => o.status === "published").slice(0,4).map(o => (
+                  <div key={o.id} className="pcp-rail-opp" onClick={() => scrollTo("opportunities")}>
+                    <div className="pcp-rail-opp-title">{o.title}</div>
+                    <div className="pcp-rail-opp-meta">{o.opportunityType || "Audition"}{o.deadline ? ` · ${o.deadline}` : ""}</div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="pcp-rail-section">
+              <div className="pcp-rail-title">Quick links</div>
+              <div className="pcp-rail-links">
+                {profile.website && <a href={profile.website} target="_blank" rel="noreferrer"><I n="globe" s={13}/> Website</a>}
+                {profile.email && <a href={`mailto:${profile.email}`}><I n="email" s={13}/> Email</a>}
+                {profile.instagram && <a href="#" onClick={e=>e.preventDefault()}><I n="instagram" s={13}/> Instagram</a>}
+                {profile.tiktok && <a href="#" onClick={e=>e.preventDefault()}><I n="tiktok" s={13}/> TikTok</a>}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Mobile bottom action bar */}
+      {!isOwner && (
+        <div className="pcp-bottom-bar">
+          <div className="pcp-bottom-info">
+            {isHiring ? <><span className="ncc-pulse"/>{openCount} open {openCount === 1 ? "role" : "roles"}</> : "Follow for alerts"}
+          </div>
+          <button className={`btn ${followed ? "btn-s" : "btn-p"} btn-sm`} onClick={() => setFollowed(f=>!f)}>{followed ? "Following" : "Follow"}</button>
+        </div>
+      )}
+
+      {/* Edit pane */}
+      {isOwner && editPane && (
+        <PublicCompanyEditPane
+          type={editPane}
+          profile={profile}
+          onClose={() => setEditPane(null)}
+          onUpdate={onUpdate}
+          showToast={showToast}
+        />
+      )}
+    </div>
+  );
+}
+
+/* Right-anchored edit pane — same idiom as FilterPanel. */
+function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) {
+  const [draft, setDraft] = useState(() => ({ ...profile }));
+  const [pendingFile, setPendingFile] = useState(null);
+  const [pendingCaption, setPendingCaption] = useState("");
+  const fileRef = useRef(null);
+
+  const titles = {
+    banner: "Edit banner",
+    about: "Edit About",
+    "media-add": "Add to Media",
+    team: "Edit Team",
+    artists: "Edit Artists section",
+    settings: "Edit profile",
+  };
+
+  const save = () => {
+    onUpdate?.(draft);
+    showToast?.("Profile updated");
+    onClose();
+  };
+
+  const handleFile = (file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPendingFile({ name: file.name, url, type: file.type.startsWith("video") ? "video" : "photo" });
+  };
+
+  const addPendingToMedia = () => {
+    if (!pendingFile) return;
+    const next = { ...draft, media: [{ type: pendingFile.type, url: pendingFile.url, caption: pendingCaption }, ...(draft.media || [])] };
+    onUpdate?.(next);
+    setDraft(next);
+    setPendingFile(null);
+    setPendingCaption("");
+    showToast?.("Added to Media");
+    onClose();
+  };
+
+  const removeMedia = (idx) => {
+    const next = { ...draft, media: (draft.media || []).filter((_,i) => i !== idx) };
+    setDraft(next);
+    onUpdate?.(next);
+  };
+
+  return createPortal(
+    <>
+      <div className="filter-side-backdrop" onClick={onClose}/>
+      <aside className="filter-side-panel" onClick={e => e.stopPropagation()}>
+        <div className="fsp-header">
+          <div><h2>{titles[type] || "Edit"}</h2></div>
+          <button className="fsp-close" onClick={onClose} aria-label="Close"><I n="x" s={18}/></button>
+        </div>
+        <div className="fsp-body">
+          {type === "banner" && (
+            <div className="afm-section">
+              <h3>Hero banner</h3>
+              <div className="pcp-edit-banner-preview" style={{ backgroundImage: draft.banner ? `url(${draft.banner})` : `linear-gradient(135deg, ${draft.accentColor}, #4A35E0)` }}/>
+              <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e => { const f = e.target.files?.[0]; if (f) { const url = URL.createObjectURL(f); setDraft(d => ({...d, banner:url})); }}}/>
+              <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+                <button className="btn btn-s btn-sm" onClick={() => fileRef.current?.click()}><I n="upload" s={12}/> Upload image</button>
+                {draft.banner && <button className="btn btn-s btn-sm" onClick={() => setDraft(d => ({...d, banner:null}))}>Use gradient</button>}
+              </div>
+              <p style={{fontSize:11,color:"var(--g4)",marginTop:8}}>Recommended: 1600×500. Falls back to your accent-color gradient if no image is uploaded.</p>
+            </div>
+          )}
+
+          {type === "about" && (
+            <>
+              <div className="afm-section">
+                <h3>Tagline</h3>
+                <div className="field afm-full"><input value={draft.tagline || ""} onChange={e => setDraft(d => ({...d, tagline:e.target.value}))} placeholder="One-line tagline shown under your name"/></div>
+              </div>
+              <div className="afm-section">
+                <h3>About</h3>
+                <div className="field afm-full"><textarea value={draft.about || ""} onChange={e => setDraft(d => ({...d, about:e.target.value}))} placeholder="A few short sentences about your company." style={{minHeight:160}}/></div>
+              </div>
+              <div className="afm-section">
+                <h3>Contact &amp; links</h3>
+                <div className="afm-grid">
+                  <div className="field afm-full"><label>Website</label><input value={draft.website || ""} onChange={e => setDraft(d => ({...d, website:e.target.value}))}/></div>
+                  <div className="field"><label>Email</label><input value={draft.email || ""} onChange={e => setDraft(d => ({...d, email:e.target.value}))}/></div>
+                  <div className="field"><label>Instagram</label><input value={draft.instagram || ""} onChange={e => setDraft(d => ({...d, instagram:e.target.value}))}/></div>
+                  <div className="field"><label>TikTok</label><input value={draft.tiktok || ""} onChange={e => setDraft(d => ({...d, tiktok:e.target.value}))}/></div>
+                  <div className="field"><label>LinkedIn</label><input value={draft.linkedin || ""} onChange={e => setDraft(d => ({...d, linkedin:e.target.value}))}/></div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {type === "media-add" && (
+            <div className="afm-section">
+              <h3>Upload</h3>
+              <input ref={fileRef} type="file" accept="image/*,video/*" style={{display:"none"}} onChange={e => handleFile(e.target.files?.[0])}/>
+              <div className="pcp-dropzone" onClick={() => fileRef.current?.click()}>
+                <I n="upload" s={20}/>
+                <div className="pcp-dropzone-t">Click to upload</div>
+                <div className="pcp-dropzone-s">PNG · JPG · MP4 · max 25 MB</div>
+              </div>
+              {pendingFile && (
+                <div className="pcp-pending">
+                  <div className="pcp-pending-thumb" style={{ backgroundImage: pendingFile.type === "photo" ? `url(${pendingFile.url})` : "none" }}>
+                    {pendingFile.type === "video" && <I n="play" s={20}/>}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="pcp-pending-name">{pendingFile.name}</div>
+                    <input className="pcp-pending-caption" placeholder="Caption (optional)" value={pendingCaption} onChange={e => setPendingCaption(e.target.value)}/>
+                  </div>
+                  <button className="pcp-pending-x" onClick={() => setPendingFile(null)} aria-label="Remove"><I n="x" s={14}/></button>
+                </div>
+              )}
+              {(draft.media || []).length > 0 && (
+                <>
+                  <h3 style={{marginTop:18}}>Current media</h3>
+                  <div className="pcp-media-list">
+                    {(draft.media || []).map((m,i) => (
+                      <div key={i} className="pcp-media-row">
+                        <div className="pcp-media-row-thumb" style={{ backgroundImage: `url(${m.url})` }}/>
+                        <div style={{flex:1,minWidth:0,fontSize:12,color:"var(--g4)"}}>{m.caption || "—"}</div>
+                        <button className="pcp-pending-x" onClick={() => removeMedia(i)} aria-label="Remove"><I n="trash" s={13}/></button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {type === "settings" && (
+            <>
+              <div className="afm-section">
+                <h3>Section visibility</h3>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideArtists} onChange={e => setDraft(d => ({...d, hideArtists:!e.target.checked}))}/><span>Show Artists section</span></label>
+                  <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideTeam} onChange={e => setDraft(d => ({...d, hideTeam:!e.target.checked}))}/><span>Show Team section</span></label>
+                  <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideMedia} onChange={e => setDraft(d => ({...d, hideMedia:!e.target.checked}))}/><span>Show Media section</span></label>
+                </div>
+              </div>
+              <div className="afm-section">
+                <h3>Branding</h3>
+                <div className="field afm-full">
+                  <label>Accent color</label>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {["#7A66FF","#FF6B9D","#FF9B6B","#6BD49B","#6BB4FF","#B96BFF","#FFB36B","#1A1A1E"].map(c => (
+                      <button key={c} type="button" onClick={() => setDraft(d => ({...d, accentColor:c}))} style={{width:28,height:28,borderRadius:"50%",background:c,border: draft.accentColor===c?"2px solid var(--tx)":"2px solid var(--g2)",cursor:"pointer"}}/>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {(type === "team" || type === "artists") && (
+            <div className="afm-section">
+              <h3>{type === "team" ? "Team members" : "Artists shown publicly"}</h3>
+              <p style={{fontSize:12,color:"var(--g4)"}}>{type === "team"
+                ? "Team management coming soon — for now, edit your team list in Settings → Profile."
+                : "Toggle each artist's visibility on the public profile. (Drag to reorder coming soon.)"}</p>
+            </div>
+          )}
+        </div>
+        <div className="fsp-actions">
+          <button className="btn-clear" onClick={onClose}>Cancel</button>
+          {type === "media-add" ? (
+            <button className="btn-apply" onClick={addPendingToMedia} disabled={!pendingFile}>Add to grid</button>
+          ) : (
+            <button className="btn-apply" onClick={save}>Save</button>
+          )}
+        </div>
+      </aside>
+    </>,
+    document.body
+  );
+}
+
 /* ━━━ Public apply page preview (used inside Marketing > Apply) ━━━ */
 function PublicCastingPreview({ room, roomMaterials = [] }) {
   if (!room) return null;
@@ -4649,6 +5368,8 @@ export default function AgencyShell() {
   // Showcase detail
   const [viewShowcase, setViewShowcase] = useState(null); // showcase id
   const [publicPreview, setPublicPreview] = useState(null);
+  const [publicCompany, setPublicCompany] = useState(null); // null | "self" | <companyId>
+  const [companyProfileEdits, setCompanyProfileEdits] = useState({}); // owner edits, keyed by id
   const [previewIsLive, setPreviewIsLive] = useState(false); // false = preview/draft mode, true = live published version
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [showShareModal, setShowShareModal] = useState(false);
@@ -5368,6 +6089,27 @@ export default function AgencyShell() {
       setChatMessages(p => [...p, {from:"agency",text:"Thanks for your message! We'll get back to you shortly.",time:"Just now"}]);
     }, 1500);
   };
+
+  // ── Public Company Profile overlay ──
+  if (publicCompany) {
+    const baseProfile = getCompanyProfile(publicCompany, MOCK_AGENCY, SEED_ARTISTS);
+    if (!baseProfile) { setPublicCompany(null); return null; }
+    const overrides = companyProfileEdits[publicCompany] || {};
+    const profile = { ...baseProfile, ...overrides };
+    const profileOpps = publicCompany === "self"
+      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage }))
+      : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
+    return (
+      <PublicCompanyProfile
+        profile={profile}
+        viewerMode={publicCompany === "self" ? "owner" : "artist"}
+        opportunities={profileOpps}
+        onClose={() => setPublicCompany(null)}
+        onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
+        showToast={showToast}
+      />
+    );
+  }
 
   // ── Public casting application page ──
   if (publicCasting) {
@@ -6329,7 +7071,7 @@ export default function AgencyShell() {
               </button>
             </div>
             <div className="sidebar-header">
-              <div className="sidebar-logo" style={{cursor:"pointer"}} onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}>
+              <div className="sidebar-logo" style={{cursor:"pointer"}} onClick={() => { if (sidebarCollapsed) { setSidebarCollapsed(false); return; } setPublicCompany("self"); }} title="View public profile">
                 {agencyProfile.logo ? (
                   <img src={agencyProfile.logo} alt="" className="sb-mark" style={{objectFit:"contain",borderRadius:8}}/>
                 ) : (
@@ -7370,7 +8112,7 @@ export default function AgencyShell() {
                 {networkView === "list" && (
                   <div className="app-list">
                     {filteredNetworkItems.map(item => (
-                      <div key={item.id} className="app-card" onClick={() => showToast(`${item.name} — Profile coming soon`)}>
+                      <div key={item.id} className="app-card" onClick={() => safeTab === "companies" ? setPublicCompany(item.id) : showToast(`${item.name} — Profile coming soon`)}>
                         <img className="ac-logo" src={item.photo || item.logo || initialsLogo(item.name)} alt="" />
                         <div className="ac-info">
                           <div className="ac-title">{item.name}</div>
@@ -7392,7 +8134,7 @@ export default function AgencyShell() {
                 {networkView === "cards" && (
                   <div className="network-cards">
                     {filteredNetworkItems.map(item => safeTab === "companies" ? (
-                      <div key={item.id} className="network-card network-card-co" onClick={() => showToast(`${item.name} — Profile coming soon`)}>
+                      <div key={item.id} className="network-card network-card-co" onClick={() => setPublicCompany(item.id)}>
                         <div className="ncc-banner" style={{ backgroundImage: item.banner ? `url(${item.banner})` : "linear-gradient(135deg,#7A66FF,#A294FF)" }}>
                           {item.openPositions > 0 && (
                             <span className="ncc-hiring"><span className="ncc-pulse"/>Active Hiring</span>
