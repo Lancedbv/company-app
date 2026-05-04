@@ -1270,6 +1270,44 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-opp-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--g4);margin-top:6px}
 .pcp-opp-meta span{display:inline-flex;align-items:center;gap:3px}
 .pcp-opp-cta{flex-shrink:0}
+/* List/calendar view toggle on the Jobs tab */
+.pcp-view-toggle{display:inline-flex;gap:2px;padding:2px;background:var(--g1);border-radius:8px}
+.pcp-view-toggle button{width:28px;height:26px;padding:0;border:none;background:transparent;color:var(--g5);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pcp-view-toggle button:hover{color:var(--tx)}
+.pcp-view-toggle button.on{background:var(--sf);color:var(--ac);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+/* Calendar */
+.pcp-cal{display:flex;flex-direction:column;gap:14px}
+.pcp-cal-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.pcp-cal-month{font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--tx)}
+.pcp-cal-nav{display:inline-flex;align-items:center;gap:4px;padding:3px;background:var(--g1);border-radius:10px}
+.pcp-cal-nav button{width:30px;height:28px;border:none;background:transparent;border-radius:7px;color:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:11.5px;font-weight:500}
+.pcp-cal-nav button:hover{background:var(--sf);color:var(--tx)}
+.pcp-cal-today{padding:0 12px!important;width:auto!important}
+.pcp-cal-legend{display:flex;gap:14px;font-size:11px;color:var(--g5)}
+.pcp-cal-legend span{display:inline-flex;align-items:center;gap:5px}
+.pcp-cal-dot{width:8px;height:8px;border-radius:50%}
+.pcp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--g2);border:1px solid var(--g2);border-radius:14px;overflow:hidden}
+.pcp-cal-dow{padding:10px 12px;background:var(--sf);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--g4);text-align:left}
+.pcp-cal-cell{background:var(--sf);min-height:96px;padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;position:relative}
+.pcp-cal-out{background:var(--g1)}
+.pcp-cal-out .pcp-cal-num{color:var(--g3)}
+.pcp-cal-num{font-size:11.5px;font-weight:600;color:var(--g5)}
+.pcp-cal-today-cell .pcp-cal-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ac);color:#fff;margin-bottom:2px}
+.pcp-cal-events{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0}
+.pcp-cal-event{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:4px 8px;background:var(--g1);border:none;border-left:3px solid var(--ac);border-radius:5px;font-family:var(--sans);text-align:left;cursor:pointer;transition:background .15s;min-width:0}
+.pcp-cal-event:hover{background:var(--g2)}
+.pcp-cal-event-label{font-size:9px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.04em}
+.pcp-cal-event-title{font-size:11px;font-weight:500;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+.pcp-cal-more{font-size:10px;color:var(--g4);padding:3px 8px;border-left:none;cursor:default}
+.pcp-cal-more:hover{background:var(--g1)}
+.pcp-cal-empty{padding:18px;text-align:center;font-size:12.5px;color:var(--g4)}
+@media (max-width:760px){
+  .pcp-cal-cell{min-height:72px;padding:6px 5px 5px}
+  .pcp-cal-event-title{display:none}
+  .pcp-cal-event{padding:3px 5px;border-radius:4px;border-left-width:3px}
+  .pcp-cal-event-label{font-size:9px}
+  .pcp-cal-dow{padding:8px 6px;font-size:9.5px}
+}
 /* Featured (pinned) opportunity hero card */
 .pcp-opp-feat{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;background:var(--sf);border:1px solid var(--g2);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s;margin-bottom:14px;box-shadow:0 4px 22px rgba(96,77,255,.06)}
 .pcp-opp-feat:hover{border-color:rgba(96,77,255,.28);transform:translateY(-2px);box-shadow:0 10px 32px rgba(96,77,255,.1)}
@@ -1318,11 +1356,15 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 @media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 /* Embed jobs modal */
-.embed-modal{max-width:920px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
-.embed-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;padding:24px 28px 28px;overflow-y:auto;flex:1}
-@media (max-width:760px){.embed-body{grid-template-columns:1fr;padding:18px}.embed-modal{border-radius:20px 20px 0 0;max-height:94vh}}
-.embed-preview{margin-right:18px;border-radius:14px;overflow:hidden;border:1px solid var(--g2);display:flex;flex-direction:column}
-@media (max-width:760px){.embed-preview{margin-right:0;margin-bottom:18px}}
+.embed-modal{max-width:1180px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;background:var(--sf);position:relative;box-shadow:0 20px 80px rgba(0,0,0,.32)}
+.embed-head{padding:32px 36px 0}
+.embed-head h2{margin:0 0 8px;font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--tx)}
+.embed-head p{margin:0;font-size:13.5px;color:var(--g5);line-height:1.6;max-width:680px}
+.embed-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;padding:28px 36px 36px;overflow-y:auto;flex:1}
+@media (max-width:880px){.embed-body{grid-template-columns:1fr;padding:22px;gap:24px}.embed-modal{border-radius:20px 20px 0 0;max-height:94vh}.embed-head{padding:24px 22px 0}}
+.embed-preview-wrap{display:flex;flex-direction:column;gap:10px}
+.embed-preview-caption{font-size:11px;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;font-weight:500;text-align:center}
+.embed-preview{border-radius:16px;overflow:hidden;border:1px solid var(--g2);display:flex;flex-direction:column;box-shadow:0 4px 18px rgba(0,0,0,.04)}
 .embed-preview-light{background:#FFFFFF;color:#1A1A1E}
 .embed-preview-dark{background:#0F0E16;color:#fff;border-color:rgba(255,255,255,.08)}
 .embed-preview-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid currentColor;border-bottom-color:var(--g2)}
@@ -1342,13 +1384,29 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .embed-preview-empty{padding:28px;text-align:center;font-size:12px;opacity:.5}
 .embed-preview-foot{font-size:10px;opacity:.4;text-align:center;padding:10px;border-top:1px solid var(--g2);font-weight:500}
 .embed-preview-dark .embed-preview-foot{border-top-color:rgba(255,255,255,.06)}
-.embed-config .embed-controls{display:grid;grid-template-columns:1fr;gap:14px}
-.embed-label{font-size:11px;font-weight:600;color:var(--g5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.embed-tabs{display:flex;gap:2px;background:var(--g1);padding:3px;border-radius:10px;margin-bottom:10px;width:fit-content}
-.embed-tab{padding:7px 14px;border:none;background:transparent;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
+.embed-config{display:flex;flex-direction:column}
+.embed-config .embed-controls{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:560px){.embed-config .embed-controls{grid-template-columns:1fr}}
+.embed-label{font-size:11px;font-weight:600;color:var(--g5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.embed-tabs{display:flex;gap:2px;background:var(--g1);padding:3px;border-radius:10px;margin-bottom:12px;width:fit-content}
+.embed-tab{padding:8px 16px;border:none;background:transparent;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
 .embed-tab.on{background:var(--sf);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.embed-snippet{margin:0;padding:14px;background:#0F0E16;color:#E6E5F0;border-radius:12px;font-family:var(--mono);font-size:11.5px;line-height:1.5;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-word;border:1px solid #1F1D2E}
+.embed-snippet{margin:0;padding:16px;background:#0F0E16;color:#E6E5F0;border-radius:12px;font-family:var(--mono);font-size:12px;line-height:1.55;overflow:auto;max-height:240px;white-space:pre-wrap;word-break:break-word;border:1px solid #1F1D2E}
 .embed-snippet code{font-family:inherit}
+.embed-copy-row{display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.embed-hint{font-size:11.5px;color:var(--g4);line-height:1.5}
+/* Single-opp preview card */
+.embed-preview-single{display:flex;flex-direction:column}
+.embed-preview-cover{position:relative;aspect-ratio:16/8;background-size:cover;background-position:center;background-color:var(--g1)}
+.embed-preview-cover-grad{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.32) 100%)}
+.embed-preview-cover-tag{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:40px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx);z-index:1}
+.embed-preview-card-body{padding:18px 18px 16px;display:flex;flex-direction:column;gap:6px}
+.embed-preview-card-title{font-size:16px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.embed-preview-card-company{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;opacity:.75;margin-top:2px}
+.embed-preview-card-meta{font-size:11.5px;opacity:.6;margin-top:4px;line-height:1.5}
+.embed-preview-card-meta span{margin-right:4px}
+.embed-preview-card-cta{margin-top:10px;border:none;color:#fff;font-family:var(--sans);font-size:12.5px;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;text-align:center}
+.embed-preview-dark .embed-preview-cover-tag{background:rgba(20,20,30,.82);color:#fff}
 
 /* News & updates */
 .pcp-news{display:flex;flex-direction:column;gap:14px}
@@ -1512,6 +1570,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .rav-cta{display:flex;flex-direction:column;align-items:center;padding-top:8px;border-top:1px solid var(--g2);margin-top:6px;padding-top:22px}
 .rav-apply{min-width:240px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .rav-preview-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(96,77,255,.08);border:1px solid rgba(96,77,255,.2);border-radius:40px;font-size:12px;color:var(--ac);font-weight:500}
+.rav-owner-actions{display:flex;flex-direction:column;align-items:center;gap:12px}
 /* Auth stage */
 .rav-auth{padding-top:8px;border-top:1px solid var(--g2);margin-top:6px;display:flex;flex-direction:column;gap:18px;animation:fadeIn .25s ease}
 .rav-back{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--g2);border-radius:40px;background:transparent;color:var(--g5);font-family:var(--sans);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .15s}
@@ -1928,6 +1987,10 @@ textarea.wiz-input{min-height:110px;resize:vertical;font-family:var(--sans)}
 .afm-range input{flex:1;min-width:0}
 .afm-range span{font-size:12px;color:var(--g4)}
 .afm-chips{display:flex;flex-wrap:wrap;gap:6px}
+.afm-qa-block{padding:12px 14px;background:var(--g1);border-radius:10px;margin-bottom:8px}
+.afm-qa-block:last-child{margin-bottom:0}
+.afm-qa-q{font-size:12.5px;font-weight:500;color:var(--tx);margin-bottom:8px;line-height:1.4}
+.dark .afm-qa-block{background:var(--g1)}
 .afm-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-family:var(--sans);font-size:12px;color:var(--g5);cursor:pointer;transition:all .15s;user-select:none}
 .afm-chip:hover{border-color:var(--g3);color:var(--tx)}
 .afm-chip.on{background:rgba(96,77,255,.08);border-color:rgba(96,77,255,.32);color:var(--ac);font-weight:500}
@@ -4382,13 +4445,19 @@ function BoostPackages({ onSelect, selectedRoomLabel, includeFreeOption, isPremi
 }
 
 /* ━━━ SHARED FILTER PANEL (right-anchored overlay, used by Network / Artists DB / Candidates) ━━━ */
-function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClear, styleOptions = [], roleOptions = null, showCastingExtras = false, mode = "artist", companyTypeOptions = [] }) {
+function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClear, styleOptions = [], roleOptions = null, showCastingExtras = false, mode = "artist", companyTypeOptions = [], roomQuestions = [] }) {
   if (!open) return null;
   const f = filters || {};
   const toggleStyle = (s) => {
     const cur = f.companyStyles || [];
     onChange("companyStyles", cur.includes(s) ? cur.filter(x => x !== s) : [...cur, s]);
   };
+  const toggleQuestionAnswer = (qId, opt) => {
+    const cur = (f.questionAnswers && f.questionAnswers[qId]) || [];
+    const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt];
+    onChange("questionAnswers", { ...(f.questionAnswers || {}), [qId]: next });
+  };
+  const filterableQuestions = (roomQuestions || []).filter(q => q.answerType === "multi" || q.answerType === "yesno");
   return createPortal(
     <>
       <div className="filter-side-backdrop" onClick={onClose} />
@@ -4573,6 +4642,30 @@ function FilterPanel({ open, onClose, title, subtitle, filters, onChange, onClea
                   Only candidates assigned to me
                 </label>
               </div>
+            </div>
+          )}
+
+          {filterableQuestions.length > 0 && (
+            <div className="afm-section">
+              <h3>Question answers</h3>
+              <p style={{fontSize:11.5,color:"var(--g4)",margin:"-4px 0 12px",lineHeight:1.5}}>Filter applicants by what they answered to your application questions.</p>
+              {filterableQuestions.map(q => {
+                const opts = q.answerType === "yesno" ? ["Yes","No"] : (q.options || []);
+                const selected = (f.questionAnswers && f.questionAnswers[q.id]) || [];
+                return (
+                  <div key={q.id} className="afm-qa-block">
+                    <div className="afm-qa-q">{q.question}</div>
+                    <div className="afm-chips">
+                      {opts.map(o => (
+                        <button key={o} type="button" className={`afm-chip${selected.includes(o) ? " on" : ""}`} onClick={() => toggleQuestionAnswer(q.id, o)}>
+                          {o}
+                          {selected.includes(o) && <I n="check" s={10}/>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -4992,6 +5085,8 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
   const [applicationOpp, setApplicationOpp] = useState(null); // opportunity being viewed in popup
   const [savedOppIds, setSavedOppIds] = useState(() => new Set()); // saved/bookmarked opportunities
   const [embedOpen, setEmbedOpen] = useState(false); // owner-only "Embed jobs" modal
+  const [embedSingleOpp, setEmbedSingleOpp] = useState(null); // owner-only "Embed this opp" modal
+  const [jobsView, setJobsView] = useState("list"); // "list" | "calendar"
   const rootRef = useRef(null);
   const bannerRef = useRef(null);
   const cardRef = useRef(null);
@@ -5152,9 +5247,17 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                     <h2>Open roles &amp; opportunities</h2>
                     <span className="pcp-section-count">{openCount}</span>
                   </div>
-                  {isOwner && openCount > 0 && (
-                    <button className="pcp-edit-chip" onClick={() => setEmbedOpen(true)}><I n="link" s={12}/> Embed on your site</button>
-                  )}
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                    {openCount > 0 && (
+                      <div className="pcp-view-toggle">
+                        <button className={jobsView === "list" ? "on" : ""} onClick={() => setJobsView("list")} aria-label="List view"><I n="list" s={13}/></button>
+                        <button className={jobsView === "calendar" ? "on" : ""} onClick={() => setJobsView("calendar")} aria-label="Calendar view"><I n="calendar" s={13}/></button>
+                      </div>
+                    )}
+                    {isOwner && openCount > 0 && (
+                      <button className="pcp-edit-chip" onClick={() => setEmbedOpen(true)}><I n="link" s={12}/> Embed on your site</button>
+                    )}
+                  </div>
                 </div>
                 {openCount === 0 ? (
                   <div className="pcp-empty">
@@ -5162,6 +5265,12 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                     <div>No open opportunities right now.</div>
                     {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); onFollow?.(profile, true); }}><I n="bell" s={12}/> Follow for alerts</button>}
                   </div>
+                ) : jobsView === "calendar" ? (
+                  <JobsCalendar
+                    opportunities={published}
+                    accentColor={profile.accentColor}
+                    onSelect={(o) => setApplicationOpp(o)}
+                  />
                 ) : (
                   <>
                     {/* Featured hero card */}
@@ -5380,9 +5489,15 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
         </aside>
       </div>
 
-      {/* Embed widget modal */}
+      {/* Embed widget modal — all jobs */}
       {embedOpen && createPortal(
         <EmbedJobsModal profile={profile} opportunities={opportunities} onClose={() => setEmbedOpen(false)} showToast={showToast}/>,
+        document.body
+      )}
+
+      {/* Embed widget modal — single opp */}
+      {embedSingleOpp && createPortal(
+        <EmbedJobsModal profile={profile} opportunities={opportunities} singleOpp={embedSingleOpp} onClose={() => setEmbedSingleOpp(null)} showToast={showToast}/>,
         document.body
       )}
 
@@ -5424,6 +5539,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           roomQuestions={roomQuestions}
           roomProfileReqs={roomProfileReqs}
           onClose={() => setApplicationOpp(null)}
+          onEmbed={(o) => { setApplicationOpp(null); setEmbedSingleOpp(o); }}
           showToast={showToast}
         />,
         document.body
@@ -5454,25 +5570,140 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
 }
 
 /* Right-anchored edit pane — same idiom as FilterPanel. */
+/* Calendar view of opportunities — shows a month grid with each
+   opportunity placed on its deadline + casting date. */
+function JobsCalendar({ opportunities = [], accentColor = "#7A66FF", onSelect }) {
+  const today = useMemo(() => new Date(), []);
+  const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+
+  const monthLabel = cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+  // Grid starts on Monday
+  const firstWeekday = (monthStart.getDay() + 6) % 7; // 0 = Mon
+  const daysInMonth = monthEnd.getDate();
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+
+  const parseDate = (s) => {
+    if (!s) return null;
+    // Handle "Apr 15, 2026" and "May 1 — May 10, 2026" → take first date
+    const head = String(s).split(/[—–-]/)[0].trim();
+    const d = new Date(head);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const sameDay = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const inMonth = (d) => d && d.getMonth() === cursor.getMonth() && d.getFullYear() === cursor.getFullYear();
+
+  // Build event list per day
+  const events = useMemo(() => {
+    const map = new Map();
+    opportunities.forEach(o => {
+      const evs = [
+        { d: parseDate(o.deadline), kind: "deadline", label: "Deadline" },
+        { d: parseDate(o.castingDate), kind: "casting", label: "Casting" },
+        { d: parseDate(o.shootingDates || o.whenIs), kind: "period", label: "Period" },
+      ].filter(x => x.d && inMonth(x.d));
+      evs.forEach(e => {
+        const key = e.d.getDate();
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push({ opp: o, kind: e.kind, label: e.label });
+      });
+    });
+    return map;
+  }, [opportunities, cursor]);
+
+  const eventsThisMonth = useMemo(() => {
+    const list = [];
+    events.forEach((arr, dayNum) => arr.forEach(e => list.push({ dayNum, ...e })));
+    return list.sort((a, b) => a.dayNum - b.dayNum);
+  }, [events]);
+
+  const goPrev = () => setCursor(c => new Date(c.getFullYear(), c.getMonth() - 1, 1));
+  const goNext = () => setCursor(c => new Date(c.getFullYear(), c.getMonth() + 1, 1));
+  const goToday = () => setCursor(new Date(today.getFullYear(), today.getMonth(), 1));
+
+  const cells = [];
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - firstWeekday + 1;
+    const inThisMonth = dayNum >= 1 && dayNum <= daysInMonth;
+    const date = inThisMonth ? new Date(cursor.getFullYear(), cursor.getMonth(), dayNum) : null;
+    const isToday = sameDay(date, today);
+    const dayEvents = inThisMonth ? (events.get(dayNum) || []) : [];
+    cells.push({ dayNum, inThisMonth, isToday, dayEvents });
+  }
+
+  const kindColor = (k) => k === "deadline" ? "var(--red)" : k === "casting" ? accentColor : "var(--green)";
+
+  return (
+    <div className="pcp-cal">
+      <div className="pcp-cal-head">
+        <div className="pcp-cal-month">{monthLabel}</div>
+        <div className="pcp-cal-nav">
+          <button onClick={goPrev} aria-label="Previous month"><I n="chevL" s={14}/></button>
+          <button onClick={goToday} className="pcp-cal-today">Today</button>
+          <button onClick={goNext} aria-label="Next month"><I n="chevR" s={14}/></button>
+        </div>
+      </div>
+      <div className="pcp-cal-legend">
+        <span><span className="pcp-cal-dot" style={{background:"var(--red)"}}/>Deadline</span>
+        <span><span className="pcp-cal-dot" style={{background:accentColor}}/>Casting</span>
+        <span><span className="pcp-cal-dot" style={{background:"var(--green)"}}/>Period</span>
+      </div>
+      <div className="pcp-cal-grid">
+        {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
+          <div key={d} className="pcp-cal-dow">{d}</div>
+        ))}
+        {cells.map((c, i) => (
+          <div key={i} className={`pcp-cal-cell${c.inThisMonth ? "" : " pcp-cal-out"}${c.isToday ? " pcp-cal-today-cell" : ""}`}>
+            {c.inThisMonth && <div className="pcp-cal-num">{c.dayNum}</div>}
+            <div className="pcp-cal-events">
+              {c.dayEvents.slice(0, 2).map((e, j) => (
+                <button key={j} className="pcp-cal-event" style={{borderLeftColor:kindColor(e.kind)}} onClick={() => onSelect?.(e.opp)} title={`${e.label}: ${e.opp.title}`}>
+                  <span className="pcp-cal-event-label">{e.label}</span>
+                  <span className="pcp-cal-event-title">{e.opp.title}</span>
+                </button>
+              ))}
+              {c.dayEvents.length > 2 && (
+                <div className="pcp-cal-event pcp-cal-more">+ {c.dayEvents.length - 2} more</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {eventsThisMonth.length === 0 && (
+        <div className="pcp-cal-empty">No events in {monthLabel}. Try another month.</div>
+      )}
+    </div>
+  );
+}
+
 /* "Embed on your site" modal — gives the owner a copyable HTML snippet
-   that renders an iframe widget showing their open opportunities. */
-function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
+   that renders an iframe widget showing their open opportunities.
+   Pass `singleOpp` to scope the widget to one specific opportunity. */
+function EmbedJobsModal({ profile, opportunities = [], singleOpp = null, onClose, showToast }) {
   const slug = (profile.name || "company").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const oppSlug = singleOpp ? (singleOpp.id || "opp") : null;
   const [theme, setTheme] = useState("light"); // "light" | "dark"
-  const [size, setSize] = useState("compact"); // "compact" | "full"
+  const [size, setSize] = useState(singleOpp ? "card" : "compact"); // "card" (single) | "compact" | "full"
   const [copied, setCopied] = useState(false);
 
-  const widgetHeight = size === "compact" ? 360 : 560;
-  const embedSrc = `https://lanced.app/embed/jobs/${slug}?theme=${theme}&size=${size}`;
+  const widgetHeight = singleOpp ? 280 : (size === "compact" ? 360 : 560);
+  const embedSrc = singleOpp
+    ? `https://lanced.app/embed/job/${slug}/${oppSlug}?theme=${theme}`
+    : `https://lanced.app/embed/jobs/${slug}?theme=${theme}&size=${size}`;
+  const iframeTitle = singleOpp ? `${singleOpp.title} · ${profile.name}` : `${profile.name} — Open roles on Lanced`;
   const iframeSnippet = `<iframe
   src="${embedSrc}"
   width="100%"
   height="${widgetHeight}"
   frameborder="0"
   style="border:0;border-radius:14px;display:block"
-  title="${profile.name} — Open roles on Lanced">
+  title="${iframeTitle}">
 </iframe>`;
-  const scriptSnippet = `<div data-lanced-jobs="${slug}" data-theme="${theme}" data-size="${size}"></div>
+  const scriptSnippet = singleOpp
+    ? `<div data-lanced-job="${slug}/${oppSlug}" data-theme="${theme}"></div>
+<script async src="https://lanced.app/embed.js"></script>`
+    : `<div data-lanced-jobs="${slug}" data-theme="${theme}" data-size="${size}"></div>
 <script async src="https://lanced.app/embed.js"></script>`;
   const [tab, setTab] = useState("iframe");
 
@@ -5484,6 +5715,7 @@ function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
   };
 
   const open = opportunities.filter(o => o.status === "published");
+  const previewOpps = singleOpp ? [singleOpp] : open.slice(0, size === "compact" ? 3 : 5);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -5495,41 +5727,70 @@ function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
     <div className="overlay app-form-overlay" onClick={onClose}>
       <div className="share-modal embed-modal" onClick={e => e.stopPropagation()}>
         <button className="app-form-close" style={{background:"var(--g1)",color:"var(--g6)",border:"1px solid var(--g2)",backdropFilter:"none"}} onClick={onClose} aria-label="Close"><I n="x" s={18}/></button>
-        <div style={{padding:"28px 28px 0"}}>
-          <h2 style={{margin:"0 0 6px",fontSize:22,fontWeight:600,letterSpacing:"-.02em"}}>Embed your open roles</h2>
-          <p style={{margin:0,fontSize:13,color:"var(--g5)",lineHeight:1.55}}>Paste this widget on your own website. It updates automatically as you publish new opportunities on Lanced.</p>
+        <div className="embed-head">
+          <h2>{singleOpp ? "Embed this opportunity" : "Embed your open roles"}</h2>
+          <p>{singleOpp
+            ? `Paste this widget on your own website to feature “${singleOpp.title}”. It updates automatically as the role status or deadline changes.`
+            : "Paste this widget on your own website. It updates automatically as you publish new opportunities on Lanced."}</p>
         </div>
 
         <div className="embed-body">
           {/* Live preview */}
-          <div className={`embed-preview embed-preview-${theme}`}>
-            <div className="embed-preview-head">
-              <div className="embed-preview-mark" style={{background:profile.accentColor || "#7A66FF"}}>{(profile.name || "•").split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div className="embed-preview-title">{profile.name}</div>
-                <div className="embed-preview-sub">{open.length} open {open.length === 1 ? "role" : "roles"} on Lanced</div>
-              </div>
-              <span className="embed-preview-pulse"><span/></span>
-            </div>
-            <div className="embed-preview-list">
-              {open.slice(0, size === "compact" ? 3 : 5).map(o => (
-                <div key={o.id} className="embed-preview-row">
-                  <div style={{flex:1,minWidth:0}}>
-                    <div className="embed-preview-row-title">{o.title}</div>
-                    <div className="embed-preview-row-meta">{(o.opportunityType || "Audition").replace(/_/g," ")}{o.location ? ` · ${o.location}` : ""}{o.deadline ? ` · ${o.deadline}` : ""}</div>
+          <div className="embed-preview-wrap">
+            <div className={`embed-preview embed-preview-${theme}${singleOpp ? " embed-preview-single" : ""}`}>
+              {singleOpp ? (
+                <>
+                  <div className="embed-preview-cover" style={{ backgroundImage: singleOpp.coverImage ? `url(${singleOpp.coverImage})` : `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}>
+                    <div className="embed-preview-cover-grad"/>
+                    <div className="embed-preview-cover-tag">{(singleOpp.opportunityType || "Audition").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase())}</div>
                   </div>
-                  <span className="embed-preview-cta">View →</span>
-                </div>
-              ))}
-              {open.length === 0 && <div className="embed-preview-empty">No open roles right now.</div>}
+                  <div className="embed-preview-card-body">
+                    <div className="embed-preview-card-title">{singleOpp.title}</div>
+                    <div className="embed-preview-card-company">
+                      <div className="embed-preview-mark" style={{background:profile.accentColor || "#7A66FF",width:24,height:24,fontSize:10,borderRadius:7}}>{(profile.name || "•").split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()}</div>
+                      <span>{profile.name}</span>
+                    </div>
+                    <div className="embed-preview-card-meta">
+                      {singleOpp.location && <span>{singleOpp.location}</span>}
+                      {singleOpp.deadline && <span>· Apply by {singleOpp.deadline}</span>}
+                    </div>
+                    <button className="embed-preview-card-cta" style={{background: profile.accentColor || "#7A66FF"}}>Apply on Lanced →</button>
+                    <div className="embed-preview-foot" style={{borderTop:"none",padding:"6px 0 0"}}>Powered by Lanced</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="embed-preview-head">
+                    <div className="embed-preview-mark" style={{background:profile.accentColor || "#7A66FF"}}>{(profile.name || "•").split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div className="embed-preview-title">{profile.name}</div>
+                      <div className="embed-preview-sub">{open.length} open {open.length === 1 ? "role" : "roles"} on Lanced</div>
+                    </div>
+                    <span className="embed-preview-pulse"><span/></span>
+                  </div>
+                  <div className="embed-preview-list">
+                    {previewOpps.map(o => (
+                      <div key={o.id} className="embed-preview-row">
+                        <div style={{flex:1,minWidth:0}}>
+                          <div className="embed-preview-row-title">{o.title}</div>
+                          <div className="embed-preview-row-meta">{(o.opportunityType || "Audition").replace(/_/g," ")}{o.location ? ` · ${o.location}` : ""}{o.deadline ? ` · ${o.deadline}` : ""}</div>
+                        </div>
+                        <span className="embed-preview-cta">View →</span>
+                      </div>
+                    ))}
+                    {open.length === 0 && <div className="embed-preview-empty">No open roles right now.</div>}
+                  </div>
+                  <div className="embed-preview-foot">Powered by Lanced</div>
+                </>
+              )}
             </div>
-            <div className="embed-preview-foot">Powered by Lanced</div>
+            <div className="embed-preview-caption">Live preview · {theme}{!singleOpp && size === "full" ? " · full" : ""}</div>
           </div>
 
           {/* Controls + snippet */}
           <div className="embed-config">
-            <div className="afm-section" style={{borderBottom:"1px solid var(--g2)",paddingBottom:14,marginBottom:14}}>
-              <h3 style={{margin:"0 0 10px"}}>Style</h3>
+            <div className="afm-section" style={{borderBottom:"1px solid var(--g2)",paddingBottom:18,marginBottom:18}}>
+              <h3 style={{margin:"0 0 12px"}}>Style</h3>
               <div className="embed-controls">
                 <div>
                   <div className="embed-label">Theme</div>
@@ -5539,28 +5800,31 @@ function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <div className="embed-label">Size</div>
-                  <div className="afm-chips">
-                    {[{k:"compact",l:"Compact (3 roles)"},{k:"full",l:"Full (5 roles)"}].map(o => (
-                      <button key={o.k} type="button" className={`afm-chip${size===o.k?" on":""}`} onClick={() => setSize(o.k)}>{o.l}</button>
-                    ))}
+                {!singleOpp && (
+                  <div>
+                    <div className="embed-label">Size</div>
+                    <div className="afm-chips">
+                      {[{k:"compact",l:"Compact (3 roles)"},{k:"full",l:"Full (5 roles)"}].map(o => (
+                        <button key={o.k} type="button" className={`afm-chip${size===o.k?" on":""}`} onClick={() => setSize(o.k)}>{o.l}</button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             <div className="afm-section">
+              <h3 style={{margin:"0 0 10px"}}>Embed code</h3>
               <div className="embed-tabs">
                 <button className={`embed-tab${tab==="iframe"?" on":""}`} onClick={() => setTab("iframe")}>iframe</button>
                 <button className={`embed-tab${tab==="script"?" on":""}`} onClick={() => setTab("script")}>JS widget</button>
               </div>
               <pre className="embed-snippet"><code>{tab === "iframe" ? iframeSnippet : scriptSnippet}</code></pre>
-              <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center",flexWrap:"wrap"}}>
-                <button className="btn btn-p btn-sm" onClick={() => copy(tab === "iframe" ? iframeSnippet : scriptSnippet)}>
-                  <I n={copied ? "check" : "share"} s={12}/> {copied ? "Copied!" : "Copy code"}
+              <div className="embed-copy-row">
+                <button className="btn btn-p" onClick={() => copy(tab === "iframe" ? iframeSnippet : scriptSnippet)}>
+                  <I n={copied ? "check" : "share"} s={12}/> {copied ? "Copied!" : "Copy embed code"}
                 </button>
-                <span style={{fontSize:11,color:"var(--g4)"}}>{tab === "iframe" ? "Works in any HTML page or CMS." : "Wordpress, Webflow, Framer, custom — drops in anywhere."}</span>
+                <span className="embed-hint">{tab === "iframe" ? "Drops into any HTML page or CMS." : "Best for Wordpress, Webflow, Framer, Squarespace."}</span>
               </div>
             </div>
           </div>
@@ -5578,7 +5842,7 @@ function EmbedJobsModal({ profile, opportunities = [], onClose, showToast }) {
    - Marketing > Apply preview inside a room (variant="preview")
    The chrome (close button, scrim, page header) is owned by the parent;
    this component is just the body. */
-function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, showToast }) {
+function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, onEmbed, showToast }) {
   const [stage, setStage] = useState("info"); // "info" | "auth"
   if (!room) return null;
 
@@ -5753,8 +6017,15 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
 
             <div className="rav-cta">
               {isOwner ? (
-                <div className="rav-preview-tag">
-                  <I n="eye" s={12}/> Preview — this is what artists see when applying.
+                <div className="rav-owner-actions">
+                  <div className="rav-preview-tag">
+                    <I n="eye" s={12}/> Preview — this is what artists see when applying.
+                  </div>
+                  {onEmbed && (
+                    <button className="btn btn-s btn-sm" onClick={() => onEmbed(room)}>
+                      <I n="link" s={12}/> Embed this role
+                    </button>
+                  )}
                 </div>
               ) : (
                 <button className="btn btn-p btn-lg rav-apply" onClick={() => setStage("auth")}>
@@ -5789,7 +6060,7 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
 
 /* Application form popup — thin wrapper around RoomApplicationView, shown
    over the public company profile when an opportunity card is clicked. */
-function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, showToast }) {
+function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onEmbed, showToast }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -5808,6 +6079,7 @@ function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQ
             roomQuestions={roomQuestions}
             roomProfileReqs={roomProfileReqs}
             isOwner={isOwner}
+            onEmbed={onEmbed}
             showToast={showToast}
           />
         </div>
@@ -6443,7 +6715,18 @@ export default function AgencyShell() {
 
   // Casting Rooms
   const [rooms, setRooms] = useState(MOCK_ROOMS);
-  const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
+  // Seed deterministic demo answers for room questions across candidates so the
+  // multi-choice question filter has something to operate on.
+  const [candidates, setCandidates] = useState(() => {
+    const disciplines = ["Contemporary","Ballet","Jazz / Commercial","Hip-Hop","Other"];
+    return MOCK_CANDIDATES.map((c, i) => ({
+      ...c,
+      answers: {
+        q3: disciplines[i % disciplines.length],
+        q4: i % 3 === 0 ? "Yes" : "No",
+      },
+    }));
+  });
   const [roomTemplates, setRoomTemplates] = useState(MOCK_TEMPLATES);
   const [broadcastLog, setBroadcastLog] = useState(MOCK_BROADCAST_LOG);
   // Rounds workspace state
@@ -6535,6 +6818,8 @@ export default function AgencyShell() {
   const [roomQuestions, setRoomQuestions] = useState([
     {id:"q1",question:"Why are you interested in this opportunity?",answerType:"text",required:true},
     {id:"q2",question:"Are you available for the full rehearsal period?",answerType:"yesno",required:true},
+    {id:"q3",question:"Which discipline are you primarily applying for?",answerType:"multi",required:true,options:["Contemporary","Ballet","Jazz / Commercial","Hip-Hop","Other"]},
+    {id:"q4",question:"Have you worked with us before?",answerType:"yesno",required:false},
   ]);
   const [editingQuestion, setEditingQuestion] = useState(null); // null or {id, question, answerType, required, placeholder, options}
   const [roomProfileReqs, setRoomProfileReqs] = useState({
@@ -10848,10 +11133,11 @@ export default function AgencyShell() {
                   subtitle="Narrow down applicants for this casting."
                   filters={candidateFilters}
                   onChange={(k, v) => setCandidateFilters(p => ({ ...p, [k]: v }))}
-                  onClear={() => setCandidateFilters({role:"all",artistType:"all",style:"all",skills:"",gender:"all",ethnicity:"",nationality:"",location:"",ageMin:"",ageMax:"",heightMin:"",heightMax:"",employment:"all",availability:"all",assignedToMe:false,stillToVote:false})}
+                  onClear={() => setCandidateFilters({role:"all",artistType:"all",style:"all",skills:"",gender:"all",ethnicity:"",nationality:"",location:"",ageMin:"",ageMax:"",heightMin:"",heightMax:"",employment:"all",availability:"all",assignedToMe:false,stillToVote:false,questionAnswers:{}})}
                   styleOptions={[...new Set(artists.flatMap(a => a.styles || []))]}
                   roleOptions={currentRoom?.roles || []}
                   showCastingExtras={true}
+                  roomQuestions={roomQuestions}
                 />
               </div>
 
@@ -10886,6 +11172,18 @@ export default function AgencyShell() {
                   }
                 }
                 if (candidateFilters.stillToVote) filtered = filtered.filter(c => !candidateVotes[c.id]?.tm1);
+                // Question-answer filters: candidate must have at least one selected
+                // option per question they answered.
+                if (candidateFilters.questionAnswers) {
+                  Object.entries(candidateFilters.questionAnswers).forEach(([qId, opts]) => {
+                    if (!Array.isArray(opts) || opts.length === 0) return;
+                    filtered = filtered.filter(c => {
+                      const ans = c.answers && c.answers[qId];
+                      if (!ans) return false;
+                      return opts.includes(ans);
+                    });
+                  });
+                }
 
                 // Sort
                 if (candidateSort === "az") filtered = [...filtered].sort((a,b) => { const na = getCandidateInfo(a).name, nb = getCandidateInfo(b).name; return na.localeCompare(nb); });
