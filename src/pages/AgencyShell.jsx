@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, Fragment } from "react";
 import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -1330,46 +1330,75 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-about-modal .fsp-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--g2);background:var(--sf);display:flex;align-items:center;justify-content:center;color:var(--g5);cursor:pointer;flex-shrink:0;transition:all .15s}
 .pcp-about-modal .fsp-close:hover{border-color:var(--ac);color:var(--ac)}
 
-/* Application form modal — opens in-place over the public profile when an
-   artist clicks an opportunity card. */
-.app-form-overlay{padding:0!important}
-.app-form-modal{max-width:720px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;background:var(--sf);position:relative;display:flex;flex-direction:column}
-.app-form-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;z-index:2}
-.app-form-close:hover{background:rgba(0,0,0,.55)}
-.app-form-banner{position:relative;width:100%;aspect-ratio:16/6;background-size:cover;background-position:center;background-color:var(--g1);flex-shrink:0}
-.app-form-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.4) 100%)}
-.app-form-banner-grad-only{aspect-ratio:16/4}
-.app-form-body{padding:24px 28px 28px;overflow-y:auto;flex:1}
-.app-form-head{margin-bottom:14px}
-.app-form-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ac);margin-bottom:6px}
-.app-form-title{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--tx);margin:0 0 10px}
-.app-form-company{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--g5);font-weight:500}
-.app-form-company-mark{width:22px;height:22px;border-radius:6px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:-.5px}
-.app-form-desc{font-size:14px;line-height:1.65;color:var(--tx);margin:14px 0 18px;white-space:pre-wrap}
-.app-form-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g2);border-radius:14px;overflow:hidden;border:1px solid var(--g2);margin-bottom:18px}
-.app-form-meta-i{padding:12px 14px;background:var(--sf);display:flex;flex-direction:column;gap:3px}
-.app-form-meta-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--g4)}
-.app-form-meta-v{font-size:13px;font-weight:600;color:var(--tx);line-height:1.3}
-.app-form-meta-v.accent{color:var(--red)}
-.app-form-offer{padding:14px 16px;background:rgba(96,77,255,.05);border:1px solid rgba(96,77,255,.12);border-radius:12px;font-size:13px;color:var(--tx);line-height:1.55;margin-bottom:18px}
-.app-form-offer .app-form-meta-l{margin-bottom:4px}
-.app-form-preview-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(96,77,255,.08);border:1px solid rgba(96,77,255,.2);border-radius:40px;font-size:12px;color:var(--ac);font-weight:500;margin-top:8px}
-.app-form-form{margin-top:6px;padding-top:20px;border-top:1px solid var(--g2)}
-.app-form-form-head{margin-bottom:14px}
-.app-form-form-head h3{font-size:15px;font-weight:600;color:var(--tx);margin:0 0 4px}
-.app-form-form-head p{font-size:12px;color:var(--g4);margin:0;line-height:1.5}
-.app-form-form .afm-grid{grid-template-columns:1fr 1fr}
-.app-form-form .field{margin-bottom:0}
-.app-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid var(--g2)}
-.app-form-success{padding:24px 0;text-align:center}
-.app-form-success-icon{width:48px;height:48px;border-radius:50%;background:#E6FFF0;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--green)}
-.app-form-success h3{font-size:18px;font-weight:600;color:var(--tx);margin:0 0 8px}
-.app-form-success p{font-size:13px;color:var(--g5);margin:0 0 18px;line-height:1.6}
+/* Application form modal wrapper — opens in-place over the public profile. */
+.app-form-overlay{padding:16px!important}
+.app-form-modal{max-width:760px;width:100%;max-height:92vh;padding:0;border-radius:24px;overflow:hidden;background:var(--sf);position:relative;display:flex;flex-direction:column;box-shadow:0 20px 80px rgba(0,0,0,.32)}
+.app-form-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;z-index:5}
+.app-form-close:hover{background:rgba(0,0,0,.6)}
+.app-form-modal-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* Shared RoomApplicationView — the body of the application form */
+.rav{display:flex;flex-direction:column;background:var(--sf)}
+.rav-banner{position:relative;width:100%;aspect-ratio:16/6;background-size:cover;background-position:center;background-color:var(--g1);flex-shrink:0}
+.rav-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.4) 100%)}
+.rav-banner-grad-only{aspect-ratio:16/4}
+.rav-body{padding:24px 28px 32px;display:flex;flex-direction:column;gap:22px}
+.rav-head{display:flex;flex-direction:column;gap:6px}
+.rav-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ac)}
+.rav-title{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--tx);margin:0}
+.rav-company{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--g5);font-weight:500;margin-top:4px}
+.rav-company-mark{width:22px;height:22px;border-radius:6px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:-.5px}
+/* Date strip — sticky inside the modal body */
+.rav-dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--g2);border-radius:14px;overflow:hidden;border:1px solid var(--g2)}
+.rav-date{padding:12px 14px;background:var(--sf);display:flex;flex-direction:column;gap:3px;min-width:0}
+.rav-date-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--g4)}
+.rav-date-v{font-size:12.5px;font-weight:600;color:var(--tx);line-height:1.3;overflow:hidden;text-overflow:ellipsis}
+.rav-date-v.accent{color:var(--red)}
+/* Sections */
+.rav-section{display:flex;flex-direction:column;gap:10px}
+.rav-section h3{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--g5);margin:0;padding-bottom:4px}
+.rav-prose{font-size:14px;line-height:1.65;color:var(--tx);margin:0;white-space:pre-wrap}
+.rav-kv{display:grid;grid-template-columns:140px 1fr;gap:10px 16px;margin:0;font-size:13px}
+.rav-kv dt{color:var(--g4);font-weight:500;line-height:1.5}
+.rav-kv dd{margin:0;color:var(--tx);font-weight:500;line-height:1.5}
+.rav-offer{padding:16px 18px;background:rgba(96,77,255,.05);border:1px solid rgba(96,77,255,.12);border-radius:14px;gap:6px}
+.rav-offer h3{color:var(--ac)}
+.rav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rav-list li{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--g1);border-radius:10px;font-size:13px;color:var(--tx)}
+.rav-list-icon{width:28px;height:28px;border-radius:8px;background:var(--sf);color:var(--g5);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rav-list-label{flex:1;min-width:0;font-weight:500}
+.rav-required-pill{font-size:9px;font-weight:600;padding:3px 8px;border-radius:40px;background:var(--g2);color:var(--g5);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.rav-required-pill.on{background:rgba(255,71,87,.12);color:var(--red)}
+.rav-questions{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:rav-q}
+.rav-questions li{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--g1);border-radius:10px}
+.rav-q-num{width:22px;height:22px;border-radius:50%;background:var(--sf);border:1px solid var(--g2);color:var(--g5);font-size:11px;font-weight:600;font-family:var(--mono);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.rav-q-text{font-size:13px;color:var(--tx);font-weight:500;line-height:1.45}
+.rav-q-meta{font-size:11px;color:var(--g4);margin-top:3px;display:flex;align-items:center;gap:6px}
+/* CTA */
+.rav-cta{display:flex;flex-direction:column;align-items:center;padding-top:8px;border-top:1px solid var(--g2);margin-top:6px;padding-top:22px}
+.rav-apply{min-width:240px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.rav-preview-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(96,77,255,.08);border:1px solid rgba(96,77,255,.2);border-radius:40px;font-size:12px;color:var(--ac);font-weight:500}
+/* Auth stage */
+.rav-auth{padding-top:8px;border-top:1px solid var(--g2);margin-top:6px;display:flex;flex-direction:column;gap:18px;animation:fadeIn .25s ease}
+.rav-back{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--g2);border-radius:40px;background:transparent;color:var(--g5);font-family:var(--sans);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .15s}
+.rav-back:hover{border-color:var(--g3);color:var(--tx)}
+.rav-auth-card{padding:32px 28px;background:linear-gradient(160deg,rgba(96,77,255,.06),rgba(96,77,255,.02));border:1px solid rgba(96,77,255,.18);border-radius:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.rav-auth-icon{width:54px;height:54px;border-radius:50%;background:var(--sf);border:1px solid var(--g2);color:var(--ac);display:flex;align-items:center;justify-content:center;margin-bottom:4px;box-shadow:0 4px 14px rgba(96,77,255,.08)}
+.rav-auth-card h3{font-size:18px;font-weight:600;color:var(--tx);margin:0}
+.rav-auth-card p{font-size:13px;color:var(--g5);max-width:420px;line-height:1.6;margin:0}
+.rav-auth-actions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin-top:10px}
+.rav-auth-actions .btn{width:100%}
+.rav-auth-foot{font-size:10.5px;color:var(--g4);margin-top:6px;line-height:1.5}
+
 @media (max-width:680px){
-  .app-form-modal{max-width:100%;border-radius:20px 20px 0 0}
-  .app-form-meta{grid-template-columns:repeat(2,1fr)}
-  .app-form-body{padding:20px 18px 22px}
-  .app-form-form .afm-grid{grid-template-columns:1fr}
+  .app-form-overlay{padding:0!important;align-items:flex-end!important}
+  .app-form-modal{max-width:100%;max-height:94vh;border-radius:20px 20px 0 0}
+  .rav-body{padding:20px 18px 24px;gap:18px}
+  .rav-title{font-size:22px}
+  .rav-kv{grid-template-columns:1fr;gap:2px 0}
+  .rav-kv dt{margin-top:6px}
+  .rav-kv dd{margin-bottom:6px;color:var(--tx)}
+  .rav-dates{grid-template-columns:repeat(2,1fr)}
 }
 .pcp-edit-banner-preview{width:100%;aspect-ratio:16/5;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);border:1px solid var(--g2)}
 .pcp-dropzone{border:2px dashed var(--g2);border-radius:12px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--g4);cursor:pointer;transition:all .15s}
@@ -4820,7 +4849,7 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
@@ -5144,6 +5173,9 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
           opp={applicationOpp}
           profile={profile}
           isOwner={isOwner}
+          roomMaterials={roomMaterials}
+          roomQuestions={roomQuestions}
+          roomProfileReqs={roomProfileReqs}
           onClose={() => setApplicationOpp(null)}
           showToast={showToast}
         />,
@@ -5175,109 +5207,211 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
 }
 
 /* Right-anchored edit pane — same idiom as FilterPanel. */
-/* Application form popup — shown when an artist clicks an opportunity card on
-   the public profile. Centered modal overlay; doesn't redirect away from the
-   profile context. Owners see the same modal in preview mode. */
-function ApplicationFormModal({ opp, profile, isOwner, onClose, showToast }) {
-  const [form, setForm] = useState({ name: "", email: "", motivation: "", video: "" });
-  const [submitted, setSubmitted] = useState(false);
+/* ━━━ Shared Application Form / room preview view ━━━
+   Single source of truth for what an artist sees when they look at an
+   opportunity. Used in three places:
+   - Modal popup on the public company profile (variant="modal")
+   - Full-page public casting page (variant="page")
+   - Marketing > Apply preview inside a room (variant="preview")
+   The chrome (close button, scrim, page header) is owned by the parent;
+   this component is just the body. */
+function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, showToast }) {
+  const [stage, setStage] = useState("info"); // "info" | "auth"
+  if (!room) return null;
 
+  const formatLabel = (k) => (k || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const formatStr = room.format === "in_person" ? "In Person"
+    : room.format === "online" ? "Online"
+    : room.format === "self_tape" ? "Self-tape"
+    : (room.format ? formatLabel(room.format) : null);
+
+  const dates = [
+    room.deadline && { label: "Deadline", value: room.deadline, accent: true },
+    room.castingDate && { label: "Casting", value: room.castingDate },
+    room.rehearsalDates && { label: "Rehearsals", value: room.rehearsalDates },
+    room.fittingDates && { label: "Fittings", value: room.fittingDates },
+    (room.shootingDates || room.whenIs) && { label: "Period", value: room.shootingDates || room.whenIs },
+    room.resultsDate && { label: "Results", value: room.resultsDate },
+  ].filter(Boolean);
+
+  const profileReqLabels = {
+    age: "Age", gender: "Gender", pronouns: "Pronouns", ethnicity: "Ethnicity",
+    nationality: "Nationality", location: "Location", languages: "Languages",
+    agencyRep: "Representation",
+  };
+  const enabledProfileReqs = Object.entries(roomProfileReqs || {})
+    .filter(([, v]) => v).map(([k]) => profileReqLabels[k] || formatLabel(k));
+
+  const looking = [
+    room.roles && (Array.isArray(room.roles) ? room.roles.join(", ") : room.roles) && { label: "Roles", value: Array.isArray(room.roles) ? room.roles.join(", ") : room.roles },
+    formatStr && { label: "Format", value: formatStr },
+    room.contracts && room.contracts.length > 0 && { label: "Contracts", value: Array.isArray(room.contracts) ? room.contracts.join(", ") : room.contracts },
+    room.location && { label: "Location", value: room.location },
+    room.artistType && !room.roles && { label: "Artist type", value: room.artistType },
+    enabledProfileReqs.length > 0 && { label: "Requested profile info", value: enabledProfileReqs.join(", ") },
+  ].filter(Boolean);
+
+  const matIcon = (t) => t === "video" ? "video" : t === "photo" ? "image" : "file";
+  const initials = (company.name || "").split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase() || "•";
+
+  return (
+    <div className="rav">
+      {(room.banner || room.coverImage) ? (
+        <div className="rav-banner" style={{ backgroundImage: `url(${room.banner || room.coverImage})` }}>
+          <div className="rav-banner-grad"/>
+        </div>
+      ) : (
+        <div className="rav-banner rav-banner-grad-only" style={{ background: `linear-gradient(135deg, ${company.accentColor || "#7A66FF"}, #4A35E0)` }}/>
+      )}
+
+      <div className="rav-body">
+        <div className="rav-head">
+          <div className="rav-type">{formatLabel(room.opportunityType || room.type || "Audition")}</div>
+          <h2 className="rav-title">{room.title}</h2>
+          {company.name && (
+            <div className="rav-company">
+              <div className="rav-company-mark">{initials}</div>
+              <span>{company.name}</span>
+              {company.verified && <span className="pcp-verified" style={{width:14,height:14}}><I n="check" s={9}/></span>}
+            </div>
+          )}
+        </div>
+
+        {dates.length > 0 && (
+          <div className="rav-dates">
+            {dates.map((d, i) => (
+              <div key={i} className="rav-date">
+                <div className="rav-date-l">{d.label}</div>
+                <div className={`rav-date-v${d.accent ? " accent" : ""}`}>{d.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {stage === "info" ? (
+          <>
+            {room.description && (
+              <section className="rav-section">
+                <h3>Description</h3>
+                <p className="rav-prose">{room.description}</p>
+              </section>
+            )}
+
+            {looking.length > 0 && (
+              <section className="rav-section">
+                <h3>What we're looking for</h3>
+                <dl className="rav-kv">
+                  {looking.map((l, i) => (
+                    <Fragment key={i}>
+                      <dt>{l.label}</dt>
+                      <dd>{l.value}</dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              </section>
+            )}
+
+            {room.offer && (
+              <section className="rav-section rav-offer">
+                <h3>Offer</h3>
+                <p className="rav-prose">{room.offer}</p>
+              </section>
+            )}
+
+            {roomMaterials.length > 0 && (
+              <section className="rav-section">
+                <h3>Materials we'll ask for</h3>
+                <ul className="rav-list">
+                  {roomMaterials.filter(m => m.enabled !== false).map(m => (
+                    <li key={m.id}>
+                      <span className="rav-list-icon"><I n={matIcon(m.type)} s={13}/></span>
+                      <span className="rav-list-label">{m.title}</span>
+                      <span className={`rav-required-pill${m.required ? " on" : ""}`}>{m.required ? "Required" : "Optional"}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {roomQuestions.length > 0 && (
+              <section className="rav-section">
+                <h3>Questions in the application</h3>
+                <ol className="rav-questions">
+                  {roomQuestions.map((q, i) => (
+                    <li key={q.id || i}>
+                      <span className="rav-q-num">{i + 1}</span>
+                      <div>
+                        <div className="rav-q-text">{q.question}</div>
+                        <div className="rav-q-meta">
+                          {q.answerType === "yesno" ? "Yes / No" : q.answerType === "text" ? "Free text" : formatLabel(q.answerType)}
+                          {q.required && <span className="rav-required-pill on" style={{marginLeft:8}}>Required</span>}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
+            <div className="rav-cta">
+              {isOwner ? (
+                <div className="rav-preview-tag">
+                  <I n="eye" s={12}/> Preview — this is what artists see when applying.
+                </div>
+              ) : (
+                <button className="btn btn-p btn-lg rav-apply" onClick={() => setStage("auth")}>
+                  Apply <I n="arrow" s={14}/>
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="rav-auth">
+            <button className="rav-back" onClick={() => setStage("info")}><I n="arrow-left" s={12}/> Back to opportunity</button>
+            <div className="rav-auth-card">
+              <div className="rav-auth-icon"><I n="user" s={28}/></div>
+              <h3>Sign in to apply</h3>
+              <p>Apply with your Lanced profile, or create one in under a minute. We'll prefill the application with your details, materials and showreel.</p>
+              <div className="rav-auth-actions">
+                <button className="btn btn-p btn-lg" onClick={() => showToast?.("Sign in flow — coming soon")}>
+                  <I n="arrow" s={14}/> Sign in with Lanced
+                </button>
+                <button className="btn btn-s btn-lg" onClick={() => showToast?.("Sign up flow — coming soon")}>
+                  <I n="users" s={14}/> Create new account
+                </button>
+              </div>
+              <div className="rav-auth-foot">By continuing you agree to Lanced's Terms and Privacy Policy.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Application form popup — thin wrapper around RoomApplicationView, shown
+   over the public company profile when an opportunity card is clicked. */
+function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, showToast }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const submit = () => {
-    if (!form.name || !form.email) { showToast?.("Please fill in your name and email."); return; }
-    setSubmitted(true);
-  };
-
-  const formatLabel = (k) => (k || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  const meta = [
-    opp.deadline && { label: "Deadline", value: opp.deadline, accent: true },
-    opp.location && { label: "Location", value: opp.location },
-    opp.format && { label: "Format", value: opp.format === "in_person" ? "In Person" : opp.format === "online" ? "Online" : opp.format === "self_tape" ? "Self-tape" : formatLabel(opp.format) },
-    opp.opportunityType && { label: "Type", value: formatLabel(opp.opportunityType) },
-    (opp.roles || opp.artistType) && { label: "Roles", value: Array.isArray(opp.roles) ? opp.roles.join(", ") : (opp.roles || opp.artistType) },
-    opp.castingDate && { label: "Casting", value: opp.castingDate },
-    opp.rehearsalDates && { label: "Rehearsals", value: opp.rehearsalDates },
-    opp.shootingDates && { label: "Period", value: opp.shootingDates },
-    opp.whenIs && !opp.shootingDates && { label: "When", value: opp.whenIs },
-  ].filter(Boolean);
-
   return (
     <div className="overlay app-form-overlay" onClick={onClose}>
-      <div className="share-modal app-form-modal" onClick={e => e.stopPropagation()}>
+      <div className="app-form-modal" onClick={e => e.stopPropagation()}>
         <button className="app-form-close" onClick={onClose} aria-label="Close"><I n="x" s={18}/></button>
-        {(opp.coverImage || opp.banner) ? (
-          <div className="app-form-banner" style={{ backgroundImage: `url(${opp.coverImage || opp.banner})` }}>
-            <div className="app-form-banner-grad"/>
-          </div>
-        ) : (
-          <div className="app-form-banner app-form-banner-grad-only" style={{ background: `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}/>
-        )}
-
-        <div className="app-form-body">
-          <div className="app-form-head">
-            <div className="app-form-type">{formatLabel(opp.opportunityType || opp.type || "Audition")}</div>
-            <h2 className="app-form-title">{opp.title}</h2>
-            <div className="app-form-company">
-              <div className="app-form-company-mark">{(profile.name.split(/\s+/).slice(0,2).map(w=>w[0]).join("") || "•").toUpperCase()}</div>
-              <span>{profile.name}</span>
-              {profile.verified && <span className="pcp-verified" style={{width:14,height:14}}><I n="check" s={9}/></span>}
-            </div>
-          </div>
-
-          {opp.description && <p className="app-form-desc">{opp.description}</p>}
-
-          {meta.length > 0 && (
-            <div className="app-form-meta">
-              {meta.map((m, i) => (
-                <div key={i} className="app-form-meta-i">
-                  <div className="app-form-meta-l">{m.label}</div>
-                  <div className={`app-form-meta-v${m.accent ? " accent" : ""}`}>{m.value}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {opp.offer && (
-            <div className="app-form-offer">
-              <div className="app-form-meta-l">Offer</div>
-              <div>{opp.offer}</div>
-            </div>
-          )}
-
-          {isOwner ? (
-            <div className="app-form-preview-tag">
-              <I n="eye" s={12}/> Preview — this is what artists see when applying.
-            </div>
-          ) : submitted ? (
-            <div className="app-form-success">
-              <div className="app-form-success-icon"><I n="check" s={22}/></div>
-              <h3>Application submitted</h3>
-              <p>Thanks for applying to {opp.title}. {profile.name} will review your application and get back to you.</p>
-              <button className="btn btn-s btn-sm" onClick={onClose}>Close</button>
-            </div>
-          ) : (
-            <div className="app-form-form">
-              <div className="app-form-form-head">
-                <h3>Apply now</h3>
-                <p>Submit your application directly. We'll match it to your Lanced profile if you have one.</p>
-              </div>
-              <div className="afm-grid">
-                <div className="field"><label>Full name</label><input placeholder="Your name" value={form.name} onChange={e => setForm(p => ({...p, name:e.target.value}))}/></div>
-                <div className="field"><label>Email</label><input placeholder="your@email.com" type="email" value={form.email} onChange={e => setForm(p => ({...p, email:e.target.value}))}/></div>
-                <div className="field afm-full"><label>Motivation</label><textarea placeholder="Tell them why you're a great fit…" value={form.motivation} onChange={e => setForm(p => ({...p, motivation:e.target.value}))} style={{minHeight:120}}/></div>
-                <div className="field afm-full"><label>Showreel / Video link (optional)</label><input placeholder="https://vimeo.com/…" value={form.video} onChange={e => setForm(p => ({...p, video:e.target.value}))}/></div>
-              </div>
-              <div className="app-form-actions">
-                <button className="btn btn-s btn-sm" onClick={onClose}>Cancel</button>
-                <button className="btn btn-p" onClick={submit}><I n="send" s={12}/> Submit application</button>
-              </div>
-            </div>
-          )}
+        <div className="app-form-modal-scroll">
+          <RoomApplicationView
+            room={opp}
+            company={{ name: profile.name, verified: profile.verified, accentColor: profile.accentColor }}
+            roomMaterials={roomMaterials}
+            roomQuestions={roomQuestions}
+            roomProfileReqs={roomProfileReqs}
+            isOwner={isOwner}
+            showToast={showToast}
+          />
         </div>
       </div>
     </div>
@@ -6461,6 +6595,9 @@ export default function AgencyShell() {
           profile={profile}
           viewerMode={publicCompany === "self" ? "owner" : "artist"}
           opportunities={profileOpps}
+          roomMaterials={publicCompany === "self" ? roomMaterials : []}
+          roomQuestions={publicCompany === "self" ? roomQuestions : []}
+          roomProfileReqs={publicCompany === "self" ? roomProfileReqs : {}}
           onClose={() => setPublicCompany(null)}
           onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
           showToast={showToast}
@@ -6487,84 +6624,15 @@ export default function AgencyShell() {
         </div>
         <div className="pub-casting-body">
           <div className="pub-casting-card">
-            {pcRoom.banner ? <img className="pcc-banner" src={pcRoom.banner} alt="" /> : <div className="pcc-banner-ph"><I n="image" s={32}/></div>}
-            <div className="pcc-body">
-              <h1 className="pcc-title">{pcRoom.title}</h1>
-              <p className="pcc-desc">{pcRoom.description}</p>
-              <div className="pcc-meta">
-                <div className="pcc-meta-i"><div className="pm-l">Deadline</div><div className="pm-v">{pcRoom.deadline || "Open"}</div></div>
-                <div className="pcc-meta-i"><div className="pm-l">Format</div><div className="pm-v">{pcRoom.format === "in_person" ? "In Person" : pcRoom.format === "online" ? "Online" : "Self-tape"}</div></div>
-                <div className="pcc-meta-i"><div className="pm-l">Roles</div><div className="pm-v">{pcRoom.roles.join(", ") || "—"}</div></div>
-              </div>
-            </div>
-            {publicCastingSubmitted ? (
-              <div className="pub-casting-success">
-                <div style={{width:48,height:48,borderRadius:"50%",background:"#E6FFF0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",color:"var(--green)"}}><I n="check" s={24}/></div>
-                <h2>Application Submitted</h2>
-                <p>Thank you for your interest. We will review your application and get back to you.</p>
-              </div>
-            ) : (
-              <div className="pub-casting-form">
-                {/* Description & deadlines */}
-                {(pcRoom.description || pcRoom.deadline || pcRoom.opportunityStart) && (
-                  <div style={{background:"rgba(96,77,255,.04)",borderRadius:12,padding:"16px 18px",marginBottom:20,border:"1px solid rgba(96,77,255,.08)"}}>
-                    {pcRoom.description && <p style={{fontSize:13,color:"var(--g6)",lineHeight:1.6,marginBottom:pcRoom.deadline||pcRoom.opportunityStart?12:0}}>{pcRoom.description}</p>}
-                    <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-                      {pcRoom.deadline && <div style={{fontSize:12}}><span style={{color:"var(--g4)",fontWeight:500}}>Deadline:</span> <span style={{fontWeight:600,color:"var(--red)"}}>{pcRoom.deadline}</span></div>}
-                      {pcRoom.opportunityStart && <div style={{fontSize:12}}><span style={{color:"var(--g4)",fontWeight:500}}>Period:</span> <span style={{fontWeight:600,color:"var(--tx)"}}>{pcRoom.opportunityStart}{pcRoom.opportunityEnd ? ` — ${pcRoom.opportunityEnd}` : ""}</span></div>}
-                      {pcRoom.location && <div style={{fontSize:12}}><span style={{color:"var(--g4)",fontWeight:500}}>Location:</span> <span style={{fontWeight:600,color:"var(--tx)"}}>{pcRoom.location}</span></div>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Login/create account prompt */}
-                <div style={{background:"var(--g1)",borderRadius:12,padding:"16px 18px",marginBottom:20,textAlign:"center"}}>
-                  <div style={{fontSize:13,fontWeight:600,color:"var(--tx)",marginBottom:4}}>Login with Lanced to apply</div>
-                  <div style={{fontSize:11,color:"var(--g4)",marginBottom:12}}>or quickly create an account to get started</div>
-                  <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-                    <button className="btn btn-p btn-sm" onClick={() => showToast("Login flow — coming soon")}><I n="log-in" s={12}/> Sign in with Lanced</button>
-                    <button className="btn btn-s btn-sm" onClick={() => showToast("Signup flow — coming soon")}><I n="user-plus" s={12}/> Create Account</button>
-                  </div>
-                </div>
-
-                <div style={{position:"relative",textAlign:"center",marginBottom:20}}><div style={{position:"absolute",top:"50%",left:0,right:0,height:1,background:"var(--g2)"}}></div><span style={{position:"relative",background:"var(--sf)",padding:"0 12px",fontSize:11,color:"var(--g4)",fontWeight:500}}>or apply directly</span></div>
-
-                <h3>Apply Now</h3>
-                <div className="field"><label>Full Name</label><input placeholder="Your name" value={publicCastingForm.name} onChange={e => setPublicCastingForm(p => ({...p, name:e.target.value}))}/></div>
-                <div className="field"><label>Email</label><input placeholder="your@email.com" type="email" value={publicCastingForm.email} onChange={e => setPublicCastingForm(p => ({...p, email:e.target.value}))}/></div>
-                <div className="field"><label>Motivation</label><textarea placeholder="Tell us why you're a great fit for this role..." value={publicCastingForm.motivation} onChange={e => setPublicCastingForm(p => ({...p, motivation:e.target.value}))} style={{height:120}}/></div>
-                <div className="field"><label>Showreel / Video Link (optional)</label><input placeholder="https://vimeo.com/..." value={publicCastingForm.video} onChange={e => setPublicCastingForm(p => ({...p, video:e.target.value}))}/></div>
-
-                {/* Dynamic materials from form builder */}
-                {roomMaterials.filter(m => m.required).length > 0 && (
-                  <div style={{marginTop:12}}>
-                    <div style={{fontSize:12,fontWeight:600,color:"var(--tx)",marginBottom:8}}>Required Materials</div>
-                    {roomMaterials.filter(m => m.required).map(mat => (
-                      <div key={mat.id} className="field">
-                        <label>{mat.title} {mat.type === "video" ? "(video link)" : mat.type === "photo" ? "(image upload)" : "(document)"}</label>
-                        <input placeholder={`Upload or link your ${mat.title.toLowerCase()}...`} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:20}}>
-                  <button className="btn btn-p btn-lg" onClick={() => {
-                    if (!publicCastingForm.name || !publicCastingForm.email) return;
-                    const newCand = {
-                      id:"cand"+Date.now(), roomId:pcRoom.id, artistId:null, number:(candidates.filter(c=>c.roomId===pcRoom.id).length)+1,
-                      status:"new", labels:[], rejectionReason:null, appliedAt:"Mar 18, 2026", reviewedBy:[], notes:[],
-                      motivation:publicCastingForm.motivation, videos:publicCastingForm.video ? [{label:"Showreel",url:publicCastingForm.video,thumb:null}] : [],
-                      availability:{available:true,conflicts:[]},
-                      externalApplicant:{name:publicCastingForm.name,email:publicCastingForm.email,age:null,height:null,nationality:null,gender:null,location:null,img:null}
-                    };
-                    setCandidates(p => [...p, newCand]);
-                    setRooms(p => p.map(r => r.id === pcRoom.id ? {...r, stats:{...r.stats, total:r.stats.total+1}} : r));
-                    setPublicCastingSubmitted(true);
-                  }}><I n="send" s={14}/> Submit Application</button>
-                </div>
-              </div>
-            )}
+            <RoomApplicationView
+              room={pcRoom}
+              company={{ name: MOCK_AGENCY.name, verified: MOCK_AGENCY.verified, accentColor: MOCK_AGENCY.accentColor }}
+              roomMaterials={roomMaterials}
+              roomQuestions={roomQuestions}
+              roomProfileReqs={roomProfileReqs}
+              isOwner={false}
+              showToast={showToast}
+            />
           </div>
         </div>
       </div>
