@@ -2800,7 +2800,7 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .breadcrumb-bar>div:first-child{min-width:0;overflow:hidden;white-space:nowrap;flex:1}
 .breadcrumb-bar .content-header{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .breadcrumb-bar .content-header .btn{padding:6px 10px;font-size:11px}
-.ctx-notif-bell{flex-shrink:0;width:34px;height:34px;border-radius:10px;border:1px solid var(--g2);background:var(--sf);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--g5);transition:all .15s;position:relative;margin-left:4px}
+.ctx-notif-bell{flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--g2);background:var(--sf);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--g5);transition:all .15s;position:relative;margin-left:4px}
 .ctx-notif-bell:hover{border-color:var(--ac);color:var(--ac)}
 .ctx-notif-bell .nb-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sf)}
 .ctx-showcase .breadcrumb-bar,.ctx-room .breadcrumb-bar{border-image:linear-gradient(90deg,var(--ctx-accent) 0%,transparent 70%) 1}
@@ -6401,7 +6401,7 @@ export default function AgencyShell() {
                   {currentRoom.status !== "published" ? (
                     <button className="btn btn-p btn-sm" onClick={() => { setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, status:"published"} : r)); showToast("Casting room published!"); }}><I n="globe" s={14}/> Publish</button>
                   ) : (
-                    <span style={{fontSize:11,fontWeight:600,padding:"4px 12px",borderRadius:40,background:"#E6FFF0",color:"var(--green)",display:"inline-flex",alignItems:"center",gap:4}}><I n="check" s={11}/> Published</span>
+                    <span style={{fontSize:13,fontWeight:600,height:38,padding:"0 16px",borderRadius:40,background:"#E6FFF0",color:"var(--green)",display:"inline-flex",alignItems:"center",gap:6,boxSizing:"border-box"}}><I n="check" s={14}/> Published</span>
                   )}
                   <button className="btn btn-s" onClick={() => setPublicCasting(currentRoom.id)}><I n="eye" s={14}/> Preview</button>
                 </>
