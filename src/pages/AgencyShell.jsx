@@ -157,7 +157,14 @@ const INFO_TIPS = {
 };
 
 const SEED_ARTISTS = [
-  { id:"a1", name:"Amara Osei", role:"Lead Dancer", speciality:"Contemporary & Afro-fusion", age:26, height:"5'8\"", nationality:"British-Ghanaian", hairColor:"Black", education:"Royal Ballet School", styles:["Contemporary","Afro-fusion","Floor Work"], location:"London, UK", experience:"Royal Ballet, Akram Khan Company", bio:"Trained at the Royal Ballet School before joining Akram Khan's company for three seasons.", rating:4.9, img:"/demo/artists/nisha-huizing.jpg", img2:"/demo/artists/boris-de-jong/pexels-cottonbro-5102571.jpg", video:true, vidThumb:"/demo/banners/pexels-mart-production-7319706.jpg", media:[{type:"photo",url:"/demo/artists/nisha-huizing.jpg",label:"Headshot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-5102571.jpg",label:"Movement Shot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg",label:"Studio"},{type:"video",url:"#",thumb:"/demo/artists/boris-de-jong/pexels-cottonbro-6221579.jpg",label:"Showreel",duration:"3:24"}], specs:{eyeColor:"Dark Brown",shoeSize:"EU 39",bust:"32\"",waist:"26\"",hips:"35\"",dressSize:"S",suitSize:"",tattoos:"None",piercings:"Ears",skinTone:"Medium",buildType:"Athletic"}, createdAt:"2026-02-10" },
+  { id:"a1", name:"Amara Osei", role:"Lead Dancer", speciality:"Contemporary & Afro-fusion", age:26, height:"5'8\"", nationality:"British-Ghanaian", hairColor:"Black", education:"Royal Ballet School", styles:["Contemporary","Afro-fusion","Floor Work"], location:"London, UK", experience:"Royal Ballet, Akram Khan Company", bio:"Trained at the Royal Ballet School before joining Akram Khan's company for three seasons.", experiences:[
+    { title:"Lead Dancer", company:"Akram Khan Company", from:"Sep 2022", to:"Current", location:"London, UK", description:"Three seasons including the European tour of XENOS and Outwitting the Devil." },
+    { title:"Soloist", company:"Royal Ballet — Apprentice Programme", from:"Jul 2021", to:"Aug 2022", location:"London, UK", description:"Selected for the apprentice programme; covered featured roles in Manon and The Sleeping Beauty." },
+    { title:"Guest Dancer", company:"Sadler's Wells — New Wave Associates", from:"Mar 2024", to:"Mar 2024", location:"London, UK", description:"Two-week residency developing a duet that premiered at the Lilian Baylis." },
+  ], educations:[
+    { title:"BA (Hons) Dance", school:"Royal Ballet School", from:"Sep 2017", to:"Jul 2021", location:"London, UK", description:"Trained under Gailene Stock and Christopher Powney; graduated with first-class honours." },
+    { title:"Afro-fusion Intensive", school:"Vocab Dance — Vocab Studio", from:"Jun 2023", to:"Jul 2023", location:"Accra, Ghana", description:"Six-week intensive in West African contemporary technique with Jesse Bonnell." },
+  ], rating:4.9, img:"/demo/artists/nisha-huizing.jpg", img2:"/demo/artists/boris-de-jong/pexels-cottonbro-5102571.jpg", video:true, vidThumb:"/demo/banners/pexels-mart-production-7319706.jpg", media:[{type:"photo",url:"/demo/artists/nisha-huizing.jpg",label:"Headshot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-5102571.jpg",label:"Movement Shot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg",label:"Studio"},{type:"video",url:"#",thumb:"/demo/artists/boris-de-jong/pexels-cottonbro-6221579.jpg",label:"Showreel",duration:"3:24"}], specs:{eyeColor:"Dark Brown",shoeSize:"EU 39",bust:"32\"",waist:"26\"",hips:"35\"",dressSize:"S",suitSize:"",tattoos:"None",piercings:"Ears",skinTone:"Medium",buildType:"Athletic"}, createdAt:"2026-02-10" },
   { id:"a2", name:"Kai Tanaka", role:"Ensemble", speciality:"Street Dance & Gaga Technique", age:24, height:"5'11\"", nationality:"Japanese", hairColor:"Dark Brown", education:"Batsheva Gaga Intensive", styles:["Hip-Hop","Contemporary","Breaking"], location:"Tokyo, JP", experience:"Batsheva Dance Company, World of Dance S4", bio:"Movement vocabulary spans street dance and Gaga technique.", rating:4.8, img:"/demo/artists/xi-zao.jpg", img2:"/demo/artists/boris-de-jong/pexels-cottonbro-5103506.jpg", video:true, vidThumb:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", media:[{type:"photo",url:"/demo/artists/xi-zao.jpg",label:"Headshot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-5103506.jpg",label:"Performance"},{type:"photo",url:"/demo/artists/jusef-al-haddad/karsten-winegeart-UicC_FIozPc-unsplash (1).jpg",label:"Behind the Scenes"},{type:"video",url:"#",thumb:"/demo/artists/jusef-al-haddad/karsten-winegeart-oa7hEAEYMlI-unsplash.jpg",label:"Showreel",duration:"2:48"},{type:"video",url:"#",thumb:"/demo/artists/jusef-al-haddad/karsten-winegeart-xF2kGH4rqQk-unsplash.jpg",label:"Breaking Solo",duration:"1:32"}], specs:{eyeColor:"Brown",shoeSize:"EU 42",bust:"",waist:"30\"",hips:"",dressSize:"",suitSize:"M",tattoos:"Small wrist",piercings:"None",skinTone:"Light",buildType:"Athletic"}, createdAt:"2026-02-12" },
   { id:"a3", name:"Sofia Reyes", role:"Ensemble", speciality:"Partnering & Ballet", age:28, height:"5'6\"", nationality:"Spanish", hairColor:"Auburn", education:"Conservatori del Liceu", styles:["Ballet","Contemporary","Partnering"], location:"Barcelona, ES", experience:"Nederlands Dans Theater, Crystal Pite", bio:"Four seasons with NDT2, specializes in partnering work.", rating:4.7, img:"/demo/artists/lara-knoop.jpg", img2:"/demo/artists/boris-de-jong/pexels-cottonbro-6221374.jpg", video:true, vidThumb:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", media:[{type:"photo",url:"/demo/artists/lara-knoop.jpg",label:"Headshot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-6221374.jpg",label:"Contemporary"},{type:"video",url:"#",thumb:"/demo/artists/jusef-al-haddad/karsten-winegeart-yRhMsT3udy0-unsplash.jpg",label:"Partnering Reel",duration:"2:15"}], specs:{eyeColor:"Green",shoeSize:"EU 38",bust:"33\"",waist:"25\"",hips:"35\"",dressSize:"S",suitSize:"",tattoos:"None",piercings:"Ears, Nose",skinTone:"Fair",buildType:"Lean"}, createdAt:"2026-02-15" },
   { id:"a4", name:"Marcus Webb", role:"Movement Director", speciality:"Movement Direction", age:32, height:"6'1\"", nationality:"American", hairColor:"Black", education:"Juilliard BFA Dance", styles:["Contemporary","Release Technique","Improvisation"], location:"New York, US", experience:"Martha Graham Dance Co., Juilliard Faculty", bio:"12 years of professional performance and direction.", rating:4.9, img:"/demo/artists/kevin-lao.jpg", img2:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg", video:true, vidThumb:"/demo/banners/shutterstock_1234830199.jpg", media:[{type:"photo",url:"/demo/artists/kevin-lao.jpg",label:"Headshot"},{type:"photo",url:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg",label:"Portrait"},{type:"photo",url:"/demo/artists/3.jpg",label:"Direction"},{type:"video",url:"#",thumb:"/demo/artists/4.jpg",label:"Direction Reel",duration:"4:10"}], createdAt:"2026-01-20" },
@@ -2619,6 +2626,21 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .cand-center{display:flex;flex-direction:column;gap:16px;overflow-y:auto;padding-right:4px;min-height:0}
 .cand-center .cc-section{background:var(--sf);border-radius:14px;border:1px solid var(--g2);padding:20px}
 .cand-center .cc-section h3{font-size:14px;font-weight:600;margin-bottom:10px}
+/* Additional Questions in candidate detail */
+.cd-q-list{display:flex;flex-direction:column;gap:10px}
+.cd-q-item{padding:14px 16px;background:var(--g1);border:1px solid var(--g2);border-radius:12px}
+.cd-q-q{font-size:13px;font-weight:600;color:var(--tx);line-height:1.45;margin-bottom:4px}
+.cd-q-num{color:var(--g4);font-weight:500;margin-right:2px}
+.cd-q-a{font-size:13px;color:var(--g5);line-height:1.55;white-space:pre-wrap}
+/* Experiences & Education resume cards */
+.cd-resume-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.cd-resume-col h3{margin-bottom:12px}
+.cd-resume-cards{display:flex;flex-direction:column;gap:10px}
+.cd-resume-card{padding:14px 16px;background:var(--g1);border:1px solid var(--g2);border-radius:12px}
+.cd-resume-title{font-size:13.5px;font-weight:600;color:var(--tx);line-height:1.35}
+.cd-resume-meta{font-size:12px;color:var(--g5);font-style:italic;margin-top:4px;line-height:1.45}
+.cd-resume-desc{font-size:12.5px;color:var(--g5);line-height:1.55;margin-top:6px}
+@media (max-width:880px){.cd-resume-grid{grid-template-columns:1fr;gap:18px}}
 .cand-center .cc-motivation{font-size:13px;color:var(--g5);line-height:1.6;white-space:pre-wrap}
 .cand-center .cc-video-tabs{display:flex;gap:4px;margin-bottom:12px}
 .cand-center .cc-video-tabs button{font-family:var(--sans);font-size:11px;font-weight:500;padding:5px 12px;border-radius:40px;border:1px solid var(--g2);background:var(--sf);cursor:pointer;color:var(--g5);transition:all .15s}
@@ -7247,10 +7269,10 @@ export default function AgencyShell() {
   const getCandidateInfo = (cand) => {
     if (cand.artistId) {
       const a = artists.find(x => x.id === cand.artistId);
-      return a ? { name:a.name, img:a.img, age:a.age, height:a.height, nationality:a.nationality, gender:a.gender || "—", location:a.location, styles:a.styles, role:a.role, specs:a.specs, bio:a.bio, experience:a.experience, education:a.education } : { name:"Unknown", img:null };
+      return a ? { name:a.name, img:a.img, age:a.age, height:a.height, nationality:a.nationality, gender:a.gender || "—", location:a.location, styles:a.styles, role:a.role, specs:a.specs, bio:a.bio, experience:a.experience, education:a.education, experiences:a.experiences, educations:a.educations } : { name:"Unknown", img:null };
     }
     const e = cand.externalApplicant || {};
-    return { name:e.name||"Applicant", img:e.img||null, age:e.age, height:e.height, nationality:e.nationality, gender:e.gender||"—", location:e.location||"—", styles:[], role:"—", specs:null, bio:null, experience:null, education:null };
+    return { name:e.name||"Applicant", img:e.img||null, age:e.age, height:e.height, nationality:e.nationality, gender:e.gender||"—", location:e.location||"—", styles:[], role:"—", specs:null, bio:null, experience:null, education:null, experiences:[], educations:[] };
   };
 
   /* ━━━ ROUNDS HELPERS ━━━ */
@@ -12180,42 +12202,75 @@ export default function AgencyShell() {
                       );
                     })()}
 
-                    {/* Comp Card */}
-                    {info.specs && (
-                      <div className="cc-section cc-section-comp">
-                        <h3>Comp Card</h3>
-                        <div className="cc-specs">
-                          {Object.entries(info.specs).filter(([,v]) => v).map(([key, val]) => (
-                            <div className="cc-spec-item" key={key}>
-                              <span className="csi-label">{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
-                              <span className="csi-value">{val}</span>
-                            </div>
-                          ))}
+                    {/* Additional Questions — what the applicant answered to the room's questions */}
+                    {(() => {
+                      const askable = (roomQuestions || []).filter(q => cand.answers && cand.answers[q.id]);
+                      if (askable.length === 0) return null;
+                      return (
+                        <div className="cc-section cc-section-questions">
+                          <h3>Additional Questions</h3>
+                          <div className="cd-q-list">
+                            {askable.map((q, i) => (
+                              <div key={q.id} className="cd-q-item">
+                                <div className="cd-q-q"><span className="cd-q-num">{i + 1}.</span> {q.question}</div>
+                                <div className="cd-q-a">{cand.answers[q.id]}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
-                    {/* Experience */}
-                    {info.experience && (
-                      <div className="cc-section cc-section-experience">
-                        <h3>Experience</h3>
-                        <div style={{fontSize:13,color:"var(--g5)",lineHeight:1.6}}>{info.experience}</div>
-                      </div>
-                    )}
-
-                    {/* Education */}
-                    {info.education && (
-                      <div className="cc-section cc-section-education">
-                        <h3>Education</h3>
-                        <div style={{fontSize:13,color:"var(--g5)",lineHeight:1.6}}>{info.education}</div>
-                      </div>
-                    )}
-
-                    {/* Bio */}
-                    {info.bio && (
-                      <div className="cc-section cc-section-bio">
-                        <h3>Bio</h3>
-                        <div style={{fontSize:13,color:"var(--g5)",lineHeight:1.6}}>{info.bio}</div>
+                    {/* Experiences & Education — two-column on desktop */}
+                    {((info.experiences && info.experiences.length > 0) || info.experience ||
+                      (info.educations && info.educations.length > 0) || info.education) && (
+                      <div className="cc-section cc-section-resume">
+                        <div className="cd-resume-grid">
+                          {((info.experiences && info.experiences.length > 0) || info.experience) && (
+                            <div className="cd-resume-col">
+                              <h3>Experiences</h3>
+                              <div className="cd-resume-cards">
+                                {info.experiences && info.experiences.length > 0 ? info.experiences.map((x, i) => (
+                                  <div key={i} className="cd-resume-card">
+                                    <div className="cd-resume-title">{x.title}{x.company ? ` — ${x.company}` : ""}</div>
+                                    {(x.from || x.to || x.location) && (
+                                      <div className="cd-resume-meta">
+                                        {(x.from || x.to) && <span>{[x.from, x.to].filter(Boolean).join(" - ")}</span>}
+                                        {x.location && (x.from || x.to) && <span> | </span>}
+                                        {x.location && <span>{x.location}</span>}
+                                      </div>
+                                    )}
+                                    {x.description && <div className="cd-resume-desc">{x.description}</div>}
+                                  </div>
+                                )) : (
+                                  <div className="cd-resume-card"><div className="cd-resume-desc">{info.experience}</div></div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {((info.educations && info.educations.length > 0) || info.education) && (
+                            <div className="cd-resume-col">
+                              <h3>Training &amp; Education</h3>
+                              <div className="cd-resume-cards">
+                                {info.educations && info.educations.length > 0 ? info.educations.map((x, i) => (
+                                  <div key={i} className="cd-resume-card">
+                                    <div className="cd-resume-title">{x.title}{x.school ? ` — ${x.school}` : ""}</div>
+                                    {(x.from || x.to || x.location) && (
+                                      <div className="cd-resume-meta">
+                                        {(x.from || x.to) && <span>{[x.from, x.to].filter(Boolean).join(" - ")}</span>}
+                                        {x.location && (x.from || x.to) && <span> | </span>}
+                                        {x.location && <span>{x.location}</span>}
+                                      </div>
+                                    )}
+                                    {x.description && <div className="cd-resume-desc">{x.description}</div>}
+                                  </div>
+                                )) : (
+                                  <div className="cd-resume-card"><div className="cd-resume-desc">{info.education}</div></div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
