@@ -1302,28 +1302,50 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-readmore:hover{opacity:.7}
 .pcp-rail-empty{font-size:12px;color:var(--g4)}
 .pcp-bottom-bar{display:none}
+.pcp-bottom-space{height:55vh;flex-shrink:0;pointer-events:none}
 @media (max-width:980px){
   .pcp-grid{grid-template-columns:1fr;grid-template-areas:"rail" "main";padding:20px;gap:24px}
   .pcp-rail{position:static}
-  .pcp-stats{padding:18px 20px;gap:32px}
-  .pcp-id-card-anchor{padding:0 16px}
-  .pcp-id-card{left:16px;right:16px;bottom:16px;max-width:none;padding:14px 16px;gap:12px;border-radius:16px}
+  .pcp-banner{aspect-ratio:16/8}
+  .pcp-id-card-anchor{padding:0 14px}
+  .pcp-id-card{left:14px;right:14px;bottom:14px;max-width:none;padding:14px 16px;gap:12px;border-radius:16px}
   .pcp-id-card-logo{width:54px;height:54px;border-radius:12px}
   .pcp-id-card-info .pcp-name{font-size:17px}
-  .pcp-id-card-info .pcp-tagline{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pcp-id-card-info .pcp-tagline{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:none}
   .pcp-id-card-actions{display:none}
-  .pcp-team{grid-template-columns:repeat(3,1fr)}
+  .pcp-team{grid-template-columns:repeat(3,1fr);gap:18px 14px}
   .pcp-media-grid{grid-template-columns:repeat(3,1fr)}
-  .pcp-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--g2);z-index:25}
+  .pcp-section-header h2{font-size:16px}
+  .pcp-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px env(safe-area-inset-bottom,12px);background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--g2);z-index:25}
   .dark .pcp-bottom-bar{background:rgba(20,20,30,.85)}
-  .pcp-bottom-info{font-size:12px;color:var(--tx);font-weight:500;display:inline-flex;align-items:center;gap:8px}
+  .pcp-bottom-info{font-size:12px;color:var(--tx);font-weight:500;display:inline-flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pcp-tabs-inner{padding:0 18px}
+  .pcp-tab{padding:13px 14px;font-size:12.5px}
+  .pcp-bottom-space{height:35vh}
+  .pcp-section{scroll-margin-top:108px}
+  .pcp-opp{flex-wrap:wrap;padding:10px;gap:12px}
+  .pcp-opp-thumb{width:60px;height:60px;border-radius:8px}
+  .pcp-opp-cta{width:100%;order:3}
 }
 @media (max-width:560px){
-  .pcp-team{grid-template-columns:repeat(2,1fr)}
-  .pcp-media-grid{grid-template-columns:repeat(2,1fr)}
-  .pcp-topbar{padding:10px 14px}
+  .pcp-team{grid-template-columns:repeat(2,1fr);gap:16px 12px}
+  .pcp-team-avatar{width:74px;height:74px}
+  .pcp-media-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .pcp-topbar{padding:8px 12px;gap:8px}
   .pcp-topbar-title{display:none}
+  .pcp-topbar-actions{flex-shrink:0}
   .pcp-id-card-info .pcp-tagline{display:none}
+  .pcp-id-card-info .pcp-name{font-size:16px}
+  .pcp-id-card-info .pcp-meta{font-size:11.5px}
+  .pcp-id-card-info .pcp-hiring-pill{margin-top:8px;font-size:11px;padding:4px 10px 4px 9px}
+  .pcp-id-card-logo{width:48px;height:48px}
+  .pcp-id-card{padding:12px 14px;gap:10px}
+  .pcp-banner{aspect-ratio:16/9}
+  .pcp-stat{flex:1;min-width:0}
+  .pcp-stat-v{font-size:18px}
+  .pcp-grid{padding:16px}
+  .pcp-section-header{flex-wrap:wrap}
+  .pcp-bottom-space{height:25vh}
 }
 .pcp-about-modal{max-width:600px}
 .pcp-about-modal-text{font-size:14px;line-height:1.7;color:var(--tx);margin:0;white-space:pre-wrap}
@@ -4874,20 +4896,26 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
     return () => ro.disconnect();
   }, []);
 
-  // Parallax: banner scrolls slower + fades; floating card fades out early.
+  // Parallax: banner translates with scroll (no fade — just scrolls away).
+  // Card scrolls up slightly faster, and only fades right at the top.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const onScroll = () => {
       const y = root.scrollTop;
+      const bannerH = bannerRef.current?.offsetHeight || 240;
       if (bannerRef.current) {
-        bannerRef.current.style.transform = `translateY(${y * 0.4}px)`;
-        bannerRef.current.style.opacity = Math.max(0, 1 - y / 320);
+        // pure parallax — banner moves down at 0.35x, no opacity change
+        bannerRef.current.style.transform = `translate3d(0, ${y * 0.35}px, 0)`;
       }
       if (cardRef.current) {
-        const fade = Math.max(0, 1 - y / 220);
-        cardRef.current.style.opacity = String(fade);
-        cardRef.current.style.transform = `translateY(${y * -0.15}px)`;
+        // small upward parallax so the card lifts a touch ahead of the banner
+        cardRef.current.style.transform = `translate3d(0, ${y * -0.12}px, 0)`;
+        // only fade once the card is essentially at the topbar
+        const fadeStart = bannerH * 0.7;
+        const fadeEnd = bannerH * 1.05;
+        const t = (y - fadeStart) / (fadeEnd - fadeStart);
+        cardRef.current.style.opacity = String(Math.max(0, Math.min(1, 1 - t)));
       }
     };
     root.addEventListener("scroll", onScroll, { passive: true });
@@ -5138,6 +5166,10 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           </div>
         </aside>
       </div>
+
+      {/* Spacer so short profiles still have enough scroll room
+          to push the hero off-screen */}
+      <div className="pcp-bottom-space" aria-hidden="true"/>
 
       {/* About read-more modal */}
       {showAboutModal && createPortal(
