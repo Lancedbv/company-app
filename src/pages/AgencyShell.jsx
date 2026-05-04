@@ -74,6 +74,7 @@ const MOCK_AGENCY = {
   hideTeam: false,
   hideMedia: false,
   hideNews: false,
+  messageEnabled: true,
 };
 
 const COMPANY_TYPES = ["Studio","Theater","Dance Company","Theater Company","Opera","Ballet Company","Performing Arts Company","Production Company","Casting Agency","Other"];
@@ -311,6 +312,13 @@ const MOCK_ROOMS = [
   {
     id:"room1", title:"Dance Audition — Season 2027/2028",
     roles:["Contemporary Dancer","Ballet Dancer","Ensemble"], description:"Auditions for new company members joining Theater Lanced's 2027/2028 season. Seeking versatile dancers with strong classical and contemporary technique.",
+    lookingFor:[
+      "Strong contemporary and classical technique",
+      "3+ years of professional or pre-professional ensemble experience",
+      "Comfortable with floor work and partnering",
+      "Open to multi-week tour commitments across Europe",
+      "Versatile movers — we cast across Lanced's full repertoire",
+    ],
     opportunityType:"audition",
     type:"open", format:"in_person", status:"published", featured:true,
     auditionFormat:"multi_date",
@@ -616,6 +624,7 @@ const getCompanyProfile = (id, mockAgency, allArtists = []) => {
       hideTeam: !!m.hideTeam,
       hideMedia: !!m.hideMedia,
       hideNews: !!m.hideNews,
+      messageEnabled: m.messageEnabled !== false,
       isSelf: true,
     };
   }
@@ -657,13 +666,14 @@ const getCompanyProfile = (id, mockAgency, allArtists = []) => {
     news: [],
     openPositions: c.openPositions || 0,
     hideArtists: false, hideTeam: false, hideMedia: false, hideNews: false,
+    messageEnabled: true,
     isSelf: false,
   };
 };
 
 /* ━━━ OPEN BOARD + BOOSTS ━━━ */
 const MOCK_OPEN_BOARD_LISTINGS = [
-  { id:"ob-1", title:"Dance Audition — Season 2027/2028", coverImage:"/demo/banners/pexels-mart-production-7319706.jpg", opportunityType:"Audition", location:"London, UK", deadline:"Apr 15, 2026", status:"live", adType:"Spotlight", price:75, premium:false, submittedDate:"Mar 12, 2026", views:2840, applicants:48, applyTo:"casting@theaterlanced.com", description:"Auditions for new company members joining Theater Lanced's 2027/2028 season. Seeking versatile dancers with strong classical and contemporary technique.", offer:"Full-time and apprenticeship contracts available. Salary scale £1,800–£3,200/month.", artistType:"Dancer", employmentType:"Full Time", category:"Audition", company:"Theater Lanced", whenIs:"Season runs Sep 2027 — Jun 2028" },
+  { id:"ob-1", title:"Dance Audition — Season 2027/2028", coverImage:"/demo/banners/pexels-mart-production-7319706.jpg", opportunityType:"Audition", location:"London, UK", deadline:"Apr 15, 2026", status:"live", adType:"Spotlight", price:75, premium:false, submittedDate:"Mar 12, 2026", views:2840, applicants:48, applyTo:"casting@theaterlanced.com", description:"Auditions for new company members joining Theater Lanced's 2027/2028 season. Seeking versatile dancers with strong classical and contemporary technique.", offer:"Full-time and apprenticeship contracts available. Salary scale £1,800–£3,200/month.", artistType:"Dancer", employmentType:"Full Time", category:"Audition", company:"Theater Lanced", whenIs:"Season runs Sep 2027 — Jun 2028", featured:true, lookingFor:["Strong contemporary technique","3+ years professional experience","Available for European tour"] },
   { id:"ob-2", title:"Residency for Movement Artists", coverImage:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", opportunityType:"Residency", location:"London, UK", deadline:"Jun 1, 2026", status:"pending", adType:"Regular", price:0, premium:true, submittedDate:"Mar 12, 2026", views:0, applicants:18, applyTo:"https://theaterlanced.com/apply", description:"Six-week paid residency for movement artists to develop new work. Studio space, mentorship, and a final showing on our main stage are included.", offer:"£3,500 stipend + studio space + accommodation.", artistType:"Choreographer", employmentType:"Project-Based", category:"Residency", company:"Theater Lanced", whenIs:"Sep 15 — Oct 26, 2026" },
   { id:"ob-3", title:"Open Call for Choreographers", coverImage:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", opportunityType:"Open Call", location:"Online", deadline:"May 20, 2026", status:"live", adType:"Regular", price:0, premium:false, submittedDate:"Mar 18, 2026", views:1230, applicants:21, applyTo:"https://theaterlanced.com/choreographers", description:"Open call for choreographers to pitch new commissions for our 2027/2028 mixed bill. Pitch a 10–25 minute piece with a clear concept and casting brief.", offer:"Commission fee £6,000–£12,000 depending on scope.", artistType:"Choreographer", employmentType:"Project-Based", category:"Open Call", company:"Theater Lanced", whenIs:"Pitches reviewed Jun 2026" },
 ];
@@ -1462,6 +1472,14 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-readmore{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:0;background:none;border:none;color:var(--pcp-accent,var(--ac));font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
 .pcp-readmore:hover{opacity:.7}
 .pcp-rail-empty{font-size:12px;color:var(--g4)}
+.pcp-rail-message{width:100%;margin-top:14px;justify-content:center}
+.pcp-rail-note{margin-top:12px;font-size:11.5px;color:var(--g4);display:flex;align-items:center;gap:5px;line-height:1.5}
+.pcp-rail-similar{display:flex;flex-direction:column;gap:6px}
+.pcp-similar-row{display:flex;align-items:center;gap:10px;padding:8px;background:var(--sf);border:1px solid var(--g2);border-radius:10px;cursor:pointer;transition:all .15s;color:var(--g5)}
+.pcp-similar-row:hover{border-color:rgba(96,77,255,.25);background:rgba(96,77,255,.04);color:var(--ac)}
+.pcp-similar-logo{width:36px;height:36px;border-radius:8px;background-color:#0A0A0A;flex-shrink:0;object-fit:cover;display:block}
+.pcp-similar-name{font-size:12.5px;font-weight:600;color:var(--tx);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcp-similar-meta{font-size:10.5px;color:var(--g4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pcp-bottom-bar{display:none}
 .pcp-main-tail{height:30vh;flex-shrink:0;pointer-events:none}
 @media (max-width:980px){
@@ -1538,6 +1556,9 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .rav-section{display:flex;flex-direction:column;gap:10px}
 .rav-section h3{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--g5);margin:0;padding-bottom:4px}
 .rav-prose{font-size:14px;line-height:1.65;color:var(--tx);margin:0;white-space:pre-wrap}
+.rav-bullets{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+.rav-bullets li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--tx);line-height:1.55}
+.rav-bullets li svg{margin-top:4px;color:var(--ac);flex-shrink:0}
 .rav-kv{display:grid;grid-template-columns:140px 1fr;gap:10px 16px;margin:0;font-size:13px}
 .rav-kv dt{color:var(--g4);font-weight:500;line-height:1.5}
 .rav-kv dd{margin:0;color:var(--tx);font-weight:500;line-height:1.5}
@@ -1567,6 +1588,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .rav-apply{min-width:240px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .rav-preview-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(96,77,255,.08);border:1px solid rgba(96,77,255,.2);border-radius:40px;font-size:12px;color:var(--ac);font-weight:500}
 .rav-owner-actions{display:flex;flex-direction:column;align-items:center;gap:12px}
+.btn.rav-pin-on{background:rgba(96,77,255,.1);border-color:rgba(96,77,255,.3);color:var(--ac)}
 /* Auth stage */
 .rav-auth{padding-top:8px;border-top:1px solid var(--g2);margin-top:6px;display:flex;flex-direction:column;gap:18px;animation:fadeIn .25s ease}
 .rav-back{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--g2);border-radius:40px;background:transparent;color:var(--g5);font-family:var(--sans);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .15s}
@@ -5072,7 +5094,7 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, onFollow, showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, onFollow, onTogglePin, onOpenCompany, similarCompanies = [], showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
@@ -5196,11 +5218,6 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                 </button>
               )}
             </div>
-            {!isOwner && (
-              <div className="pcp-id-card-actions">
-                <button className="btn btn-s btn-sm" onClick={() => showToast?.(`Message sent to ${profile.name}`)}><I n="chat" s={12}/> Message</button>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -5290,7 +5307,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                             {featured.format && <span><I n="users" s={11}/> {featured.format === "in_person" ? "In Person" : featured.format === "online" ? "Online" : "Self-tape"}</span>}
                           </div>
                           <div className="pcp-opp-feat-cta">
-                            <button className="btn btn-p" onClick={e => { e.stopPropagation(); setApplicationOpp(featured); }}>View application <I n="arrow" s={12}/></button>
+                            <button className="btn btn-p" onClick={e => { e.stopPropagation(); setApplicationOpp(featured); }}>View <I n="arrow" s={12}/></button>
                           </div>
                         </div>
                       </div>
@@ -5486,8 +5503,36 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                 {profile.tiktok && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="tiktok" s={12}/> {profile.tiktok}</a>}
                 {profile.linkedin && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="link" s={12}/> LinkedIn</a>}
               </div>
+              {!isOwner && profile.messageEnabled !== false && (
+                <button className="btn btn-p btn-sm pcp-rail-message" onClick={() => showToast?.(`Message sent to ${profile.name}`)}>
+                  <I n="chat" s={12}/> Message {profile.name.split(/\s+/)[0]}
+                </button>
+              )}
+              {isOwner && profile.messageEnabled === false && (
+                <div className="pcp-rail-note"><I n="eye" s={11}/> Direct messaging is hidden on your public profile.</div>
+              )}
             </div>
           </div>
+
+          {!isOwner && (similarCompanies || []).length > 0 && (
+            <div className="pcp-rail-card">
+              <div className="pcp-rail-section">
+                <div className="pcp-rail-title">Similar companies</div>
+                <div className="pcp-rail-similar">
+                  {similarCompanies.map(c => (
+                    <button key={c.id} className="pcp-similar-row" onClick={() => onOpenCompany?.(c.id)}>
+                      <img className="pcp-similar-logo" src={c.logo || initialsLogo(c.name)} alt={c.name}/>
+                      <div style={{flex:1,minWidth:0,textAlign:"left"}}>
+                        <div className="pcp-similar-name">{c.name}</div>
+                        <div className="pcp-similar-meta">{c.type}{c.location ? ` · ${c.location.split(",")[0]}` : ""}{c.openPositions > 0 ? ` · ${c.openPositions} open` : ""}</div>
+                      </div>
+                      <I n="chevR" s={12}/>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </aside>
       </div>
 
@@ -5542,6 +5587,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           roomProfileReqs={roomProfileReqs}
           onClose={() => setApplicationOpp(null)}
           onEmbed={(o) => { setApplicationOpp(null); setEmbedSingleOpp(o); }}
+          onTogglePin={onTogglePin}
           showToast={showToast}
         />,
         document.body
@@ -5844,7 +5890,7 @@ function EmbedJobsModal({ profile, opportunities = [], singleOpp = null, onClose
    - Marketing > Apply preview inside a room (variant="preview")
    The chrome (close button, scrim, page header) is owned by the parent;
    this component is just the body. */
-function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, onEmbed, showToast }) {
+function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, onEmbed, onTogglePin, showToast }) {
   const [stage, setStage] = useState("info"); // "info" | "auth"
   if (!room) return null;
 
@@ -5926,17 +5972,26 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
               </section>
             )}
 
-            {looking.length > 0 && (
+            {(looking.length > 0 || (room.lookingFor && room.lookingFor.length > 0)) && (
               <section className="rav-section">
                 <h3>What we're looking for</h3>
-                <dl className="rav-kv">
-                  {looking.map((l, i) => (
-                    <Fragment key={i}>
-                      <dt>{l.label}</dt>
-                      <dd>{l.value}</dd>
-                    </Fragment>
-                  ))}
-                </dl>
+                {room.lookingFor && room.lookingFor.length > 0 && (
+                  <ul className="rav-bullets">
+                    {room.lookingFor.filter(Boolean).map((b, i) => (
+                      <li key={i}><I n="check" s={11}/> <span>{b}</span></li>
+                    ))}
+                  </ul>
+                )}
+                {looking.length > 0 && (
+                  <dl className="rav-kv">
+                    {looking.map((l, i) => (
+                      <Fragment key={i}>
+                        <dt>{l.label}</dt>
+                        <dd>{l.value}</dd>
+                      </Fragment>
+                    ))}
+                  </dl>
+                )}
               </section>
             )}
 
@@ -6023,11 +6078,18 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
                   <div className="rav-preview-tag">
                     <I n="eye" s={12}/> Preview — this is what artists see when applying.
                   </div>
-                  {onEmbed && (
-                    <button className="btn btn-s btn-sm" onClick={() => onEmbed(room)}>
-                      <I n="link" s={12}/> Embed this role
-                    </button>
-                  )}
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
+                    {onTogglePin && (
+                      <button className={`btn btn-s btn-sm${room.featured ? " rav-pin-on" : ""}`} onClick={() => onTogglePin(room)}>
+                        <I n="pin" s={12}/> {room.featured ? "Unpin from featured" : "Pin as featured"}
+                      </button>
+                    )}
+                    {onEmbed && (
+                      <button className="btn btn-s btn-sm" onClick={() => onEmbed(room)}>
+                        <I n="link" s={12}/> Embed this role
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <button className="btn btn-p btn-lg rav-apply" onClick={() => setStage("auth")}>
@@ -6062,7 +6124,7 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
 
 /* Application form popup — thin wrapper around RoomApplicationView, shown
    over the public company profile when an opportunity card is clicked. */
-function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onEmbed, showToast }) {
+function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onEmbed, onTogglePin, showToast }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -6082,6 +6144,7 @@ function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQ
             roomProfileReqs={roomProfileReqs}
             isOwner={isOwner}
             onEmbed={onEmbed}
+            onTogglePin={onTogglePin}
             showToast={showToast}
           />
         </div>
@@ -6356,6 +6419,7 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideTeam} onChange={e => setDraft(d => ({...d, hideTeam:!e.target.checked}))}/><span>Show Team section</span></label>
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideMedia} onChange={e => setDraft(d => ({...d, hideMedia:!e.target.checked}))}/><span>Show Media section</span></label>
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideNews} onChange={e => setDraft(d => ({...d, hideNews:!e.target.checked}))}/><span>Show News section</span></label>
+                  <label className="pcp-toggle"><input type="checkbox" checked={draft.messageEnabled !== false} onChange={e => setDraft(d => ({...d, messageEnabled:e.target.checked}))}/><span>Allow visitors to message us</span></label>
                 </div>
               </div>
               <div className="afm-section">
@@ -7357,12 +7421,13 @@ export default function AgencyShell() {
     const overrides = companyProfileEdits[publicCompany] || {};
     const profile = { ...baseProfile, ...overrides };
     const profileOpps = publicCompany === "self"
-      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, description:r.description, format:r.format, roles:r.roles, castingDate:r.castingDate, rehearsalDates:r.rehearsalDates, shootingDates:r.shootingDates, offer:r.offer, featured:r.featured, _roomId:r.id }))
+      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, description:r.description, lookingFor:r.lookingFor, format:r.format, roles:r.roles, castingDate:r.castingDate, rehearsalDates:r.rehearsalDates, shootingDates:r.shootingDates, offer:r.offer, featured:r.featured, _roomId:r.id }))
       : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
     return (
       <>
         <style>{CSS}</style>
         <PublicCompanyProfile
+          key={publicCompany}
           profile={profile}
           viewerMode={publicCompany === "self" ? "owner" : "artist"}
           opportunities={profileOpps}
@@ -7382,6 +7447,21 @@ export default function AgencyShell() {
               ...p,
             ]);
           }}
+          onTogglePin={publicCompany === "self" ? (opp) => {
+            // Only allow pinning for self profile (rooms we control)
+            const targetId = opp._roomId || opp.id;
+            // Single-pin policy: setting featured on this one clears any others
+            const becomingFeatured = !opp.featured;
+            setRooms(prev => prev.map(r => ({
+              ...r,
+              featured: r.id === targetId ? becomingFeatured : (becomingFeatured ? false : r.featured),
+            })));
+            // Reflect immediately in the open modal
+            setApplicationOpp(p => p ? { ...p, featured: becomingFeatured } : p);
+            showToast(becomingFeatured ? `Pinned "${opp.title}" as featured` : `Unpinned "${opp.title}"`);
+          } : null}
+          onOpenCompany={(id) => setPublicCompany(id)}
+          similarCompanies={MOCK_NETWORK_COMPANIES.filter(c => c.id !== publicCompany).slice(0, 4)}
           showToast={showToast}
         />
       </>
