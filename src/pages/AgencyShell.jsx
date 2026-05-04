@@ -27,10 +27,10 @@ const MOCK_AGENCY = {
   linkedin: "theater-lanced",
   twitter: "@theaterlanced",
   team: [
-    { name: "Mira Ostrowska", role: "Artistic Director", photo: "/demo/artists/lara-knoop.jpg" },
+    { name: "Mira Ostrowska", role: "Artistic Director", photo: "/demo/artists/lara-knoop.jpg", artistId: "a3" },
     { name: "Daniel Frey", role: "Casting Director", photo: "/demo/artists/kevin-lao.jpg" },
     { name: "Anya Petrov", role: "Senior Producer", photo: "/demo/artists/melissa-nuys.jpg" },
-    { name: "Joel Asare", role: "Rehearsal Director", photo: "/demo/artists/rob-fischer.jpg" },
+    { name: "Joel Asare", role: "Rehearsal Director", photo: "/demo/artists/rob-fischer.jpg", artistId: "a12" },
     { name: "Lina Tomović", role: "Company Manager", photo: "/demo/artists/jessica-lane.jpg" },
     { name: "Theo Beauchamp", role: "Resident Choreographer", photo: "/demo/artists/joel-lewis.jpg" },
     { name: "Sasha Aleyev", role: "Movement Coach", photo: "/demo/artists/noah-silver.jpg" },
@@ -44,9 +44,36 @@ const MOCK_AGENCY = {
     { type:"photo", url:"/demo/banners/shutterstock_1234830199.jpg", title:"Costume fittings", description:"Wardrobe day for the new production.", tags:["Costume","Production"], location:"Theater Lanced HQ" },
     { type:"photo", url:"/demo/banners/shutterstock_1505137721.jpg", title:"Premiere night", description:"Curtain call after our season premiere.", tags:["Premiere","Performance"], location:"Sadler's Wells, London" },
   ],
+  news: [
+    {
+      id: "n1",
+      date: "Apr 28, 2026",
+      title: "Theater Lanced announces a new co-production with NDT",
+      excerpt: "We're thrilled to share that our 2027 spring programme will be a co-production with Nederlands Dans Theater, premiering at Sadler's Wells.",
+      coverImage: "/demo/banners/danny-howe-gwqahislnra-unsplash.jpg",
+      externalUrl: null,
+    },
+    {
+      id: "n2",
+      date: "Apr 12, 2026",
+      title: "Now hiring: 5 dancers for our 2027/2028 season",
+      excerpt: "Auditions open for contemporary, ballet and ensemble roles. We're looking for versatile artists who can move across our full repertoire.",
+      coverImage: null,
+      externalUrl: null,
+    },
+    {
+      id: "n3",
+      date: "Mar 20, 2026",
+      title: "Theater Lanced featured in Dance Magazine — read the interview",
+      excerpt: "Our artistic director Mira Ostrowska sat down with Dance Magazine to talk about the company's first decade and what's next.",
+      coverImage: "/demo/banners/shutterstock_1505137721.jpg",
+      externalUrl: "https://example.com/article",
+    },
+  ],
   hideArtists: false,
   hideTeam: false,
   hideMedia: false,
+  hideNews: false,
 };
 
 const COMPANY_TYPES = ["Studio","Theater","Dance Company","Theater Company","Opera","Ballet Company","Performing Arts Company","Production Company","Casting Agency","Other"];
@@ -285,7 +312,7 @@ const MOCK_ROOMS = [
     id:"room1", title:"Dance Audition — Season 2027/2028",
     roles:["Contemporary Dancer","Ballet Dancer","Ensemble"], description:"Auditions for new company members joining Theater Lanced's 2027/2028 season. Seeking versatile dancers with strong classical and contemporary technique.",
     opportunityType:"audition",
-    type:"open", format:"in_person", status:"published",
+    type:"open", format:"in_person", status:"published", featured:true,
     auditionFormat:"multi_date",
     enableShortlist:false, enableWaitlist:true, enableEarlyInvites:true,
     contracts:["Full Time","Apprenticeship"],
@@ -583,10 +610,12 @@ const getCompanyProfile = (id, mockAgency, allArtists = []) => {
       team: m.team || [],
       artists: allArtists.slice(0, 8),
       media: m.media || [],
+      news: m.news || [],
       openPositions: 0, // computed by caller from rooms
       hideArtists: !!m.hideArtists,
       hideTeam: !!m.hideTeam,
       hideMedia: !!m.hideMedia,
+      hideNews: !!m.hideNews,
       isSelf: true,
     };
   }
@@ -623,8 +652,9 @@ const getCompanyProfile = (id, mockAgency, allArtists = []) => {
       { type:"photo", url:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", caption:"" },
       { type:"photo", url:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", caption:"" },
     ],
+    news: [],
     openPositions: c.openPositions || 0,
-    hideArtists: false, hideTeam: false, hideMedia: false,
+    hideArtists: false, hideTeam: false, hideMedia: false, hideNews: false,
     isSelf: false,
   };
 };
@@ -1240,6 +1270,30 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-opp-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--g4);margin-top:6px}
 .pcp-opp-meta span{display:inline-flex;align-items:center;gap:3px}
 .pcp-opp-cta{flex-shrink:0}
+/* Featured (pinned) opportunity hero card */
+.pcp-opp-feat{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;background:var(--sf);border:1px solid var(--g2);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s;margin-bottom:14px;box-shadow:0 4px 22px rgba(96,77,255,.06)}
+.pcp-opp-feat:hover{border-color:rgba(96,77,255,.28);transform:translateY(-2px);box-shadow:0 10px 32px rgba(96,77,255,.1)}
+.pcp-opp-feat-cover{position:relative;background-size:cover;background-position:center;background-color:var(--g1);min-height:220px}
+.pcp-opp-feat-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.18) 100%)}
+.pcp-opp-feat-pin{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 9px;border-radius:40px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:var(--ac);font-size:10px;font-weight:600;letter-spacing:.04em;box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:1;text-transform:uppercase}
+.pcp-opp-feat-body{display:flex;flex-direction:column;justify-content:center;padding:22px 24px;gap:8px;min-width:0}
+.pcp-opp-feat-title{font-size:20px;font-weight:600;letter-spacing:-.015em;line-height:1.25;color:var(--tx);margin:0}
+.pcp-opp-feat-desc{font-size:13px;color:var(--g5);line-height:1.55;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcp-opp-feat-cta{margin-top:8px}
+.pcp-opp-feat-cta .btn{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:760px){
+  .pcp-opp-feat{grid-template-columns:1fr}
+  .pcp-opp-feat-cover{aspect-ratio:16/8;min-height:0}
+  .pcp-opp-feat-body{padding:18px}
+  .pcp-opp-feat-title{font-size:18px}
+}
+/* Save / bookmark button */
+.pcp-opp-save{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--g5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;z-index:1;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.pcp-opp-save:hover{color:var(--red);transform:scale(1.06)}
+.pcp-opp-save.on{color:var(--red);background:rgba(255,255,255,.95)}
+.pcp-opp-save.on svg{fill:var(--red)}
+.pcp-opp-save-inline{position:static;width:32px;height:32px;background:transparent;border-color:transparent;box-shadow:none;flex-shrink:0}
+.pcp-opp-save-inline:hover{background:var(--g1)}
 .pcp-artists-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 @media (max-width:980px){.pcp-artists-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}
 @media (max-width:560px){.pcp-artists-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
@@ -1255,13 +1309,34 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-artist-tags span{font-size:9px;font-weight:500;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.18);color:rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .dark .pcp-artist{border-color:var(--g2)}
 .pcp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:24px 18px}
-.pcp-team-member{text-align:center;cursor:default}
-.pcp-team-avatar{width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s}
+.pcp-team-member{text-align:center;cursor:default;transition:transform .15s}
+.pcp-team-member.linked{cursor:pointer}
+.pcp-team-member.linked:hover{transform:translateY(-2px)}
+.pcp-team-avatar{position:relative;width:96px;height:96px;border-radius:50%;background-size:cover;background-position:center;margin:0 auto 12px;background-color:var(--g1);box-shadow:0 4px 14px rgba(0,0,0,.06);filter:grayscale(8%);transition:filter .3s,box-shadow .2s}
 .pcp-team-member:hover .pcp-team-avatar{filter:grayscale(0)}
+.pcp-team-member.linked:hover .pcp-team-avatar{box-shadow:0 6px 20px rgba(96,77,255,.16)}
+.pcp-team-link-mark{position:absolute;bottom:0;right:2px;width:22px;height:22px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--sf);box-shadow:0 2px 6px rgba(96,77,255,.3)}
 .pcp-team-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25;letter-spacing:-.005em}
+.pcp-team-linked-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ac);margin-left:5px;vertical-align:middle}
 .pcp-team-role{font-size:11px;color:var(--g4);margin-top:3px;line-height:1.35}
 @media (max-width:560px){.pcp-team-avatar{width:80px;height:80px}}
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+/* News & updates */
+.pcp-news{display:flex;flex-direction:column;gap:14px}
+.pcp-news-card{display:grid;grid-template-columns:200px 1fr;gap:0;background:var(--sf);border:1px solid var(--g2);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .18s}
+.pcp-news-card:hover{border-color:rgba(96,77,255,.22);transform:translateY(-1px);box-shadow:0 6px 20px rgba(96,77,255,.07)}
+.pcp-news-thumb{aspect-ratio:auto;background-size:cover;background-position:center;background-color:var(--g1);min-height:140px}
+.pcp-news-card:not(:has(.pcp-news-thumb)){grid-template-columns:1fr}
+.pcp-news-body{padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pcp-news-date{font-size:10.5px;font-weight:500;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.pcp-news-external{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:40px;background:var(--g1);color:var(--g5);text-transform:none;letter-spacing:0;font-size:10px}
+.pcp-news-title{font-size:16px;font-weight:600;color:var(--tx);letter-spacing:-.01em;line-height:1.3;margin:2px 0 0}
+.pcp-news-excerpt{font-size:13px;color:var(--g5);line-height:1.55;margin:4px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcp-news-readmore{margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--ac)}
+@media (max-width:680px){
+  .pcp-news-card{grid-template-columns:1fr}
+  .pcp-news-thumb{aspect-ratio:16/8;min-height:0}
+}
 .pcp-media-tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--g1);transition:transform .15s}
 .pcp-media-tile:hover{transform:scale(1.02)}
 .pcp-media-tile img,.pcp-media-tile video{width:100%;height:100%;object-fit:cover;display:block}
@@ -1302,7 +1377,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-readmore:hover{opacity:.7}
 .pcp-rail-empty{font-size:12px;color:var(--g4)}
 .pcp-bottom-bar{display:none}
-.pcp-bottom-space{height:55vh;flex-shrink:0;pointer-events:none}
+.pcp-main-tail{height:30vh;flex-shrink:0;pointer-events:none}
 @media (max-width:980px){
   .pcp-grid{grid-template-columns:1fr;grid-template-areas:"rail" "main";padding:20px;gap:24px}
   .pcp-rail{position:static}
@@ -1321,7 +1396,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
   .pcp-bottom-info{font-size:12px;color:var(--tx);font-weight:500;display:inline-flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pcp-tabs-inner{padding:0 18px}
   .pcp-tab{padding:13px 14px;font-size:12.5px}
-  .pcp-bottom-space{height:35vh}
+  .pcp-main-tail{height:20vh}
   .pcp-section{scroll-margin-top:108px}
   .pcp-opp{flex-wrap:wrap;padding:10px;gap:12px}
   .pcp-opp-thumb{width:60px;height:60px;border-radius:8px}
@@ -1345,7 +1420,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
   .pcp-stat-v{font-size:18px}
   .pcp-grid{padding:16px}
   .pcp-section-header{flex-wrap:wrap}
-  .pcp-bottom-space{height:25vh}
+  .pcp-main-tail{height:14vh}
 }
 .pcp-about-modal{max-width:600px}
 .pcp-about-modal-text{font-size:14px;line-height:1.7;color:var(--tx);margin:0;white-space:pre-wrap}
@@ -4878,6 +4953,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null); // null | number — index into profile.media
   const [applicationOpp, setApplicationOpp] = useState(null); // opportunity being viewed in popup
+  const [savedOppIds, setSavedOppIds] = useState(() => new Set()); // saved/bookmarked opportunities
   const rootRef = useRef(null);
   const bannerRef = useRef(null);
   const cardRef = useRef(null);
@@ -4928,6 +5004,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
   const hasArtists = !profile.hideArtists && (profile.artists || []).length > 0;
   const hasTeam = !profile.hideTeam && (profile.team || []).length > 0;
   const hasMedia = !profile.hideMedia && (profile.media || []).length > 0;
+  const hasNews = !profile.hideNews && ((profile.news || []).length > 0 || isOwner);
 
   const ABOUT_CHAR_LIMIT = 240;
   const aboutText = profile.about || "";
@@ -4938,7 +5015,8 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
     { id:"jobs", label:"Jobs", count: openCount },
     ...(hasMedia ? [{ id:"discover", label:"Discover" }] : []),
     ...((hasTeam || hasArtists) ? [{ id:"people", label:"People" }] : []),
-  ], [openCount, hasMedia, hasTeam, hasArtists]);
+    ...(hasNews ? [{ id:"news", label:"News" }] : []),
+  ], [openCount, hasMedia, hasTeam, hasArtists, hasNews]);
 
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
@@ -5015,38 +5093,90 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
         <main className="pcp-main">
 
           {/* JOBS */}
-          {activeTab === "jobs" && (
-            <section className="pcp-section">
-              <div className="pcp-section-header">
-                <h2>Open roles &amp; opportunities</h2>
-                <span className="pcp-section-count">{openCount}</span>
-              </div>
-              {openCount === 0 ? (
-                <div className="pcp-empty">
-                  <I n="inbox" s={24}/>
-                  <div>No open opportunities right now.</div>
-                  {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
+          {activeTab === "jobs" && (() => {
+            const published = (opportunities || []).filter(o => o.status === "published");
+            const featured = published.find(o => o.featured);
+            const others = featured ? published.filter(o => o.id !== featured.id) : published;
+            const toggleSave = (e, id) => {
+              e.stopPropagation();
+              setSavedOppIds(prev => {
+                const next = new Set(prev);
+                if (next.has(id)) { next.delete(id); showToast?.("Removed from saved"); }
+                else { next.add(id); showToast?.("Saved to your list"); }
+                return next;
+              });
+            };
+            const formatType = (k) => (k || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+            return (
+              <section className="pcp-section">
+                <div className="pcp-section-header">
+                  <h2>Open roles &amp; opportunities</h2>
+                  <span className="pcp-section-count">{openCount}</span>
                 </div>
-              ) : (
-                <div className="pcp-opps">
-                  {(opportunities || []).filter(o => o.status === "published").map(o => (
-                    <div key={o.id} className="pcp-opp" onClick={() => setApplicationOpp(o)}>
-                      <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
-                      <div className="pcp-opp-body">
-                        <div className="pcp-opp-type">{(o.opportunityType || o.type || "Audition").replace(/_/g," ")}</div>
-                        <div className="pcp-opp-title">{o.title}</div>
-                        <div className="pcp-opp-meta">
-                          {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
-                          {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
+                {openCount === 0 ? (
+                  <div className="pcp-empty">
+                    <I n="inbox" s={24}/>
+                    <div>No open opportunities right now.</div>
+                    {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
+                  </div>
+                ) : (
+                  <>
+                    {/* Featured hero card */}
+                    {featured && (
+                      <div className="pcp-opp-feat" onClick={() => setApplicationOpp(featured)}>
+                        <div className="pcp-opp-feat-cover" style={{ backgroundImage: featured.coverImage ? `url(${featured.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}>
+                          <span className="pcp-opp-feat-pin"><I n="pin" s={11}/> Featured</span>
+                          {!isOwner && (
+                            <button className={`pcp-opp-save${savedOppIds.has(featured.id) ? " on" : ""}`} onClick={e => toggleSave(e, featured.id)} aria-label="Save">
+                              <I n="heart" s={15}/>
+                            </button>
+                          )}
+                        </div>
+                        <div className="pcp-opp-feat-body">
+                          <div className="pcp-opp-type">{formatType(featured.opportunityType || featured.type || "Audition")}</div>
+                          <h3 className="pcp-opp-feat-title">{featured.title}</h3>
+                          {featured.description && <p className="pcp-opp-feat-desc">{featured.description}</p>}
+                          <div className="pcp-opp-meta">
+                            {featured.location && <span><I n="pin" s={11}/> {featured.location}</span>}
+                            {featured.deadline && <span><I n="calendar" s={11}/> Apply by {featured.deadline}</span>}
+                            {featured.format && <span><I n="users" s={11}/> {featured.format === "in_person" ? "In Person" : featured.format === "online" ? "Online" : "Self-tape"}</span>}
+                          </div>
+                          <div className="pcp-opp-feat-cta">
+                            <button className="btn btn-p" onClick={e => { e.stopPropagation(); setApplicationOpp(featured); }}>View application <I n="arrow" s={12}/></button>
+                          </div>
                         </div>
                       </div>
-                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); setApplicationOpp(o); }}>View</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                    )}
+
+                    {/* Remaining opportunities */}
+                    {others.length > 0 && (
+                      <div className="pcp-opps">
+                        {others.map(o => (
+                          <div key={o.id} className="pcp-opp" onClick={() => setApplicationOpp(o)}>
+                            <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
+                            <div className="pcp-opp-body">
+                              <div className="pcp-opp-type">{formatType(o.opportunityType || o.type || "Audition")}</div>
+                              <div className="pcp-opp-title">{o.title}</div>
+                              <div className="pcp-opp-meta">
+                                {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
+                                {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
+                              </div>
+                            </div>
+                            {!isOwner && (
+                              <button className={`pcp-opp-save pcp-opp-save-inline${savedOppIds.has(o.id) ? " on" : ""}`} onClick={e => toggleSave(e, o.id)} aria-label="Save">
+                                <I n="heart" s={14}/>
+                              </button>
+                            )}
+                            <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); setApplicationOpp(o); }}>View</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+            );
+          })()}
 
           {/* DISCOVER (Media) */}
           {activeTab === "discover" && hasMedia && (
@@ -5089,13 +5219,23 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
                     {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
                   </div>
                   <div className="pcp-team">
-                    {(profile.team || []).map((t, i) => (
-                      <div key={i} className="pcp-team-member">
-                        <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
-                        <div className="pcp-team-name">{t.name}</div>
-                        <div className="pcp-team-role">{t.role}</div>
-                      </div>
-                    ))}
+                    {(profile.team || []).map((t, i) => {
+                      const linked = !!t.artistId;
+                      return (
+                        <div
+                          key={i}
+                          className={`pcp-team-member${linked ? " linked" : ""}`}
+                          onClick={linked ? () => showToast?.(`Opening ${t.name}'s profile`) : undefined}
+                          title={linked ? "View Lanced profile" : undefined}
+                        >
+                          <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}>
+                            {linked && <span className="pcp-team-link-mark" aria-hidden="true"><I n="check" s={9}/></span>}
+                          </div>
+                          <div className="pcp-team-name">{t.name}{linked && <span className="pcp-team-linked-dot" title="On Lanced"/>}</div>
+                          <div className="pcp-team-role">{t.role}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -5132,6 +5272,46 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
             </>
           )}
 
+          {/* NEWS */}
+          {activeTab === "news" && (
+            <section className="pcp-section">
+              <div className="pcp-section-header">
+                <div>
+                  <h2>News &amp; updates</h2>
+                  <div className="pcp-section-sub">{(profile.news || []).length === 0 ? "Latest announcements will appear here." : "Latest announcements from the company."}</div>
+                </div>
+                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("news-add")}><I n="plus" s={12}/> Add post</button>}
+              </div>
+              {(profile.news || []).length === 0 ? (
+                <div className="pcp-empty">
+                  <I n="message-circle" s={24}/>
+                  <div>{isOwner ? "Share an update — announce a hire, a season, or a press feature." : "No updates yet."}</div>
+                  {isOwner && <button className="btn btn-p btn-sm" onClick={() => setEditPane("news-add")}><I n="plus" s={12}/> Write your first post</button>}
+                </div>
+              ) : (
+                <div className="pcp-news">
+                  {(profile.news || []).map(n => (
+                    <article key={n.id} className="pcp-news-card" onClick={() => n.externalUrl ? window.open(n.externalUrl, "_blank") : showToast?.("Opening post — full reader coming soon")}>
+                      {n.coverImage && <div className="pcp-news-thumb" style={{ backgroundImage: `url(${n.coverImage})` }}/>}
+                      <div className="pcp-news-body">
+                        <div className="pcp-news-date">{n.date}{n.externalUrl && <span className="pcp-news-external"><I n="link" s={10}/> External</span>}</div>
+                        <h3 className="pcp-news-title">{n.title}</h3>
+                        {n.excerpt && <p className="pcp-news-excerpt">{n.excerpt}</p>}
+                        <div className="pcp-news-readmore">
+                          {n.externalUrl ? <>Read article <I n="arrow" s={11}/></> : <>Read more <I n="arrow" s={11}/></>}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Tail space inside main only — keeps the rail sticky to the
+              bottom of the grid and gives short tabs room to scroll. */}
+          <div className="pcp-main-tail" aria-hidden="true"/>
+
         </main>
 
         {/* Right rail (desktop) */}
@@ -5166,10 +5346,6 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           </div>
         </aside>
       </div>
-
-      {/* Spacer so short profiles still have enough scroll room
-          to push the hero off-screen */}
-      <div className="pcp-bottom-space" aria-hidden="true"/>
 
       {/* About read-more modal */}
       {showAboutModal && createPortal(
@@ -5515,9 +5691,36 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
     banner: "Edit banner",
     about: "Edit About",
     "media-add": "Add to Media",
+    "news-add": "Write a news post",
     team: "Edit Team",
     artists: "Edit Artists section",
     settings: "Edit profile",
+  };
+
+  const [newsDraft, setNewsDraft] = useState({ title: "", excerpt: "", externalUrl: "", coverImage: null });
+  const newsCoverRef = useRef(null);
+  const addNewsPost = () => {
+    if (!newsDraft.title.trim()) { showToast?.("Add a title to publish."); return; }
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const post = {
+      id: "n" + Date.now(),
+      date: today,
+      title: newsDraft.title.trim(),
+      excerpt: newsDraft.excerpt.trim(),
+      coverImage: newsDraft.coverImage,
+      externalUrl: newsDraft.externalUrl.trim() || null,
+    };
+    const next = { ...draft, news: [post, ...(draft.news || [])] };
+    onUpdate?.(next);
+    setDraft(next);
+    setNewsDraft({ title: "", excerpt: "", externalUrl: "", coverImage: null });
+    showToast?.("News post published");
+    onClose();
+  };
+  const removeNews = (id) => {
+    const next = { ...draft, news: (draft.news || []).filter(n => n.id !== id) };
+    setDraft(next);
+    onUpdate?.(next);
   };
 
   const save = () => {
@@ -5688,6 +5891,7 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideArtists} onChange={e => setDraft(d => ({...d, hideArtists:!e.target.checked}))}/><span>Show Artists section</span></label>
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideTeam} onChange={e => setDraft(d => ({...d, hideTeam:!e.target.checked}))}/><span>Show Team section</span></label>
                   <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideMedia} onChange={e => setDraft(d => ({...d, hideMedia:!e.target.checked}))}/><span>Show Media section</span></label>
+                  <label className="pcp-toggle"><input type="checkbox" checked={!draft.hideNews} onChange={e => setDraft(d => ({...d, hideNews:!e.target.checked}))}/><span>Show News section</span></label>
                 </div>
               </div>
               <div className="afm-section">
@@ -5712,11 +5916,69 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
                 : "Toggle each artist's visibility on the public profile. (Drag to reorder coming soon.)"}</p>
             </div>
           )}
+
+          {type === "news-add" && (
+            <>
+              <div className="afm-section">
+                <h3>Post details</h3>
+                <div className="afm-grid">
+                  <div className="field afm-full">
+                    <label>Title</label>
+                    <input placeholder="What are you announcing?" value={newsDraft.title} onChange={e => setNewsDraft(p => ({ ...p, title: e.target.value }))}/>
+                  </div>
+                  <div className="field afm-full">
+                    <label>Excerpt / body</label>
+                    <textarea placeholder="A short summary of the news…" value={newsDraft.excerpt} onChange={e => setNewsDraft(p => ({ ...p, excerpt: e.target.value }))} style={{minHeight:120}}/>
+                  </div>
+                  <div className="field afm-full">
+                    <label>External URL (optional)</label>
+                    <input placeholder="https://example.com/article — leave blank for an in-app post" value={newsDraft.externalUrl} onChange={e => setNewsDraft(p => ({ ...p, externalUrl: e.target.value }))}/>
+                    <div style={{fontSize:11,color:"var(--g4)",marginTop:4}}>Paste a blog/press article URL to embed it. The card will open the link in a new tab.</div>
+                  </div>
+                  <div className="field afm-full">
+                    <label>Cover image (optional)</label>
+                    <input ref={newsCoverRef} type="file" accept="image/*" style={{display:"none"}} onChange={e => { const f = e.target.files?.[0]; if (f) setNewsDraft(p => ({ ...p, coverImage: URL.createObjectURL(f) })); }}/>
+                    {newsDraft.coverImage ? (
+                      <div style={{display:"flex",gap:10,alignItems:"center",marginTop:6}}>
+                        <div style={{width:72,height:48,borderRadius:8,backgroundSize:"cover",backgroundPosition:"center",backgroundImage:`url(${newsDraft.coverImage})`,flexShrink:0}}/>
+                        <button className="btn btn-s btn-sm" onClick={() => setNewsDraft(p => ({ ...p, coverImage: null }))}>Remove</button>
+                      </div>
+                    ) : (
+                      <button className="btn btn-s btn-sm" onClick={() => newsCoverRef.current?.click()}><I n="upload" s={12}/> Upload image</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {(draft.news || []).length > 0 && (
+                <div className="afm-section">
+                  <h3>Published posts</h3>
+                  <div className="pcp-media-list">
+                    {(draft.news || []).map(n => (
+                      <div key={n.id} className="pcp-media-row">
+                        {n.coverImage ? (
+                          <div className="pcp-media-row-thumb" style={{ backgroundImage: `url(${n.coverImage})` }}/>
+                        ) : (
+                          <div className="pcp-media-row-thumb" style={{display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)"}}><I n="message-circle" s={14}/></div>
+                        )}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,color:"var(--tx)",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.title}</div>
+                          <div style={{fontSize:10,color:"var(--g4)",marginTop:2}}>{n.date}{n.externalUrl ? " · External link" : ""}</div>
+                        </div>
+                        <button className="pcp-pending-x" onClick={() => removeNews(n.id)} aria-label="Remove"><I n="trash" s={13}/></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
         <div className="fsp-actions">
           <button className="btn-clear" onClick={onClose}>Cancel</button>
           {type === "media-add" ? (
             <button className="btn-apply" onClick={addPendingToMedia} disabled={!pendingFile}>Add to grid</button>
+          ) : type === "news-add" ? (
+            <button className="btn-apply" onClick={addNewsPost} disabled={!newsDraft.title.trim()}>Publish post</button>
           ) : (
             <button className="btn-apply" onClick={save}>Save</button>
           )}
@@ -6618,7 +6880,7 @@ export default function AgencyShell() {
     const overrides = companyProfileEdits[publicCompany] || {};
     const profile = { ...baseProfile, ...overrides };
     const profileOpps = publicCompany === "self"
-      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, description:r.description, format:r.format, roles:r.roles, castingDate:r.castingDate, rehearsalDates:r.rehearsalDates, shootingDates:r.shootingDates, offer:r.offer, _roomId:r.id }))
+      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, description:r.description, format:r.format, roles:r.roles, castingDate:r.castingDate, rehearsalDates:r.rehearsalDates, shootingDates:r.shootingDates, offer:r.offer, featured:r.featured, _roomId:r.id }))
       : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
     return (
       <>
