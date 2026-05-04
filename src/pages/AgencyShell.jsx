@@ -17376,6 +17376,9 @@ export default function AgencyShell() {
         <>
           <div style={{position:"fixed",inset:0,zIndex:145,background:"rgba(0,0,0,.2)",animation:"fadeIn .15s"}} onClick={()=>setShowMobileMore(false)}/>
           <div className="mobile-more-panel">
+            <button onClick={() => { setPublicCompany("self"); setShowMobileMore(false); }}>
+              <I n="users" s={18}/><span>Company Profile</span>
+            </button>
             {[
               {key:"agency-settings",icon:"settings",label:"Settings"},
               {key:"network",icon:"share",label:"Network"},
