@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Chart from "react-apexcharts";
 import { QRCodeSVG } from "qrcode.react";
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import { geoMercator, geoPath } from "d3-geo";
+import { feature } from "topojson-client";
 
 /* ━━━ MOCK DATA ━━━ */
 const MOCK_AGENCY = { name: "Theater Lanced", type: "Theater", email: "team@theaterlanced.com", logo: null, address: "12 Stage Lane, London, UK", website: "https://theaterlanced.com", instagram: "@theaterlanced", tiktok: "@theaterlanced" };
@@ -4103,14 +4104,24 @@ function MarketingAnalytics({ data, isDark }) {
   );
 }
 
+const MAP_W = 500, MAP_H = 280, MAP_SCALE = 78;
+
 function WorldChoropleth({ countries }) {
-  const [geo, setGeo] = useState(null);
+  const [topo, setTopo] = useState(null);
   const [position, setPosition] = useState({ coordinates: [0, 25], zoom: 1 });
+  const dragRef = useRef(null);
   useEffect(() => {
     let cancelled = false;
-    fetch(WORLD_TOPO_URL).then(r => r.json()).then(j => { if (!cancelled) setGeo(j); }).catch(() => {});
+    fetch(WORLD_TOPO_URL).then(r => r.json()).then(j => { if (!cancelled) setTopo(j); }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
+  const projection = useMemo(() => geoMercator().scale(MAP_SCALE).translate([MAP_W/2, MAP_H/2]), []);
+  const pathGen = useMemo(() => geoPath(projection), [projection]);
+  const features = useMemo(() => {
+    if (!topo) return null;
+    const fc = feature(topo, topo.objects.countries);
+    return fc.features.filter(f => f.properties.name !== "Antarctica");
+  }, [topo]);
   const zoomIn = () => setPosition(p => ({ ...p, zoom: Math.min(p.zoom * 1.5, 8) }));
   const zoomOut = () => setPosition(p => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }));
   const reset = () => setPosition({ coordinates: [0, 25], zoom: 1 });
@@ -4126,20 +4137,53 @@ function WorldChoropleth({ countries }) {
     const b = lerp(255, 232, t);
     return `rgb(${r},${g},${b})`;
   };
-  if (!geo) return <div className="mk-map-wrap" style={{display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:12}}>Loading map…</div>;
+  const onWheel = (e) => {
+    e.preventDefault();
+    const factor = Math.exp(-e.deltaY * 0.002);
+    setPosition(p => ({ ...p, zoom: Math.max(1, Math.min(8, p.zoom * factor)) }));
+  };
+  const onPointerDown = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { x: e.clientX, y: e.clientY, coords: position.coordinates, rect: e.currentTarget.getBoundingClientRect() };
+  };
+  const onPointerMove = (e) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const sx = MAP_W / d.rect.width;
+    const sy = MAP_H / d.rect.height;
+    const projected = projection(d.coords);
+    const nx = projected[0] - ((e.clientX - d.x) * sx) / position.zoom;
+    const ny = projected[1] - ((e.clientY - d.y) * sy) / position.zoom;
+    const inv = projection.invert([nx, ny]);
+    if (inv) setPosition(p => ({ ...p, coordinates: inv }));
+  };
+  const onPointerUp = (e) => {
+    if (dragRef.current) { e.currentTarget.releasePointerCapture(e.pointerId); dragRef.current = null; }
+  };
+  if (!features) return <div className="mk-map-wrap" style={{display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:12}}>Loading map…</div>;
+  const [cx, cy] = projection(position.coordinates);
+  const transform = `translate(${MAP_W/2},${MAP_H/2}) scale(${position.zoom}) translate(${-cx},${-cy})`;
   return (
     <div className="mk-map-wrap">
-      <ComposableMap projection="geoMercator" projectionConfig={{ scale: 78 }} width={500} height={280} style={{ width:"100%", height:"100%" }}>
-        <ZoomableGroup center={position.coordinates} zoom={position.zoom} onMoveEnd={setPosition} maxZoom={8} minZoom={1} translateExtent={[[0,0],[500,280]]}>
-          <Geographies geography={geo}>
-            {({ geographies }) => geographies.map((g) => {
-              if (g.properties.name === "Antarctica") return null;
-              const v = map[g.properties.name] || 0;
-              return <Geography key={g.rsmKey} geography={g} fill={colorFor(v)} stroke="#FFFFFF" strokeWidth={0.5} style={{ default:{ outline:"none" }, hover:{ outline:"none", fill:"#7A66FF", cursor:"pointer" }, pressed:{ outline:"none" } }} />;
-            })}
-          </Geographies>
-        </ZoomableGroup>
-      </ComposableMap>
+      <style>{`.mk-map-country:hover{fill:#7A66FF !important;cursor:pointer;}`}</style>
+      <svg
+        viewBox={`0 0 ${MAP_W} ${MAP_H}`}
+        width="100%"
+        height="100%"
+        style={{ width:"100%", height:"100%", touchAction:"none", cursor: dragRef.current ? "grabbing" : "grab" }}
+        onWheel={onWheel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <g transform={transform}>
+          {features.map((f, i) => {
+            const v = map[f.properties.name] || 0;
+            return <path key={i} className="mk-map-country" d={pathGen(f)} fill={colorFor(v)} stroke="#FFFFFF" strokeWidth={0.5 / position.zoom} style={{ outline:"none" }} />;
+          })}
+        </g>
+      </svg>
       <div className="mk-map-zoom">
         <button onClick={zoomIn} aria-label="Zoom in"><I n="plus" s={14}/></button>
         <button onClick={zoomOut} aria-label="Zoom out">−</button>
