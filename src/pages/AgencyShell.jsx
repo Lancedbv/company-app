@@ -33,12 +33,12 @@ const MOCK_AGENCY = {
     { name: "Joel Asare", role: "Rehearsal Director", photo: "/demo/artists/rob-fischer.jpg" },
   ],
   media: [
-    { type:"photo", url:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", caption:"Spring season opening" },
-    { type:"photo", url:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", caption:"Summer residency 2025" },
-    { type:"photo", url:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", caption:"Studio rehearsal" },
-    { type:"photo", url:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg", caption:"Touring – Berlin" },
-    { type:"photo", url:"/demo/banners/shutterstock_1234830199.jpg", caption:"Costume fittings" },
-    { type:"photo", url:"/demo/banners/shutterstock_1505137721.jpg", caption:"Premiere night" },
+    { type:"photo", url:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg", title:"Spring season opening", description:"Opening night of our 2026 spring programme — three world premieres on a single bill.", tags:["Performance","Season Opening"], location:"Sadler's Wells, London" },
+    { type:"photo", url:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg", title:"Summer residency 2025", description:"Six-week paid residency for movement artists developing new work.", tags:["Residency","Development"], location:"Studio C, London" },
+    { type:"photo", url:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg", title:"Studio rehearsal", description:"Behind the scenes during the technical run-through of our touring piece.", tags:["Rehearsal","BTS"], location:"Theater Lanced HQ" },
+    { type:"photo", url:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg", title:"Touring · Berlin", description:"Berlin leg of the European tour at Radialsystem.", tags:["Tour","Touring"], location:"Radialsystem, Berlin" },
+    { type:"photo", url:"/demo/banners/shutterstock_1234830199.jpg", title:"Costume fittings", description:"Wardrobe day for the new production.", tags:["Costume","Production"], location:"Theater Lanced HQ" },
+    { type:"photo", url:"/demo/banners/shutterstock_1505137721.jpg", title:"Premiere night", description:"Curtain call after our season premiere.", tags:["Premiere","Performance"], location:"Sadler's Wells, London" },
   ],
   hideArtists: false,
   hideTeam: false,
@@ -1235,10 +1235,10 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-opp-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--g4);margin-top:6px}
 .pcp-opp-meta span{display:inline-flex;align-items:center;gap:3px}
 .pcp-opp-cta{flex-shrink:0}
-.pcp-rail-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
-.pcp-rail-scroll::-webkit-scrollbar{height:6px}
-.pcp-rail-scroll::-webkit-scrollbar-thumb{background:var(--g2);border-radius:3px}
-.pcp-artist{flex:0 0 150px;cursor:pointer;transition:transform .15s}
+.pcp-artists-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+@media (max-width:980px){.pcp-artists-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
+@media (max-width:560px){.pcp-artists-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+.pcp-artist{cursor:pointer;transition:transform .15s}
 .pcp-artist:hover{transform:translateY(-2px)}
 .pcp-artist-photo{width:100%;aspect-ratio:3/4;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);margin-bottom:8px}
 .pcp-artist-name{font-size:13px;font-weight:600;color:var(--tx);line-height:1.25}
@@ -1251,8 +1251,32 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .pcp-media-tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--g1);transition:transform .15s}
 .pcp-media-tile:hover{transform:scale(1.02)}
-.pcp-media-tile img{width:100%;height:100%;object-fit:cover;display:block}
-.pcp-media-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3}
+.pcp-media-tile img,.pcp-media-tile video{width:100%;height:100%;object-fit:cover;display:block}
+.pcp-media-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3;font-weight:500}
+.pcp-media-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);color:#0A0A0A;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .15s;pointer-events:none;padding-left:3px}
+.pcp-media-tile:hover .pcp-media-play{transform:translate(-50%,-50%) scale(1.08)}
+/* Discover lightbox */
+.pcp-lb{position:fixed;inset:0;z-index:300;background:rgba(8,6,18,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease;padding:24px}
+.pcp-lb-close{position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.pcp-lb-close:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4)}
+.pcp-lb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1}
+.pcp-lb-arrow:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4)}
+.pcp-lb-prev{left:24px}
+.pcp-lb-next{right:24px}
+.pcp-lb-stage{display:flex;flex-direction:column;align-items:center;gap:18px;max-width:1200px;width:100%}
+.pcp-lb-meta{max-width:760px;text-align:center;color:#fff}
+.pcp-lb-title{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.pcp-lb-desc{font-size:13px;line-height:1.6;color:rgba(255,255,255,.78);margin-top:8px;max-width:680px;margin-left:auto;margin-right:auto}
+.pcp-lb-meta-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pcp-lb-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:40px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);font-size:11px;font-weight:500}
+.pcp-lb-counter{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);margin-left:4px}
+@media (max-width:680px){
+  .pcp-lb{padding:14px}
+  .pcp-lb-arrow{width:38px;height:38px}
+  .pcp-lb-prev{left:8px}
+  .pcp-lb-next{right:8px}
+  .pcp-lb-close{width:34px;height:34px;top:14px;right:14px}
+}
 .pcp-rail{position:sticky;top:108px;align-self:start;height:fit-content}
 .pcp-rail-card{background:var(--sf);border:1px solid var(--g2);border-radius:16px;padding:20px}
 .pcp-rail-section + .pcp-rail-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--g2)}
@@ -4741,11 +4765,12 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, onOpenOpportunity, showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(null); // null | number — index into profile.media
 
   const isOwner = viewerMode === "owner";
   const isHiring = (opportunities || []).some(o => o.status === "published");
@@ -4855,17 +4880,17 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
               ) : (
                 <div className="pcp-opps">
                   {(opportunities || []).filter(o => o.status === "published").map(o => (
-                    <div key={o.id} className="pcp-opp" onClick={() => showToast?.(`Opening ${o.title}`)}>
+                    <div key={o.id} className="pcp-opp" onClick={() => onOpenOpportunity?.(o)}>
                       <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
                       <div className="pcp-opp-body">
-                        <div className="pcp-opp-type">{o.opportunityType || o.type || "Audition"}</div>
+                        <div className="pcp-opp-type">{(o.opportunityType || o.type || "Audition").replace(/_/g," ")}</div>
                         <div className="pcp-opp-title">{o.title}</div>
                         <div className="pcp-opp-meta">
                           {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
                           {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
                         </div>
                       </div>
-                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); showToast?.("Apply flow coming soon."); }}>{isOwner ? "View" : "Apply"}</button>
+                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); onOpenOpportunity?.(o); }}>{isOwner ? "View" : "Application form"}</button>
                     </div>
                   ))}
                 </div>
@@ -4885,9 +4910,16 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
               </div>
               <div className="pcp-media-grid">
                 {(profile.media || []).map((m, i) => (
-                  <div key={i} className="pcp-media-tile" onClick={() => showToast?.("Lightbox coming soon")}>
-                    <img src={m.url} alt={m.caption || ""}/>
-                    {m.caption && <div className="pcp-media-caption">{m.caption}</div>}
+                  <div key={i} className="pcp-media-tile" onClick={() => setLightboxIndex(i)}>
+                    {m.type === "video" ? (
+                      <>
+                        <video src={m.url} preload="metadata" muted playsInline style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                        <div className="pcp-media-play"><I n="play" s={22}/></div>
+                      </>
+                    ) : (
+                      <img src={m.url} alt={m.caption || m.title || ""}/>
+                    )}
+                    {(m.title || m.caption) && <div className="pcp-media-caption">{m.title || m.caption}</div>}
                   </div>
                 ))}
               </div>
@@ -4926,7 +4958,7 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
                     </div>
                     {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("artists")}><I n="edit" s={12}/> Edit</button>}
                   </div>
-                  <div className="pcp-rail-scroll">
+                  <div className="pcp-artists-grid">
                     {(profile.artists || []).map(a => (
                       <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
                         <div className="pcp-artist-photo" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
@@ -4992,6 +5024,17 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
         document.body
       )}
 
+      {/* Discover lightbox */}
+      {lightboxIndex !== null && (profile.media || [])[lightboxIndex] && createPortal(
+        <MediaLightbox
+          items={profile.media || []}
+          index={lightboxIndex}
+          onIndex={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />,
+        document.body
+      )}
+
       {/* Mobile bottom action bar */}
       {!isOwner && (
         <div className="pcp-bottom-bar">
@@ -5017,11 +5060,66 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
 }
 
 /* Right-anchored edit pane — same idiom as FilterPanel. */
+/* Full-screen lightbox for the Discover gallery: shows a single photo or
+   video tile with prev/next arrows, caption, and basic metadata. */
+function MediaLightbox({ items = [], index = 0, onIndex, onClose }) {
+  const item = items[index];
+  const prev = () => onIndex(index === 0 ? items.length - 1 : index - 1);
+  const next = () => onIndex(index === items.length - 1 ? 0 : index + 1);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [index]);
+  if (!item) return null;
+  return (
+    <div className="pcp-lb" onClick={onClose}>
+      <button className="pcp-lb-close" onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label="Close"><I n="x" s={20}/></button>
+      {items.length > 1 && (
+        <>
+          <button className="pcp-lb-arrow pcp-lb-prev" onClick={(e) => { e.stopPropagation(); prev(); }} aria-label="Previous"><I n="chevL" s={22}/></button>
+          <button className="pcp-lb-arrow pcp-lb-next" onClick={(e) => { e.stopPropagation(); next(); }} aria-label="Next"><I n="chevR" s={22}/></button>
+        </>
+      )}
+      <div className="pcp-lb-stage" onClick={(e) => e.stopPropagation()}>
+        {item.type === "video" ? (
+          <video key={item.url} src={item.url} controls autoPlay style={{maxWidth:"100%",maxHeight:"calc(100vh - 160px)",borderRadius:12,background:"#000"}}/>
+        ) : (
+          <img src={item.url} alt={item.title || item.caption || ""} style={{maxWidth:"100%",maxHeight:"calc(100vh - 160px)",borderRadius:12,objectFit:"contain",background:"#0A0A0A"}}/>
+        )}
+        <div className="pcp-lb-meta">
+          {(item.title || item.caption) && <div className="pcp-lb-title">{item.title || item.caption}</div>}
+          {item.description && <div className="pcp-lb-desc">{item.description}</div>}
+          <div className="pcp-lb-meta-row">
+            {item.location && <span className="pcp-lb-tag"><I n="pin" s={11}/> {item.location}</span>}
+            {(item.tags || []).map((t, i) => <span key={i} className="pcp-lb-tag">{t}</span>)}
+            <span className="pcp-lb-counter">{index + 1} / {items.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) {
   const [draft, setDraft] = useState(() => ({ ...profile }));
   const [pendingFile, setPendingFile] = useState(null);
-  const [pendingCaption, setPendingCaption] = useState("");
+  const [pendingMeta, setPendingMeta] = useState({ title: "", description: "", tags: [], location: "" });
+  const [pendingTagInput, setPendingTagInput] = useState("");
   const fileRef = useRef(null);
+
+  const addTag = () => {
+    const t = pendingTagInput.trim();
+    if (!t) return;
+    if (pendingMeta.tags.includes(t)) { setPendingTagInput(""); return; }
+    setPendingMeta(p => ({ ...p, tags: [...p.tags, t] }));
+    setPendingTagInput("");
+  };
+  const removeTag = (t) => setPendingMeta(p => ({ ...p, tags: p.tags.filter(x => x !== t) }));
 
   const titles = {
     banner: "Edit banner",
@@ -5046,11 +5144,21 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
 
   const addPendingToMedia = () => {
     if (!pendingFile) return;
-    const next = { ...draft, media: [{ type: pendingFile.type, url: pendingFile.url, caption: pendingCaption }, ...(draft.media || [])] };
+    const newItem = {
+      type: pendingFile.type,
+      url: pendingFile.url,
+      title: pendingMeta.title || "",
+      description: pendingMeta.description || "",
+      tags: pendingMeta.tags || [],
+      location: pendingMeta.location || "",
+      caption: pendingMeta.title || "",
+    };
+    const next = { ...draft, media: [newItem, ...(draft.media || [])] };
     onUpdate?.(next);
     setDraft(next);
     setPendingFile(null);
-    setPendingCaption("");
+    setPendingMeta({ title: "", description: "", tags: [], location: "" });
+    setPendingTagInput("");
     showToast?.("Added to Media");
     onClose();
   };
@@ -5107,41 +5215,79 @@ function PublicCompanyEditPane({ type, profile, onClose, onUpdate, showToast }) 
           )}
 
           {type === "media-add" && (
-            <div className="afm-section">
-              <h3>Upload</h3>
-              <input ref={fileRef} type="file" accept="image/*,video/*" style={{display:"none"}} onChange={e => handleFile(e.target.files?.[0])}/>
-              <div className="pcp-dropzone" onClick={() => fileRef.current?.click()}>
-                <I n="upload" s={20}/>
-                <div className="pcp-dropzone-t">Click to upload</div>
-                <div className="pcp-dropzone-s">PNG · JPG · MP4 · max 25 MB</div>
+            <>
+              <div className="afm-section">
+                <h3>Upload</h3>
+                <input ref={fileRef} type="file" accept="image/*,video/*" style={{display:"none"}} onChange={e => handleFile(e.target.files?.[0])}/>
+                <div className="pcp-dropzone" onClick={() => fileRef.current?.click()}>
+                  <I n="upload" s={20}/>
+                  <div className="pcp-dropzone-t">{pendingFile ? "Replace file" : "Click to upload"}</div>
+                  <div className="pcp-dropzone-s">PNG · JPG · MP4 · max 25 MB</div>
+                </div>
+                {pendingFile && (
+                  <div className="pcp-pending">
+                    <div className="pcp-pending-thumb" style={{ backgroundImage: pendingFile.type === "photo" ? `url(${pendingFile.url})` : "none" }}>
+                      {pendingFile.type === "video" && <I n="play" s={20}/>}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div className="pcp-pending-name">{pendingFile.name}</div>
+                      <div style={{fontSize:11,color:"var(--g4)"}}>{pendingFile.type === "video" ? "Video" : "Photo"}</div>
+                    </div>
+                    <button className="pcp-pending-x" onClick={() => setPendingFile(null)} aria-label="Remove"><I n="x" s={14}/></button>
+                  </div>
+                )}
               </div>
+
               {pendingFile && (
-                <div className="pcp-pending">
-                  <div className="pcp-pending-thumb" style={{ backgroundImage: pendingFile.type === "photo" ? `url(${pendingFile.url})` : "none" }}>
-                    {pendingFile.type === "video" && <I n="play" s={20}/>}
+                <div className="afm-section">
+                  <h3>Details</h3>
+                  <div className="afm-grid">
+                    <div className="field afm-full">
+                      <label>Title</label>
+                      <input placeholder="e.g. Spring season opening" value={pendingMeta.title} onChange={e => setPendingMeta(p => ({ ...p, title: e.target.value }))}/>
+                    </div>
+                    <div className="field afm-full">
+                      <label>Description</label>
+                      <textarea placeholder="Add some context about this moment…" value={pendingMeta.description} onChange={e => setPendingMeta(p => ({ ...p, description: e.target.value }))} style={{minHeight:80}}/>
+                    </div>
+                    <div className="field afm-full">
+                      <label>Location</label>
+                      <input placeholder="e.g. Sadler's Wells, London" value={pendingMeta.location} onChange={e => setPendingMeta(p => ({ ...p, location: e.target.value }))}/>
+                    </div>
+                    <div className="field afm-full">
+                      <label>Tags</label>
+                      <div className="afm-chips" style={{marginBottom: pendingMeta.tags.length > 0 ? 8 : 0}}>
+                        {pendingMeta.tags.map(t => (
+                          <button key={t} type="button" className="afm-chip on" onClick={() => removeTag(t)}>{t} <I n="x" s={10}/></button>
+                        ))}
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <input placeholder="Add a tag and press Enter" value={pendingTagInput} onChange={e => setPendingTagInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }}/>
+                        <button type="button" className="btn btn-s btn-sm" onClick={addTag} disabled={!pendingTagInput.trim()}>Add</button>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div className="pcp-pending-name">{pendingFile.name}</div>
-                    <input className="pcp-pending-caption" placeholder="Caption (optional)" value={pendingCaption} onChange={e => setPendingCaption(e.target.value)}/>
-                  </div>
-                  <button className="pcp-pending-x" onClick={() => setPendingFile(null)} aria-label="Remove"><I n="x" s={14}/></button>
                 </div>
               )}
+
               {(draft.media || []).length > 0 && (
-                <>
-                  <h3 style={{marginTop:18}}>Current media</h3>
+                <div className="afm-section">
+                  <h3>Current media</h3>
                   <div className="pcp-media-list">
                     {(draft.media || []).map((m,i) => (
                       <div key={i} className="pcp-media-row">
                         <div className="pcp-media-row-thumb" style={{ backgroundImage: `url(${m.url})` }}/>
-                        <div style={{flex:1,minWidth:0,fontSize:12,color:"var(--g4)"}}>{m.caption || "—"}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,color:"var(--tx)",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title || m.caption || "—"}</div>
+                          {(m.location || (m.tags || []).length > 0) && <div style={{fontSize:10,color:"var(--g4)",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{[m.location, ...(m.tags || [])].filter(Boolean).join(" · ")}</div>}
+                        </div>
                         <button className="pcp-pending-x" onClick={() => removeMedia(i)} aria-label="Remove"><I n="trash" s={13}/></button>
                       </div>
                     ))}
                   </div>
-                </>
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {type === "settings" && (
@@ -5199,7 +5345,7 @@ function PublicCastingPreview({ room, roomMaterials = [] }) {
       <div className="pub-casting-header">
         <div className="pch-logo">
           <div className="pch-mark">L</div>
-          <span style={{fontSize:14,fontWeight:600}}>Lanced Casting</span>
+          <span style={{fontSize:14,fontWeight:600}}>Application Form</span>
         </div>
       </div>
       <div className="pub-casting-body">
@@ -6082,7 +6228,7 @@ export default function AgencyShell() {
     const overrides = companyProfileEdits[publicCompany] || {};
     const profile = { ...baseProfile, ...overrides };
     const profileOpps = publicCompany === "self"
-      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage }))
+      ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage || r.banner, _roomId:r.id }))
       : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
     return (
       <>
@@ -6093,6 +6239,10 @@ export default function AgencyShell() {
           opportunities={profileOpps}
           onClose={() => setPublicCompany(null)}
           onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
+          onOpenOpportunity={(opp) => {
+            if (opp._roomId) { setPublicCasting(opp._roomId); }
+            else { showToast(`Application form for "${opp.title}" — connect via Lanced to apply.`); }
+          }}
           showToast={showToast}
         />
       </>
@@ -6109,7 +6259,7 @@ export default function AgencyShell() {
         <div className="pub-casting-header">
           <div className="pch-logo">
             <div className="pch-mark">L</div>
-            <span style={{fontSize:14,fontWeight:600}}>Lanced Casting</span>
+            <span style={{fontSize:14,fontWeight:600}}>Application Form</span>
           </div>
           <button className="btn btn-s btn-sm" onClick={() => { setPublicCasting(null); setPublicCastingSubmitted(false); setPublicCastingForm({name:"",email:"",motivation:"",video:""}); }}>
             <I n="x" s={12}/> Close
