@@ -1183,35 +1183,38 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-edit-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--g2);border-radius:40px;background:var(--sf);font-family:var(--sans);font-size:11px;font-weight:500;color:var(--g5);cursor:pointer;transition:all .15s}
 .pcp-edit-chip:hover{border-color:var(--pcp-accent,var(--ac));color:var(--pcp-accent,var(--ac))}
 .pcp-edit-chip-banner{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:1;color:var(--tx);border-color:rgba(255,255,255,.5)}
-.pcp-id-strip{display:flex;align-items:flex-end;gap:18px;max-width:1280px;margin:0 auto;padding:0 32px 24px;position:relative;margin-top:-46px}
-.pcp-logo{width:96px;height:96px;border-radius:24px;background:var(--sf);padding:5px;box-shadow:0 4px 16px rgba(0,0,0,.1);flex-shrink:0;position:relative;z-index:1}
-.pcp-logo img{width:100%;height:100%;border-radius:20px;object-fit:cover;display:block}
-.pcp-logo-initials{width:100%;height:100%;border-radius:20px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:600;letter-spacing:-1px}
-.pcp-id-info{flex:1;min-width:0;padding-bottom:6px}
-.pcp-name-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.pcp-name{font-size:24px;font-weight:600;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin:0}
-.pcp-verified{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ac);color:#fff}
-.pcp-meta{font-size:13px;color:var(--g5);line-height:1.4}
+.pcp-edit-chip-sm{padding:4px 10px;font-size:10px}
+/* Floating identity card on banner */
+.pcp-id-card-anchor{position:absolute;inset:0;max-width:1280px;margin:0 auto;padding:0 32px;pointer-events:none}
+.pcp-id-card{position:absolute;bottom:24px;left:32px;pointer-events:auto;display:flex;align-items:flex-start;gap:14px;padding:16px 20px;max-width:min(580px,calc(100% - 64px));background:rgba(255,255,255,.7);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border:1px solid rgba(255,255,255,.45);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.22)}
+.dark .pcp-id-card{background:rgba(20,20,30,.6);border-color:rgba(255,255,255,.08)}
+.pcp-id-card-logo{width:64px;height:64px;border-radius:14px;background:var(--sf);padding:4px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.pcp-id-card-logo img{width:100%;height:100%;border-radius:10px;object-fit:cover;display:block}
+.pcp-logo-initials{width:100%;height:100%;border-radius:10px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;letter-spacing:-1px}
+.pcp-id-card-info{flex:1;min-width:0;padding-top:1px}
+.pcp-id-card-name-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.pcp-id-card-info .pcp-name{font-size:20px;font-weight:600;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin:0}
+.pcp-verified{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ac);color:#fff;flex-shrink:0}
+.pcp-meta{font-size:12px;color:var(--g5);line-height:1.4}
 .pcp-meta-type{color:var(--tx);font-weight:500}
-.pcp-tagline{margin-top:6px;font-size:14px;color:var(--g5);line-height:1.45;max-width:640px}
-.pcp-id-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-.pcp-hiring-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 10px;border:none;border-radius:40px;background:rgba(29,185,84,.12);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
-.pcp-hiring-pill:hover{background:rgba(29,185,84,.2)}
-.pcp-id-actions{display:flex;gap:8px;flex-shrink:0;padding-bottom:6px}
-.pcp-subnav{position:sticky;top:56px;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--g2)}
-.dark .pcp-subnav{background:rgba(20,20,30,.78)}
-.pcp-subnav-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
-.pcp-subnav-inner::-webkit-scrollbar{display:none}
-.pcp-subnav-btn{padding:14px 16px;border:none;background:none;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--g5);cursor:pointer;position:relative;white-space:nowrap;transition:color .15s}
-.pcp-subnav-btn:hover{color:var(--tx)}
-.pcp-subnav-btn.active{color:var(--pcp-accent,var(--ac));font-weight:600}
-.pcp-subnav-btn.active::after{content:"";position:absolute;bottom:0;left:16px;right:16px;height:2px;background:var(--pcp-accent,var(--ac));border-radius:2px 2px 0 0}
-.pcp-stats{max-width:1280px;margin:0 auto;padding:24px 32px;display:flex;gap:48px;border-bottom:1px solid var(--g2);flex-wrap:wrap}
-.pcp-stat{display:flex;flex-direction:column;gap:2px}
-.pcp-stat-v{font-size:22px;font-weight:600;color:var(--tx);font-family:var(--sans);letter-spacing:-.02em;line-height:1.1}
-.pcp-stat-l{font-size:11px;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
-.pcp-grid{max-width:1280px;margin:0 auto;padding:32px;display:grid;grid-template-columns:1fr 320px;gap:48px}
-.pcp-main{min-width:0;display:flex;flex-direction:column;gap:48px}
+.pcp-tagline{margin-top:6px;font-size:13px;color:var(--g5);line-height:1.45;max-width:520px}
+.pcp-id-card-info .pcp-hiring-pill{margin-top:10px}
+.pcp-hiring-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 10px;border:none;border-radius:40px;background:rgba(29,185,84,.16);color:var(--green);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.pcp-hiring-pill:hover{background:rgba(29,185,84,.26)}
+.pcp-id-card-actions{flex-shrink:0;padding-top:2px}
+.pcp-tabs{position:sticky;top:56px;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--g2)}
+.dark .pcp-tabs{background:rgba(20,20,30,.78)}
+.pcp-tabs-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.pcp-tabs-inner::-webkit-scrollbar{display:none}
+.pcp-tab{padding:14px 16px;border:none;background:none;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--g5);cursor:pointer;position:relative;white-space:nowrap;transition:color .15s;display:inline-flex;align-items:center;gap:8px}
+.pcp-tab:hover{color:var(--tx)}
+.pcp-tab.active{color:var(--pcp-accent,var(--ac));font-weight:600}
+.pcp-tab.active::after{content:"";position:absolute;bottom:0;left:16px;right:16px;height:2px;background:var(--pcp-accent,var(--ac));border-radius:2px 2px 0 0}
+.pcp-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:40px;background:var(--g1);color:var(--g5);font-size:10px;font-weight:600;font-family:var(--mono)}
+.pcp-tab.active .pcp-tab-count{background:rgba(96,77,255,.14);color:var(--pcp-accent,var(--ac))}
+.pcp-grid{max-width:1280px;margin:0 auto;padding:32px;display:grid;grid-template-columns:1fr 320px;grid-template-areas:"main rail";gap:48px}
+.pcp-main{grid-area:main;min-width:0;display:flex;flex-direction:column;gap:48px}
+.pcp-rail{grid-area:rail}
 .pcp-section{scroll-margin-top:120px}
 .pcp-section-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--g2)}
 .pcp-section-header h2{font-size:18px;font-weight:600;color:var(--tx);letter-spacing:-.01em;line-height:1.2;margin:0}
@@ -1254,25 +1257,26 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .pcp-rail-card{background:var(--sf);border:1px solid var(--g2);border-radius:16px;padding:20px}
 .pcp-rail-section + .pcp-rail-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--g2)}
 .pcp-rail-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--g4);margin-bottom:12px}
+.pcp-rail-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.pcp-rail-title-row .pcp-rail-title{margin-bottom:0}
+.pcp-rail-about{font-size:13px;line-height:1.6;color:var(--tx);margin:0;white-space:pre-wrap}
+.pcp-rail-about-empty{color:var(--g4);font-style:italic}
+.pcp-readmore{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:0;background:none;border:none;color:var(--pcp-accent,var(--ac));font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.pcp-readmore:hover{opacity:.7}
 .pcp-rail-empty{font-size:12px;color:var(--g4)}
-.pcp-rail-opp{padding:10px 12px;border:1px solid var(--g2);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:8px}
-.pcp-rail-opp:hover{border-color:var(--pcp-accent,var(--ac));background:rgba(96,77,255,.04)}
-.pcp-rail-opp-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.3}
-.pcp-rail-opp-meta{font-size:10px;color:var(--g4);margin-top:3px}
-.pcp-rail-links{display:flex;flex-direction:column;gap:4px}
-.pcp-rail-links a{display:inline-flex;align-items:center;gap:8px;padding:7px 8px;font-size:12px;color:var(--g5);text-decoration:none;border-radius:8px;transition:all .15s}
-.pcp-rail-links a:hover{background:var(--g1);color:var(--pcp-accent,var(--ac))}
 .pcp-bottom-bar{display:none}
 @media (max-width:980px){
-  .pcp-grid{grid-template-columns:1fr}
-  .pcp-rail{display:none}
+  .pcp-grid{grid-template-columns:1fr;grid-template-areas:"rail" "main";padding:20px;gap:24px}
+  .pcp-rail{position:static}
   .pcp-stats{padding:18px 20px;gap:32px}
-  .pcp-id-strip{padding:0 20px 20px;gap:14px;margin-top:-38px}
-  .pcp-logo{width:78px;height:78px;border-radius:20px}
-  .pcp-name{font-size:20px}
+  .pcp-id-card-anchor{padding:0 16px}
+  .pcp-id-card{left:16px;right:16px;bottom:16px;max-width:none;padding:14px 16px;gap:12px;border-radius:16px}
+  .pcp-id-card-logo{width:54px;height:54px;border-radius:12px}
+  .pcp-id-card-info .pcp-name{font-size:17px}
+  .pcp-id-card-info .pcp-tagline{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pcp-id-card-actions{display:none}
   .pcp-team{grid-template-columns:repeat(3,1fr)}
   .pcp-media-grid{grid-template-columns:repeat(3,1fr)}
-  .pcp-grid{padding:20px}
   .pcp-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--g2);z-index:25}
   .dark .pcp-bottom-bar{background:rgba(20,20,30,.85)}
   .pcp-bottom-info{font-size:12px;color:var(--tx);font-weight:500;display:inline-flex;align-items:center;gap:8px}
@@ -1280,10 +1284,14 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 @media (max-width:560px){
   .pcp-team{grid-template-columns:repeat(2,1fr)}
   .pcp-media-grid{grid-template-columns:repeat(2,1fr)}
-  .pcp-id-actions{display:none}
   .pcp-topbar{padding:10px 14px}
   .pcp-topbar-title{display:none}
+  .pcp-id-card-info .pcp-tagline{display:none}
 }
+.pcp-about-modal{max-width:600px}
+.pcp-about-modal-text{font-size:14px;line-height:1.7;color:var(--tx);margin:0;white-space:pre-wrap}
+.pcp-about-modal .fsp-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--g2);background:var(--sf);display:flex;align-items:center;justify-content:center;color:var(--g5);cursor:pointer;flex-shrink:0;transition:all .15s}
+.pcp-about-modal .fsp-close:hover{border-color:var(--ac);color:var(--ac)}
 .pcp-edit-banner-preview{width:100%;aspect-ratio:16/5;border-radius:12px;background-size:cover;background-position:center;background-color:var(--g1);border:1px solid var(--g2)}
 .pcp-dropzone{border:2px dashed var(--g2);border-radius:12px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--g4);cursor:pointer;transition:all .15s}
 .pcp-dropzone:hover{border-color:var(--ac);color:var(--ac);background:rgba(96,77,255,.03)}
@@ -4734,11 +4742,10 @@ function downloadQR(containerSelector, filename) {
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
 function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose, onUpdate, showToast }) {
-  const [activeSection, setActiveSection] = useState("about");
+  const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
-  const sectionRefs = useRef({});
-  const subnavRef = useRef(null);
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   const isOwner = viewerMode === "owner";
   const isHiring = (opportunities || []).some(o => o.status === "published");
@@ -4747,30 +4754,16 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
   const hasTeam = !profile.hideTeam && (profile.team || []).length > 0;
   const hasMedia = !profile.hideMedia && (profile.media || []).length > 0;
 
-  const sections = useMemo(() => [
-    { id:"about", label:"About" },
-    { id:"opportunities", label:"Opportunities" },
-    ...(hasArtists ? [{ id:"artists", label:"Artists" }] : []),
-    ...(hasTeam ? [{ id:"team", label:"Team" }] : []),
-    ...(hasMedia ? [{ id:"media", label:"Media" }] : []),
-  ], [hasArtists, hasTeam, hasMedia]);
+  const ABOUT_CHAR_LIMIT = 240;
+  const aboutText = profile.about || "";
+  const aboutNeedsTruncation = aboutText.length > ABOUT_CHAR_LIMIT;
+  const aboutPreview = aboutNeedsTruncation ? aboutText.slice(0, ABOUT_CHAR_LIMIT).trimEnd() + "…" : aboutText;
 
-  // Active section via scroll position
-  useEffect(() => {
-    const obs = new IntersectionObserver((entries) => {
-      const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio);
-      if (visible[0]) setActiveSection(visible[0].target.id);
-    }, { rootMargin: "-30% 0px -55% 0px", threshold: [0, .25, .5, .75, 1] });
-    sections.forEach(s => { const el = sectionRefs.current[s.id]; if (el) obs.observe(el); });
-    return () => obs.disconnect();
-  }, [sections]);
-
-  const scrollTo = (id) => {
-    const el = sectionRefs.current[id];
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 80;
-    window.scrollTo({ top, behavior: "smooth" });
-  };
+  const tabs = useMemo(() => [
+    { id:"jobs", label:"Jobs", count: openCount },
+    ...(hasMedia ? [{ id:"discover", label:"Discover" }] : []),
+    ...((hasTeam || hasArtists) ? [{ id:"people", label:"People" }] : []),
+  ], [openCount, hasMedia, hasTeam, hasArtists]);
 
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
@@ -4792,177 +4785,102 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
         </div>
       </div>
 
-      {/* Hero banner */}
+      {/* Hero banner with floating identity card */}
       <div className="pcp-hero">
         <div className="pcp-banner" style={{ backgroundImage: profile.banner ? `url(${profile.banner})` : `linear-gradient(135deg, ${profile.accentColor || "#7A66FF"}, #4A35E0)` }}>
           {isOwner && (
             <button className="pcp-edit-chip pcp-edit-chip-banner" onClick={() => setEditPane("banner")}><I n="edit" s={12}/> Edit banner</button>
           )}
         </div>
-        <div className="pcp-id-strip">
-          <div className="pcp-logo">
-            {profile.logo ? <img src={profile.logo} alt={profile.name}/> : <div className="pcp-logo-initials">{initials || "•"}</div>}
-          </div>
-          <div className="pcp-id-info">
-            <div className="pcp-name-row">
-              <h1 className="pcp-name">{profile.name}</h1>
-              {profile.verified && <span className="pcp-verified" title="Verified"><I n="check" s={11}/></span>}
+        <div className="pcp-id-card-anchor">
+          <div className="pcp-id-card">
+            <div className="pcp-id-card-logo">
+              {profile.logo ? <img src={profile.logo} alt={profile.name}/> : <div className="pcp-logo-initials">{initials || "•"}</div>}
             </div>
-            <div className="pcp-meta">
-              <span className="pcp-meta-type">{profile.type}</span>
-              {profile.location && <span> · {profile.location}</span>}
-              {profile.followerCount > 0 && <span> · {profile.followerCount.toLocaleString()} followers</span>}
-            </div>
-            {profile.tagline && <div className="pcp-tagline">{profile.tagline}</div>}
-            <div className="pcp-id-row">
+            <div className="pcp-id-card-info">
+              <div className="pcp-id-card-name-row">
+                <h1 className="pcp-name">{profile.name}</h1>
+                {profile.verified && <span className="pcp-verified" title="Verified"><I n="check" s={11}/></span>}
+              </div>
+              <div className="pcp-meta">
+                <span className="pcp-meta-type">{profile.type}</span>
+                {profile.location && <span> · {profile.location}</span>}
+                {profile.followerCount > 0 && <span> · {profile.followerCount.toLocaleString()} followers</span>}
+              </div>
+              {profile.tagline && <div className="pcp-tagline">{profile.tagline}</div>}
               {isHiring && (
-                <button className="pcp-hiring-pill" onClick={() => scrollTo("opportunities")}>
+                <button className="pcp-hiring-pill" onClick={() => setActiveTab("jobs")}>
                   <span className="ncc-pulse"/>Hiring · {openCount} open {openCount === 1 ? "role" : "roles"}
                 </button>
               )}
             </div>
+            {!isOwner && (
+              <div className="pcp-id-card-actions">
+                <button className="btn btn-s btn-sm" onClick={() => showToast?.(`Message sent to ${profile.name}`)}><I n="chat" s={12}/> Message</button>
+              </div>
+            )}
           </div>
-          {!isOwner && (
-            <div className="pcp-id-actions">
-              <button className="btn btn-s btn-sm" onClick={() => showToast?.(`Message sent to ${profile.name}`)}><I n="chat" s={12}/> Message</button>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Sticky sub-nav */}
-      <nav className="pcp-subnav" ref={subnavRef}>
-        <div className="pcp-subnav-inner">
-          {sections.map(s => (
-            <button key={s.id} className={`pcp-subnav-btn${activeSection === s.id ? " active" : ""}`} onClick={() => scrollTo(s.id)}>{s.label}</button>
+      {/* Tab bar */}
+      <nav className="pcp-tabs">
+        <div className="pcp-tabs-inner">
+          {tabs.map(t => (
+            <button key={t.id} className={`pcp-tab${activeTab === t.id ? " active" : ""}`} onClick={() => setActiveTab(t.id)}>
+              {t.label}
+              {t.count > 0 && <span className="pcp-tab-count">{t.count}</span>}
+            </button>
           ))}
         </div>
       </nav>
-
-      {/* Stat strip */}
-      <div className="pcp-stats">
-        <div className="pcp-stat">
-          <div className="pcp-stat-v">{openCount}</div>
-          <div className="pcp-stat-l">Open {openCount === 1 ? "role" : "roles"}</div>
-        </div>
-        {hasArtists && (
-          <div className="pcp-stat">
-            <div className="pcp-stat-v">{(profile.artists || []).length}</div>
-            <div className="pcp-stat-l">{profile.type === "Casting Agency" || profile.type === "Talent Agency" ? "Artists represented" : "In ensemble"}</div>
-          </div>
-        )}
-        {profile.founded && (
-          <div className="pcp-stat">
-            <div className="pcp-stat-v">{profile.founded}</div>
-            <div className="pcp-stat-l">Founded</div>
-          </div>
-        )}
-        <div className="pcp-stat">
-          <div className="pcp-stat-v">{(profile.followerCount || 0).toLocaleString()}</div>
-          <div className="pcp-stat-l">Followers</div>
-        </div>
-      </div>
 
       {/* Two-column grid: main + right rail */}
       <div className="pcp-grid">
         <main className="pcp-main">
 
-          {/* About */}
-          <section id="about" ref={el => sectionRefs.current.about = el} className="pcp-section">
-            <div className="pcp-section-header">
-              <h2>About</h2>
-              {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("about")}><I n="edit" s={12}/> Edit</button>}
-            </div>
-            <div className="pcp-about">
-              <p>{profile.about || (isOwner ? "Add a short description of your company." : "")}</p>
-              <div className="pcp-quick-facts">
-                {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="pcp-qf"><I n="globe" s={12}/> Website</a>}
-                {profile.email && <a href={`mailto:${profile.email}`} className="pcp-qf"><I n="email" s={12}/> {profile.email}</a>}
-                {profile.instagram && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="instagram" s={12}/> {profile.instagram}</a>}
-                {profile.tiktok && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="tiktok" s={12}/> {profile.tiktok}</a>}
-                {profile.linkedin && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="link" s={12}/> LinkedIn</a>}
+          {/* JOBS */}
+          {activeTab === "jobs" && (
+            <section className="pcp-section">
+              <div className="pcp-section-header">
+                <h2>Open roles &amp; opportunities</h2>
+                <span className="pcp-section-count">{openCount}</span>
               </div>
-            </div>
-          </section>
-
-          {/* Opportunities */}
-          <section id="opportunities" ref={el => sectionRefs.current.opportunities = el} className="pcp-section">
-            <div className="pcp-section-header">
-              <h2>Open opportunities</h2>
-              <span className="pcp-section-count">{openCount}</span>
-            </div>
-            {openCount === 0 ? (
-              <div className="pcp-empty">
-                <I n="inbox" s={24}/>
-                <div>No open opportunities right now.</div>
-                {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
-              </div>
-            ) : (
-              <div className="pcp-opps">
-                {(opportunities || []).filter(o => o.status === "published").map(o => (
-                  <div key={o.id} className="pcp-opp" onClick={() => showToast?.(`Opening ${o.title}`)}>
-                    <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
-                    <div className="pcp-opp-body">
-                      <div className="pcp-opp-type">{o.opportunityType || o.type || "Audition"}</div>
-                      <div className="pcp-opp-title">{o.title}</div>
-                      <div className="pcp-opp-meta">
-                        {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
-                        {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
+              {openCount === 0 ? (
+                <div className="pcp-empty">
+                  <I n="inbox" s={24}/>
+                  <div>No open opportunities right now.</div>
+                  {!isOwner && <button className="btn btn-s btn-sm" onClick={() => { setFollowed(true); showToast?.("You'll be notified about new roles."); }}><I n="bell" s={12}/> Follow for alerts</button>}
+                </div>
+              ) : (
+                <div className="pcp-opps">
+                  {(opportunities || []).filter(o => o.status === "published").map(o => (
+                    <div key={o.id} className="pcp-opp" onClick={() => showToast?.(`Opening ${o.title}`)}>
+                      <div className="pcp-opp-thumb" style={{ backgroundImage: o.coverImage ? `url(${o.coverImage})` : `linear-gradient(135deg, ${profile.accentColor}, #4A35E0)` }}/>
+                      <div className="pcp-opp-body">
+                        <div className="pcp-opp-type">{o.opportunityType || o.type || "Audition"}</div>
+                        <div className="pcp-opp-title">{o.title}</div>
+                        <div className="pcp-opp-meta">
+                          {o.location && <span><I n="pin" s={11}/> {o.location}</span>}
+                          {o.deadline && <span><I n="calendar" s={11}/> {o.deadline}</span>}
+                        </div>
                       </div>
+                      <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); showToast?.("Apply flow coming soon."); }}>{isOwner ? "View" : "Apply"}</button>
                     </div>
-                    <button className="btn btn-p btn-sm pcp-opp-cta" onClick={e => { e.stopPropagation(); showToast?.("Apply flow coming soon."); }}>{isOwner ? "View" : "Apply"}</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
-          {/* Artists */}
-          {hasArtists && (
-            <section id="artists" ref={el => sectionRefs.current.artists = el} className="pcp-section">
+          {/* DISCOVER (Media) */}
+          {activeTab === "discover" && hasMedia && (
+            <section className="pcp-section">
               <div className="pcp-section-header">
                 <div>
-                  <h2>Artists</h2>
-                  <div className="pcp-section-sub">{profile.type === "Casting Agency" || profile.type === "Talent Agency" ? "Currently represented" : "Currently in our ensemble"}</div>
+                  <h2>Discover</h2>
+                  <div className="pcp-section-sub">A look behind the scenes.</div>
                 </div>
-                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("artists")}><I n="edit" s={12}/> Edit</button>}
-              </div>
-              <div className="pcp-rail-scroll">
-                {(profile.artists || []).map(a => (
-                  <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
-                    <div className="pcp-artist-photo" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
-                    <div className="pcp-artist-name">{a.name}</div>
-                    <div className="pcp-artist-role">{a.role || a.speciality}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Team */}
-          {hasTeam && (
-            <section id="team" ref={el => sectionRefs.current.team = el} className="pcp-section">
-              <div className="pcp-section-header">
-                <h2>Team</h2>
-                {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
-              </div>
-              <div className="pcp-team">
-                {(profile.team || []).map((t, i) => (
-                  <div key={i} className="pcp-team-member">
-                    <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
-                    <div className="pcp-team-name">{t.name}</div>
-                    <div className="pcp-team-role">{t.role}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Media */}
-          {hasMedia && (
-            <section id="media" ref={el => sectionRefs.current.media = el} className="pcp-section">
-              <div className="pcp-section-header">
-                <h2>Media</h2>
                 {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("media-add")}><I n="plus" s={12}/> Add</button>}
               </div>
               <div className="pcp-media-grid">
@@ -4976,36 +4894,103 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], onClose
             </section>
           )}
 
+          {/* PEOPLE (Team + Artists) */}
+          {activeTab === "people" && (hasTeam || hasArtists) && (
+            <>
+              {hasTeam && (
+                <section className="pcp-section">
+                  <div className="pcp-section-header">
+                    <div>
+                      <h2>Team</h2>
+                      <div className="pcp-section-sub">The people behind the work.</div>
+                    </div>
+                    {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("team")}><I n="edit" s={12}/> Edit</button>}
+                  </div>
+                  <div className="pcp-team">
+                    {(profile.team || []).map((t, i) => (
+                      <div key={i} className="pcp-team-member">
+                        <div className="pcp-team-avatar" style={{ backgroundImage: t.photo ? `url(${t.photo})` : "none", background: t.photo ? undefined : "var(--g1)" }}/>
+                        <div className="pcp-team-name">{t.name}</div>
+                        <div className="pcp-team-role">{t.role}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {hasArtists && (
+                <section className="pcp-section">
+                  <div className="pcp-section-header">
+                    <div>
+                      <h2>Artists</h2>
+                      <div className="pcp-section-sub">{profile.type === "Casting Agency" || profile.type === "Talent Agency" ? "Currently represented" : "Currently in our ensemble"}</div>
+                    </div>
+                    {isOwner && <button className="pcp-edit-chip" onClick={() => setEditPane("artists")}><I n="edit" s={12}/> Edit</button>}
+                  </div>
+                  <div className="pcp-rail-scroll">
+                    {(profile.artists || []).map(a => (
+                      <div key={a.id} className="pcp-artist" onClick={() => showToast?.(`Opening ${a.name}'s profile`)}>
+                        <div className="pcp-artist-photo" style={{ backgroundImage: `url(${a.img || a.photo})` }}/>
+                        <div className="pcp-artist-name">{a.name}</div>
+                        <div className="pcp-artist-role">{a.role || a.speciality}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+
         </main>
 
         {/* Right rail (desktop) */}
         <aside className="pcp-rail">
           <div className="pcp-rail-card">
             <div className="pcp-rail-section">
-              <div className="pcp-rail-title">Open roles</div>
-              {openCount === 0 ? (
-                <div className="pcp-rail-empty">No open roles right now.</div>
+              <div className="pcp-rail-title-row">
+                <div className="pcp-rail-title">About</div>
+                {isOwner && <button className="pcp-edit-chip pcp-edit-chip-sm" onClick={() => setEditPane("about")}><I n="edit" s={11}/> Edit</button>}
+              </div>
+              {aboutText ? (
+                <>
+                  <p className="pcp-rail-about">{aboutPreview}</p>
+                  {aboutNeedsTruncation && (
+                    <button className="pcp-readmore" onClick={() => setShowAboutModal(true)}>Read more <I n="chevR" s={11}/></button>
+                  )}
+                </>
               ) : (
-                (opportunities || []).filter(o => o.status === "published").slice(0,4).map(o => (
-                  <div key={o.id} className="pcp-rail-opp" onClick={() => scrollTo("opportunities")}>
-                    <div className="pcp-rail-opp-title">{o.title}</div>
-                    <div className="pcp-rail-opp-meta">{o.opportunityType || "Audition"}{o.deadline ? ` · ${o.deadline}` : ""}</div>
-                  </div>
-                ))
+                <p className="pcp-rail-about pcp-rail-about-empty">{isOwner ? "Add a short description of your company." : "—"}</p>
               )}
             </div>
             <div className="pcp-rail-section">
-              <div className="pcp-rail-title">Quick links</div>
-              <div className="pcp-rail-links">
-                {profile.website && <a href={profile.website} target="_blank" rel="noreferrer"><I n="globe" s={13}/> Website</a>}
-                {profile.email && <a href={`mailto:${profile.email}`}><I n="email" s={13}/> Email</a>}
-                {profile.instagram && <a href="#" onClick={e=>e.preventDefault()}><I n="instagram" s={13}/> Instagram</a>}
-                {profile.tiktok && <a href="#" onClick={e=>e.preventDefault()}><I n="tiktok" s={13}/> TikTok</a>}
+              <div className="pcp-rail-title">Links &amp; contact</div>
+              <div className="pcp-quick-facts">
+                {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="pcp-qf"><I n="globe" s={12}/> Website</a>}
+                {profile.email && <a href={`mailto:${profile.email}`} className="pcp-qf"><I n="email" s={12}/> {profile.email}</a>}
+                {profile.instagram && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="instagram" s={12}/> {profile.instagram}</a>}
+                {profile.tiktok && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="tiktok" s={12}/> {profile.tiktok}</a>}
+                {profile.linkedin && <a href="#" className="pcp-qf" onClick={e=>e.preventDefault()}><I n="link" s={12}/> LinkedIn</a>}
               </div>
             </div>
           </div>
         </aside>
       </div>
+
+      {/* About read-more modal */}
+      {showAboutModal && createPortal(
+        <div className="overlay" onClick={() => setShowAboutModal(false)}>
+          <div className="share-modal pcp-about-modal" onClick={e => e.stopPropagation()}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14,marginBottom:18}}>
+              <div>
+                <h2 style={{margin:0}}>About</h2>
+                <div className="sm-sub" style={{marginTop:4,marginBottom:0}}>{profile.name}</div>
+              </div>
+              <button className="fsp-close" onClick={() => setShowAboutModal(false)} aria-label="Close"><I n="x" s={18}/></button>
+            </div>
+            <p className="pcp-about-modal-text">{aboutText}</p>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Mobile bottom action bar */}
       {!isOwner && (
