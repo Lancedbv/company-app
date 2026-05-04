@@ -6100,14 +6100,17 @@ export default function AgencyShell() {
       ? rooms.map(r => ({ id:r.id, title:r.title, status:r.status, opportunityType:r.opportunityType, location:r.location, deadline:r.deadline, coverImage:r.coverImage }))
       : MOCK_OPEN_BOARD_LISTINGS.slice(0, baseProfile.openPositions || 0).map(o => ({ ...o, status:"published" }));
     return (
-      <PublicCompanyProfile
-        profile={profile}
-        viewerMode={publicCompany === "self" ? "owner" : "artist"}
-        opportunities={profileOpps}
-        onClose={() => setPublicCompany(null)}
-        onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
-        showToast={showToast}
-      />
+      <>
+        <style>{CSS}</style>
+        <PublicCompanyProfile
+          profile={profile}
+          viewerMode={publicCompany === "self" ? "owner" : "artist"}
+          opportunities={profileOpps}
+          onClose={() => setPublicCompany(null)}
+          onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
+          showToast={showToast}
+        />
+      </>
     );
   }
 
