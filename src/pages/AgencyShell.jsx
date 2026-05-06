@@ -6981,6 +6981,7 @@ export default function AgencyShell() {
   });
   const [connectedCalendars, setConnectedCalendars] = useState({google:false, apple:false, microsoft:false});
   const [bulkSlotForm, setBulkSlotForm] = useState({date:"", startTime:"10:00", endTime:"12:00", duration:30, buffer:0});
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [candidateView, setCandidateView] = useState("grid");
   const [candidateFilter, setCandidateFilter] = useState("all");
   const [candidateSearch, setCandidateSearch] = useState("");
@@ -11340,74 +11341,13 @@ export default function AgencyShell() {
                   <h1>Candidates</h1>
                   <p className="pg-sub">{roomCandidates.length} applicant{roomCandidates.length !== 1 ? "s" : ""} for {currentRoom.title}</p>
                 </div>
-                <button className="btn btn-p mobile-hide" onClick={() => { setShareResultsSelection({selected:true,shortlisted:false,potential:false,not_selected:false}); setShowShareResults(true); }}><I n="send" s={14}/> Share Results</button>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                  {currentRoom.opportunityType === "competition" && currentRoom.enableScoring && (
+                    <button className="btn btn-s mobile-hide" onClick={() => setShowLeaderboard(true)}><I n="trophy" s={14}/> Leaderboard</button>
+                  )}
+                  <button className="btn btn-p mobile-hide" onClick={() => { setShareResultsSelection({selected:true,shortlisted:false,potential:false,not_selected:false}); setShowShareResults(true); }}><I n="send" s={14}/> Share Results</button>
+                </div>
               </div>
-
-              {/* Competition Leaderboard */}
-              {currentRoom.opportunityType === "competition" && currentRoom.enableScoring && (() => {
-                const criteria = currentRoom.scoringCriteria || [];
-                const scale = currentRoom.scoringScale || 10;
-                const scored = roomCandidates.map(c => {
-                  const myScores = candidateScores[c.id] || {};
-                  let weighted = 0; let totalWeight = 0;
-                  criteria.forEach(crit => {
-                    const score = myScores[crit.id];
-                    if (typeof score === "number") { weighted += (score/scale) * crit.weight; totalWeight += crit.weight; }
-                  });
-                  const final = totalWeight > 0 ? (weighted / totalWeight) * 100 : null;
-                  return { c, info:getCandidateInfo(c), myScores, final };
-                }).filter(s => s.final !== null).sort((a,b) => b.final - a.final);
-                if (scored.length === 0) return null;
-                return (
-                  <div className="room-stat-card" style={{marginBottom:18}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
-                      <div>
-                        <h3 style={{margin:0,display:"flex",alignItems:"center",gap:6}}><I n="trophy" s={16}/> Leaderboard</h3>
-                        <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>Ranked by weighted average across {criteria.length} criteria · scale 1–{scale}</div>
-                      </div>
-                      <div style={{fontSize:11,color:"var(--g4)"}}>{scored.length} scored</div>
-                    </div>
-                    <div style={{overflowX:"auto"}}>
-                      <table style={{width:"100%",fontSize:12,borderCollapse:"collapse"}}>
-                        <thead>
-                          <tr style={{borderBottom:"1px solid var(--g1)",textAlign:"left"}}>
-                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",width:50}}>Rank</th>
-                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>Candidate</th>
-                            {criteria.map(crit => (
-                              <th key={crit.id} style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"center"}}>{crit.name}<div style={{fontSize:9,fontWeight:500,color:"var(--g4)",marginTop:2}}>{crit.weight}%</div></th>
-                            ))}
-                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"right"}}>Score</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {scored.map((row, idx) => (
-                            <tr key={row.c.id} style={{borderBottom:"1px solid var(--g1)",cursor:"pointer"}} onClick={() => setViewCandidate(row.c.id)}>
-                              <td style={{padding:"10px 6px"}}>
-                                <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:8,fontWeight:700,fontSize:12, background: idx === 0 ? "rgba(245,166,35,.15)" : idx === 1 ? "rgba(160,160,170,.15)" : idx === 2 ? "rgba(176,108,72,.15)" : "var(--g1)", color: idx === 0 ? "#F5A623" : idx === 1 ? "#8C8C9A" : idx === 2 ? "#B06C48" : "var(--g5)"}}>{idx+1}</span>
-                              </td>
-                              <td style={{padding:"10px 6px"}}>
-                                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                  <div className="team-avatar" style={{width:28,height:28,fontSize:10}}>{row.info.name?.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
-                                  <div>
-                                    <div style={{fontWeight:600}}>{row.info.name}</div>
-                                    <div style={{fontSize:10,color:"var(--g4)"}}>#{row.c.number} · {row.c.status}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              {criteria.map(crit => (
-                                <td key={crit.id} style={{padding:"10px 6px",textAlign:"center",fontFamily:"var(--mono)",color:"var(--g6)"}}>{row.myScores[crit.id] ?? "—"}</td>
-                              ))}
-                              <td style={{padding:"10px 6px",textAlign:"right"}}>
-                                <span style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:14,color:"var(--ac)"}}>{row.final.toFixed(1)}%</span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })()}
 
               <div className={`cand-toolbar${!mobileSearchOpen?" search-collapsed":""}`}>
                 <button className="search-toggle-btn" onClick={() => setMobileSearchOpen(o => !o)}>
@@ -11550,12 +11490,29 @@ export default function AgencyShell() {
                     <div className="cand-grid">
                       {filtered.map(cand => {
                         const info = getCandidateInfo(cand);
+                        const isCompetition = currentRoom.opportunityType === "competition" && currentRoom.enableScoring;
+                        const finalScore = isCompetition ? (() => {
+                          const criteria = currentRoom.scoringCriteria || [];
+                          const scale = currentRoom.scoringScale || 10;
+                          const myScores = candidateScores[cand.id] || {};
+                          let weighted = 0; let totalWeight = 0;
+                          criteria.forEach(crit => {
+                            const sc = myScores[crit.id];
+                            if (typeof sc === "number") { weighted += (sc/scale) * crit.weight; totalWeight += crit.weight; }
+                          });
+                          return totalWeight > 0 ? (weighted / totalWeight) * 100 : null;
+                        })() : null;
                         return (
                           <div className="cand-card" key={cand.id} onClick={() => { setViewCandidate(cand.id); setCandidateVideoTab(0); }}>
                             <div className="cand-img-wrap">
                               {info.img ? <img className="cand-img" src={info.img} alt={info.name}/> : <div className="cand-img" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:20,fontWeight:700}}>{info.name?.[0]}</div>}
                               <div className="cand-number">#{cand.number}</div>
                               <span className={`cand-badge ${cand.status}`}>{cand.status === "not_selected" ? "Not Selected" : cand.status}</span>
+                              {finalScore !== null && (
+                                <div style={{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",background:"rgba(245,166,35,.95)",color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:40,display:"inline-flex",alignItems:"center",gap:3,boxShadow:"0 2px 6px rgba(0,0,0,.15)"}}>
+                                  <I n="trophy" s={10}/> {finalScore.toFixed(1)}%
+                                </div>
+                              )}
                               <div className="cand-overlay">
                                 <div className="cand-name">{info.name}</div>
                                 <div className="cand-tags">
@@ -17907,6 +17864,78 @@ export default function AgencyShell() {
           </div>
         </div>
       )}
+
+      {/* ═══ LEADERBOARD MODAL ═══ */}
+      {showLeaderboard && currentRoom && currentRoom.opportunityType === "competition" && (() => {
+        const criteria = currentRoom.scoringCriteria || [];
+        const scale = currentRoom.scoringScale || 10;
+        const roomCands = candidates.filter(c => c.roomId === currentRoom.id);
+        const scored = roomCands.map(c => {
+          const myScores = candidateScores[c.id] || {};
+          let weighted = 0; let totalWeight = 0;
+          criteria.forEach(crit => {
+            const score = myScores[crit.id];
+            if (typeof score === "number") { weighted += (score/scale) * crit.weight; totalWeight += crit.weight; }
+          });
+          const final = totalWeight > 0 ? (weighted / totalWeight) * 100 : null;
+          return { c, info:getCandidateInfo(c), myScores, final };
+        }).sort((a,b) => (b.final ?? -1) - (a.final ?? -1));
+        return (
+          <div className="overlay" onClick={() => setShowLeaderboard(false)}>
+            <div className="new-room-modal" style={{maxWidth:900,width:"95%"}} onClick={e => e.stopPropagation()}>
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:14}}>
+                <div>
+                  <h2 style={{margin:0,display:"flex",alignItems:"center",gap:8}}><I n="trophy" s={20}/> Leaderboard</h2>
+                  <p className="nrm-sub" style={{margin:"4px 0 0"}}>Ranked by weighted average across {criteria.length} criteria · scale 1–{scale} · {scored.filter(s => s.final !== null).length} of {scored.length} scored</p>
+                </div>
+                <button className="rm-del" onClick={() => setShowLeaderboard(false)}><I n="x" s={14}/></button>
+              </div>
+              <div style={{overflowX:"auto",maxHeight:"60vh",overflowY:"auto"}}>
+                <table style={{width:"100%",fontSize:12,borderCollapse:"collapse"}}>
+                  <thead style={{position:"sticky",top:0,background:"var(--sf)",zIndex:1}}>
+                    <tr style={{borderBottom:"1px solid var(--g1)",textAlign:"left"}}>
+                      <th style={{padding:"10px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",width:50}}>Rank</th>
+                      <th style={{padding:"10px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>Candidate</th>
+                      {criteria.map(crit => (
+                        <th key={crit.id} style={{padding:"10px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"center"}}>{crit.name}<div style={{fontSize:9,fontWeight:500,color:"var(--g4)",marginTop:2}}>{crit.weight}%</div></th>
+                      ))}
+                      <th style={{padding:"10px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"right"}}>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scored.map((row, idx) => (
+                      <tr key={row.c.id} style={{borderBottom:"1px solid var(--g1)",cursor:"pointer"}} onClick={() => { setShowLeaderboard(false); setViewCandidate(row.c.id); }}>
+                        <td style={{padding:"10px 6px"}}>
+                          <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:8,fontWeight:700,fontSize:12, background: row.final === null ? "var(--g1)" : idx === 0 ? "rgba(245,166,35,.15)" : idx === 1 ? "rgba(160,160,170,.15)" : idx === 2 ? "rgba(176,108,72,.15)" : "var(--g1)", color: row.final === null ? "var(--g4)" : idx === 0 ? "#F5A623" : idx === 1 ? "#8C8C9A" : idx === 2 ? "#B06C48" : "var(--g5)"}}>{row.final === null ? "—" : idx+1}</span>
+                        </td>
+                        <td style={{padding:"10px 6px"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div className="team-avatar" style={{width:28,height:28,fontSize:10}}>{row.info.name?.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                            <div>
+                              <div style={{fontWeight:600}}>{row.info.name}</div>
+                              <div style={{fontSize:10,color:"var(--g4)"}}>#{row.c.number} · {row.c.status}</div>
+                            </div>
+                          </div>
+                        </td>
+                        {criteria.map(crit => (
+                          <td key={crit.id} style={{padding:"10px 6px",textAlign:"center",fontFamily:"var(--mono)",color:"var(--g6)"}}>{row.myScores[crit.id] ?? "—"}</td>
+                        ))}
+                        <td style={{padding:"10px 6px",textAlign:"right"}}>
+                          {row.final !== null ? (
+                            <span style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:14,color:"var(--ac)"}}>{row.final.toFixed(1)}%</span>
+                          ) : (
+                            <span style={{fontSize:10,color:"var(--g4)"}}>Not scored</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ═══ SHARE RESULTS MODAL ═══ */}
       {showShareResults && currentRoom && (() => {
