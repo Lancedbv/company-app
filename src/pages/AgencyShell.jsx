@@ -82,12 +82,15 @@ const COMPANY_TYPES = ["Studio","Theater","Dance Company","Theater Company","Ope
 const OPPORTUNITY_TYPES = [
   {key:"casting",label:"Casting",icon:"inbox",desc:"Cast roles for a campaign, production or shoot",color:"#604DFF",enabled:true},
   {key:"audition",label:"Audition",icon:"play",desc:"Run season auditions for company members or roles",color:"#1A56DB",enabled:true},
-  {key:"job_call",label:"Job Call",icon:"card",desc:"Hire for staff or freelance roles within your company",color:"#0EA5A8",enabled:false},
-  {key:"open_call",label:"Open Call",icon:"globe",desc:"Public call to discover new artists and talent",color:"#F5A623",enabled:false},
-  {key:"residency",label:"Residency",icon:"home",desc:"Invite artists for a creative or research residency",color:"#FF6B81",enabled:false},
-  {key:"competition",label:"Competition",icon:"star",desc:"Run a contest, prize or competitive selection",color:"#1DB954",enabled:false},
+  {key:"job_call",label:"Job Call",icon:"card",desc:"Hire for staff or freelance roles within your company",color:"#0EA5A8",enabled:true},
+  {key:"open_call",label:"Open Call",icon:"globe",desc:"Public call to discover new artists and talent",color:"#F5A623",enabled:true},
+  {key:"residency",label:"Residency",icon:"home",desc:"Invite artists for a creative or research residency",color:"#FF6B81",enabled:true},
+  {key:"competition",label:"Competition",icon:"star",desc:"Run a contest, prize or competitive selection",color:"#1DB954",enabled:true},
+  {key:"education",label:"Education",icon:"book",desc:"Run a school, training programme or workshop",color:"#8B5CF6",enabled:true},
 ];
 const getOpportunityType = (key) => OPPORTUNITY_TYPES.find(t => t.key === key) || OPPORTUNITY_TYPES[0];
+const INTERVIEW_ELIGIBLE_TYPES = ["open_call","residency","job_call"];
+const TYPES_WITH_CONTRACTS = ["audition","job_call","residency","education"];
 
 const AUDITION_FORMATS = [
   {val:"one_date",title:"One Date",desc:"A single audition day at one location",icon:"calendar"},
@@ -357,6 +360,7 @@ const MOCK_ROOMS = [
     roles:["Ballet Teacher","Modern Teacher","Contemporary Teacher"], description:"Hiring freelance teachers across our school program. Open to applications year-round; flexible scheduling for working artists.",
     opportunityType:"job_call",
     type:"open", format:"hybrid", status:"published",
+    enableShortlist:true, enableWaitlist:true, enableInterviews:false,
     contracts:["Freelance","Part Time","Contract"],
     deadline:"May 30, 2026", resultsDate:"Rolling",
     castingDate:null, rehearsalDates:null, fittingDates:null, shootingDates:null,
@@ -387,6 +391,10 @@ const MOCK_ROOMS = [
     roles:["Choreographer","Movement Artist","Performance Artist"], description:"Six-week paid residency for movement artists to develop new work. Studio space, mentorship, and a final showing on our main stage are included.",
     opportunityType:"residency",
     type:"open", format:"in_person", status:"published",
+    enableShortlist:true, enableWaitlist:true, enableInterviews:true,
+    interviewFormat:"video", interviewDuration:"30",
+    meetingProvider:"google_meet", interviewBuffer:10, allowCandidateSelfBook:true,
+    interviewReminders:{h24:true, h1:true},
     contracts:["Project-Based"],
     deadline:"Jun 1, 2026", resultsDate:"Jun 20, 2026",
     castingDate:null, rehearsalDates:"Sep 15 — Oct 26, 2026", fittingDates:null, shootingDates:"Showing: Oct 28 — Oct 30, 2026",
@@ -401,12 +409,50 @@ const MOCK_ROOMS = [
     roles:["Choreographer","Co-creator"], description:"Open call for choreographers to pitch new commissions for our 2027/2028 mixed bill. Pitch a 10–25 minute piece with a clear concept and casting brief.",
     opportunityType:"open_call",
     type:"open", format:"online", status:"published",
+    enableShortlist:true, enableWaitlist:true, enableInterviews:false,
     deadline:"May 20, 2026", resultsDate:"Jun 30, 2026",
     castingDate:null, rehearsalDates:null, fittingDates:null, shootingDates:null,
     teamMemberIds:["tm1","tm2","tm3"], createdAt:"Mar 18, 2026",
     stats:{total:21,shortlisted:0,potential:7,rejected:3,offered:0,reviewed:12},
     banner:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg",
     shareId:"tl-choreo-2027", collaborationShareId:"tl-choreo-2027-collab",
+    shareSettings:{requireLogin:true,requirePassword:false,password:"",welcomeMessage:""}
+  },
+  {
+    id:"room7", title:"Young Choreographer Award 2027",
+    roles:["Choreographer"], description:"Annual prize for emerging choreographers under 30. Finalists present a 10-minute work; winner receives a commission for the main stage and a €15,000 prize.",
+    opportunityType:"competition",
+    type:"open", format:"hybrid", status:"published",
+    enableShortlist:true, enableWaitlist:false,
+    enableScoring:true,
+    scoringScale:10,
+    scoringCriteria:[
+      {id:"sc1",name:"Technique",weight:25},
+      {id:"sc2",name:"Creativity",weight:30},
+      {id:"sc3",name:"Artistry",weight:25},
+      {id:"sc4",name:"Stage Presence",weight:20},
+    ],
+    deadline:"Jul 15, 2026", resultsDate:"Sep 5, 2026",
+    castingDate:"Aug 28 — Aug 30, 2026", rehearsalDates:null, fittingDates:null, shootingDates:"Final showing: Sep 4, 2026",
+    teamMemberIds:["tm1","tm2","tm3"], createdAt:"Mar 22, 2026",
+    stats:{total:32,shortlisted:8,potential:0,rejected:6,offered:0,reviewed:18},
+    banner:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg",
+    shareId:"tl-ycaward-2027", collaborationShareId:"tl-ycaward-2027-collab",
+    shareSettings:{requireLogin:true,requirePassword:false,password:"",welcomeMessage:""}
+  },
+  {
+    id:"room8", title:"Summer Intensive Workshop 2026",
+    roles:["Student Dancer","Pre-Professional"], description:"Three-week summer intensive for pre-professional dancers ages 16-22. Daily classes in ballet, contemporary, and repertoire with company artists.",
+    opportunityType:"education",
+    type:"open", format:"in_person", status:"published",
+    enableShortlist:true, enableWaitlist:true,
+    contracts:["Project-Based"],
+    deadline:"May 1, 2026", resultsDate:"May 15, 2026",
+    castingDate:null, rehearsalDates:null, fittingDates:null, shootingDates:"Programme runs Jul 6 — Jul 24, 2026",
+    teamMemberIds:["tm1","tm3"], createdAt:"Mar 24, 2026",
+    stats:{total:54,shortlisted:0,potential:12,rejected:8,offered:0,reviewed:25},
+    banner:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg",
+    shareId:"tl-intensive-2026", collaborationShareId:"tl-intensive-2026-collab",
     shareSettings:{requireLogin:true,requirePassword:false,password:"",welcomeMessage:""}
   },
 ];
@@ -460,6 +506,57 @@ const MOCK_CANDIDATES = [
   {id:"cand46",roomId:"room1",artistId:null,number:46,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Interesting background in capoeira. Could add diversity.",time:"Mar 17"}],motivation:"My capoeira and contemporary fusion creates dynamic movement.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Ana Souza",email:"ana.s@example.com",age:27,height:"5'6\"",nationality:"Brazilian",gender:"Female",location:"Salvador, BR",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
   {id:"cand47",roomId:"room1",artistId:null,number:47,status:"not_selected",labels:[],rejectionReason:"Experience Level",appliedAt:"Mar 15, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Needs more professional experience. Encourage to apply next year.",time:"Mar 16"}],motivation:"I just started my dance journey and am eager to learn on set.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Oliver Jensen",email:"oliver.j@example.com",age:18,height:"5'10\"",nationality:"Danish",gender:"Male",location:"Aarhus, DK",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
   {id:"cand48",roomId:"room1",artistId:null,number:48,status:"new",labels:["Internship"],rejectionReason:null,appliedAt:"Mar 20, 2026",reviewedBy:[],notes:[],motivation:"Applying as a recent graduate eager to gain real-world experience in commercial dance.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Chloe Nguyen",email:"chloe.n@example.com",age:21,height:"5'4\"",nationality:"Vietnamese-Australian",gender:"Female",location:"Sydney, AU",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+
+  // ── room3 (Job Call — Freelance Teachers) ──
+  {id:"cand_j1",roomId:"room3",artistId:"a3",number:1,status:"selected",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm3"],notes:[{from:"tm1",text:"Excellent ballet pedagogy background — RAD certified.",time:"Mar 15"}],motivation:"I'd love to share my ballet knowledge with your students. I've taught at conservatories in three countries.",videos:[{label:"Teaching Demo",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_j2",roomId:"room3",artistId:"a5",number:2,status:"shortlisted",labels:["Part Time"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Strong contemporary technique, fresh approach.",time:"Mar 17"}],motivation:"My contemporary practice draws from Cunningham and Forsythe — I'd bring this depth to your students.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_j3",roomId:"room3",artistId:"a8",number:3,status:"shortlisted",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 18, 2026",reviewedBy:["tm1"],notes:[],motivation:"I've taught modern dance for 8 years and would welcome a flexible role.",videos:[{label:"Class Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_j4",roomId:"room3",artistId:null,number:4,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 22, 2026",reviewedBy:[],notes:[],motivation:"Applying as a Pilates-certified contemporary teacher with 12 years of professional dance experience.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Sofia Mendez",email:"sofia.m@example.com",age:34,height:"5'7\"",nationality:"Spanish",gender:"Female",location:"Madrid, ES",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_j5",roomId:"room3",artistId:null,number:5,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 24, 2026",reviewedBy:[],notes:[],motivation:"Former soloist with the Hamburg Ballet, now transitioning to teaching.",videos:[{label:"Teaching Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Henrik Lund",email:"henrik.l@example.com",age:38,height:"5'11\"",nationality:"Danish",gender:"Male",location:"Copenhagen, DK",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_j6",roomId:"room3",artistId:null,number:6,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Background looks promising, want to see her teach.",time:"Mar 20"}],motivation:"Modern technique specialist, Limón-trained.",videos:[],availability:{available:true,conflicts:["Tuesdays unavailable"]},externalApplicant:{name:"Priya Sharma",email:"priya.s@example.com",age:29,height:"5'5\"",nationality:"Indian-British",gender:"Female",location:"London, UK",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_j7",roomId:"room3",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Experience Level",appliedAt:"Mar 18, 2026",reviewedBy:["tm1"],notes:[],motivation:"Recent graduate looking for first teaching role.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Alex Petrov",email:"alex.p@example.com",age:23,height:"5'9\"",nationality:"Bulgarian",gender:"Male",location:"Sofia, BG",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+
+  // ── room5 (Residency — Movement Artists) ──
+  {id:"cand_r1",roomId:"room5",artistId:"a4",number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 5, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Concept is strong — exploring memory through gesture.",time:"Apr 8"},{from:"tm2",text:"Pitch deck was very thoughtful.",time:"Apr 8"}],motivation:"My new work explores embodied memory through gesture — I need studio time and mentorship to develop it.",videos:[{label:"Studio Sketch",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_r2",roomId:"room5",artistId:"a7",number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 7, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Cross-disciplinary, mixes movement with sound design.",time:"Apr 9"}],motivation:"I'm developing a sound-and-movement piece exploring migration narratives.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_r3",roomId:"room5",artistId:"a11",number:3,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 9, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Strong solo practice. Six weeks would let her finish the piece.",time:"Apr 10"}],motivation:"Six weeks of dedicated studio time would let me finish the solo I've been developing for two years.",videos:[{label:"Excerpt",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_r4",roomId:"room5",artistId:"a13",number:4,status:"selected",labels:[],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Already selected — outstanding pitch.",time:"Apr 11"}],motivation:"My research investigates trauma-informed choreographic practice. The mentorship offered is ideal.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_r5",roomId:"room5",artistId:null,number:5,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 18, 2026",reviewedBy:[],notes:[],motivation:"Pitching a duet exploring the relationship between performer and audience expectation.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Mira Volkova",email:"mira.v@example.com",age:31,height:"5'7\"",nationality:"Russian-French",gender:"Female",location:"Paris, FR",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_r6",roomId:"room5",artistId:null,number:6,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 20, 2026",reviewedBy:[],notes:[],motivation:"My practice combines butoh and contemporary improvisation.",videos:[{label:"Performance Excerpt",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Tomás Reyes",email:"tomas.r@example.com",age:36,height:"5'10\"",nationality:"Mexican",gender:"Male",location:"Mexico City, MX",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_r7",roomId:"room5",artistId:null,number:7,status:"potential",labels:[],rejectionReason:null,appliedAt:"Apr 12, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Concept needs sharpening but the artist is interesting.",time:"Apr 14"}],motivation:"My work explores ecological themes through site-specific movement.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Linnea Berg",email:"linnea.b@example.com",age:28,height:"5'6\"",nationality:"Swedish",gender:"Female",location:"Stockholm, SE",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_r8",roomId:"room5",artistId:null,number:8,status:"not_selected",labels:[],rejectionReason:"Out of Scope",appliedAt:"Apr 8, 2026",reviewedBy:["tm2"],notes:[],motivation:"Documentary film project incorporating movement.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Jiro Sato",email:"jiro.s@example.com",age:42,height:"5'8\"",nationality:"Japanese",gender:"Male",location:"Osaka, JP",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
+  {id:"cand_r9",roomId:"room5",artistId:null,number:9,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm2",text:"Beautiful previous work, strong proposal.",time:"Apr 9"}],motivation:"My new piece is a meditation on stillness and labour.",videos:[{label:"Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Yusuf Demir",email:"yusuf.d@example.com",age:33,height:"5'9\"",nationality:"Turkish",gender:"Male",location:"Istanbul, TR",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+
+  // ── room6 (Open Call — Choreographers) ──
+  {id:"cand_o1",roomId:"room6",artistId:"a12",number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 2, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Pitch is bold. 18 minutes, 6 dancers.",time:"Apr 5"}],motivation:"My pitch is a 18-minute work for six dancers exploring African diaspora futures.",videos:[{label:"Choreography Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_o2",roomId:"room6",artistId:"a15",number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm2"],notes:[],motivation:"A 22-minute neoclassical work scored to a new commission from a contemporary composer.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_o3",roomId:"room6",artistId:null,number:3,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 22, 2026",reviewedBy:[],notes:[],motivation:"Pitching a 12-minute trio exploring disability and dance partnering.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Hana Kim",email:"hana.k@example.com",age:34,height:"5'5\"",nationality:"Korean-American",gender:"Female",location:"Seoul, KR",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_o4",roomId:"room6",artistId:null,number:4,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 23, 2026",reviewedBy:[],notes:[],motivation:"Co-creating with my long-time collaborator — a 20-minute piece with live music.",videos:[{label:"Past Work",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Gabriel Santos",email:"gabriel.s@example.com",age:39,height:"5'10\"",nationality:"Brazilian",gender:"Male",location:"São Paulo, BR",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_o5",roomId:"room6",artistId:null,number:5,status:"potential",labels:[],rejectionReason:null,appliedAt:"Apr 14, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Ambitious concept — 25 dancers. Budget concerns.",time:"Apr 16"}],motivation:"A 20-minute large-ensemble work for 25 dancers — ambitious but possible.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Elena Marchetti",email:"elena.m@example.com",age:41,height:"5'6\"",nationality:"Italian",gender:"Female",location:"Milan, IT",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_o6",roomId:"room6",artistId:null,number:6,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Has commissioned work at three major houses already.",time:"Apr 8"}],motivation:"A 15-minute solo for one of your principal dancers, scored to silence.",videos:[{label:"Previous Commission",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Davide Russo",email:"davide.r@example.com",age:45,height:"6'0\"",nationality:"Italian",gender:"Male",location:"Naples, IT",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+  {id:"cand_o7",roomId:"room6",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Concept Mismatch",appliedAt:"Apr 9, 2026",reviewedBy:["tm2"],notes:[],motivation:"A pop-influenced 10-minute piece for a quartet.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Aaliyah Brooks",email:"aaliyah.b@example.com",age:27,height:"5'7\"",nationality:"American",gender:"Female",location:"New York, US",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+
+  // ── room7 (Competition — Young Choreographer Award) ──
+  {id:"cand_c1",roomId:"room7",artistId:null,number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 4, 2026",reviewedBy:["tm1","tm2","tm3"],notes:[{from:"tm1",text:"Strong technical foundation, exciting voice.",time:"May 8"}],motivation:"My piece 'Threshold' explores liminal spaces in queer identity.",videos:[{label:"Audition Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Casey Ward",email:"casey.w@example.com",age:26,height:"5'8\"",nationality:"American",gender:"Non-binary",location:"Berlin, DE",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_c2",roomId:"room7",artistId:null,number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 5, 2026",reviewedBy:["tm1","tm2","tm3"],notes:[{from:"tm2",text:"Most original concept I've seen this year.",time:"May 9"}],motivation:"'Salt Water' is a 10-minute solo on grief and inheritance.",videos:[{label:"Excerpt",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Niamh O'Brien",email:"niamh.ob@example.com",age:24,height:"5'5\"",nationality:"Irish",gender:"Female",location:"Dublin, IE",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_c3",roomId:"room7",artistId:null,number:3,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 7, 2026",reviewedBy:["tm1","tm3"],notes:[],motivation:"A duet investigating sibling relationships, set to live cello.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Adrian Costa",email:"adrian.c@example.com",age:28,height:"5'11\"",nationality:"Portuguese",gender:"Male",location:"Porto, PT",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_c4",roomId:"room7",artistId:null,number:4,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 3, 2026",reviewedBy:["tm1","tm2","tm3"],notes:[{from:"tm1",text:"Could win — exceptional musicality.",time:"May 7"}],motivation:"'Threadbare' — a quartet on memory, time, and the body's archive.",videos:[{label:"Choreography Reel",url:"#",thumb:null},{label:"Studio Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Iris Wagner",email:"iris.w@example.com",age:25,height:"5'6\"",nationality:"German",gender:"Female",location:"Munich, DE",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+  {id:"cand_c5",roomId:"room7",artistId:null,number:5,status:"potential",labels:[],rejectionReason:null,appliedAt:"May 9, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Promising but the concept feels under-developed.",time:"May 11"}],motivation:"Solo work blending krump and ballet.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Marcus Ade",email:"marcus.a@example.com",age:23,height:"5'10\"",nationality:"Nigerian-British",gender:"Male",location:"London, UK",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+  {id:"cand_c6",roomId:"room7",artistId:null,number:6,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 6, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Solid pitch, beautiful previous work.",time:"May 10"}],motivation:"A trio investigating digital intimacy and screen-mediated touch.",videos:[{label:"Past Work",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Yuki Sato",email:"yuki.s@example.com",age:27,height:"5'4\"",nationality:"Japanese",gender:"Female",location:"Tokyo, JP",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
+  {id:"cand_c7",roomId:"room7",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Submission Incomplete",appliedAt:"May 12, 2026",reviewedBy:["tm3"],notes:[],motivation:"A 10-minute work on climate grief.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Erik Hansen",email:"erik.h@example.com",age:29,height:"6'0\"",nationality:"Norwegian",gender:"Male",location:"Oslo, NO",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_c8",roomId:"room7",artistId:null,number:8,status:"new",labels:[],rejectionReason:null,appliedAt:"Jun 1, 2026",reviewedBy:[],notes:[],motivation:"Ensemble work for five dancers blending Afro-Caribbean traditions.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Solange Pierre",email:"solange.p@example.com",age:26,height:"5'5\"",nationality:"Haitian-French",gender:"Female",location:"Marseille, FR",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_c9",roomId:"room7",artistId:null,number:9,status:"new",labels:[],rejectionReason:null,appliedAt:"Jun 2, 2026",reviewedBy:[],notes:[],motivation:"Solo on inherited cultural language — Bharatanatyam meets contemporary.",videos:[{label:"Audition",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Anjali Rao",email:"anjali.r@example.com",age:24,height:"5'4\"",nationality:"Indian",gender:"Female",location:"Bangalore, IN",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_c10",roomId:"room7",artistId:null,number:10,status:"potential",labels:[],rejectionReason:null,appliedAt:"May 8, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Interesting use of architecture but very abstract.",time:"May 10"}],motivation:"Site-specific work for an industrial space.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Felix Brandt",email:"felix.b@example.com",age:28,height:"5'9\"",nationality:"Swiss",gender:"Male",location:"Zurich, CH",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+
+  // ── room8 (Education — Summer Intensive) ──
+  {id:"cand_e1",roomId:"room8",artistId:null,number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 8, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Strong audition reel. Pre-pro level.",time:"Apr 12"}],motivation:"I'm a final-year student at Royal Conservatoire and want to deepen my contemporary practice.",videos:[{label:"Audition",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Ella Müller",email:"ella.m@example.com",age:18,height:"5'5\"",nationality:"German",gender:"Female",location:"Frankfurt, DE",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_e2",roomId:"room8",artistId:null,number:2,status:"selected",labels:[],rejectionReason:null,appliedAt:"Apr 5, 2026",reviewedBy:["tm1","tm3"],notes:[{from:"tm1",text:"Already accepted, paid deposit.",time:"Apr 14"}],motivation:"Pre-professional dancer looking for repertoire training.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Diego Martín",email:"diego.m@example.com",age:19,height:"5'10\"",nationality:"Spanish",gender:"Male",location:"Barcelona, ES",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_e3",roomId:"room8",artistId:null,number:3,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 10, 2026",reviewedBy:["tm3"],notes:[],motivation:"Currently training in Vienna, want to expand into contemporary.",videos:[{label:"Variations",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Lukas Weber",email:"lukas.w@example.com",age:17,height:"5'9\"",nationality:"Austrian",gender:"Male",location:"Vienna, AT",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_e4",roomId:"room8",artistId:null,number:4,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 22, 2026",reviewedBy:[],notes:[],motivation:"High-school senior planning to go pre-professional.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Mia Johansson",email:"mia.j@example.com",age:17,height:"5'6\"",nationality:"Swedish",gender:"Female",location:"Gothenburg, SE",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+  {id:"cand_e5",roomId:"room8",artistId:null,number:5,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 24, 2026",reviewedBy:[],notes:[],motivation:"Looking to broaden my training before applying to conservatoires next year.",videos:[{label:"Class Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Theo Laurent",email:"theo.l@example.com",age:18,height:"5'11\"",nationality:"French",gender:"Male",location:"Lyon, FR",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+  {id:"cand_e6",roomId:"room8",artistId:null,number:6,status:"potential",labels:[],rejectionReason:null,appliedAt:"Apr 12, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Less experience but strong potential. Worth a slot.",time:"Apr 14"}],motivation:"Self-taught dancer with strong gymnastic background.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Zoe Carter",email:"zoe.c@example.com",age:16,height:"5'4\"",nationality:"British",gender:"Female",location:"Bristol, UK",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
+  {id:"cand_e7",roomId:"room8",artistId:null,number:7,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 9, 2026",reviewedBy:["tm1","tm3"],notes:[{from:"tm3",text:"Bharatanatyam background brings interesting texture.",time:"Apr 13"}],motivation:"Looking to combine my classical Indian training with contemporary forms.",videos:[{label:"Solo",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Riya Patel",email:"riya.p@example.com",age:19,height:"5'3\"",nationality:"Indian-British",gender:"Female",location:"Leicester, UK",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_e8",roomId:"room8",artistId:null,number:8,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 26, 2026",reviewedBy:[],notes:[],motivation:"Aspiring dancer, want to test myself in a high-level intensive.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Noah Williams",email:"noah.w@example.com",age:18,height:"5'10\"",nationality:"Canadian",gender:"Male",location:"Toronto, CA",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
 ];
 
 const MOCK_TEMPLATES = [
@@ -808,6 +905,7 @@ const I=({n,s=20})=>{
     trophy:<svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 4h3v3a3 3 0 0 1-3 3M7 4H4v3a3 3 0 0 0 3 3"/></svg>,
     clock:<svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     alert:<svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+    book:<svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
   };
   return icons[n]||null;
 };
@@ -6861,7 +6959,28 @@ export default function AgencyShell() {
   const [newRoom, setNewRoom] = useState({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
   const [newRoomRole, setNewRoomRole] = useState("");
   const [newRoomStep, setNewRoomStep] = useState(0);
-  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, auditionFormat:"one_date", castingType:"open" });
+  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, useInterviews:false, auditionFormat:"one_date", castingType:"open" });
+  const [interviewSlots, setInterviewSlots] = useState([
+    {id:"is1", roomId:"room5", date:"Jun 5, 2026", time:"10:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/abc-defg-hij", candidateId:null, status:"open"},
+    {id:"is2", roomId:"room5", date:"Jun 5, 2026", time:"10:45", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/jkl-mnop-qrs", candidateId:null, status:"open"},
+    {id:"is3", roomId:"room5", date:"Jun 5, 2026", time:"11:30", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/tuv-wxyz-123", candidateId:null, status:"open"},
+    {id:"is4", roomId:"room5", date:"Jun 5, 2026", time:"14:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/aaa-bbbb-ccc", candidateId:null, status:"open"},
+    {id:"is5", roomId:"room5", date:"Jun 6, 2026", time:"10:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/ddd-eeee-fff", candidateId:null, status:"open"},
+    {id:"is6", roomId:"room5", date:"Jun 6, 2026", time:"11:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/ggg-hhhh-iii", candidateId:null, status:"open"},
+  ]);
+  const [interviewStatuses, setInterviewStatuses] = useState({});
+  const [interviewFilter, setInterviewFilter] = useState("all");
+  const [interviewFeedback, setInterviewFeedback] = useState({});
+  const [candidateScores, setCandidateScores] = useState({
+    cand_c1: {sc1:9, sc2:8, sc3:9, sc4:8},
+    cand_c2: {sc1:7, sc2:9, sc3:8, sc4:9},
+    cand_c3: {sc1:8, sc2:7, sc3:7, sc4:8},
+    cand_c4: {sc1:9, sc2:9, sc3:8, sc4:7},
+    cand_c5: {sc1:6, sc2:8, sc3:7, sc4:6},
+    cand_c6: {sc1:8, sc2:8, sc3:9, sc4:9},
+  });
+  const [connectedCalendars, setConnectedCalendars] = useState({google:false, apple:false, microsoft:false});
+  const [bulkSlotForm, setBulkSlotForm] = useState({date:"", startTime:"10:00", endTime:"12:00", duration:30, buffer:0});
   const [candidateView, setCandidateView] = useState("grid");
   const [candidateFilter, setCandidateFilter] = useState("all");
   const [candidateSearch, setCandidateSearch] = useState("");
@@ -7369,6 +7488,8 @@ export default function AgencyShell() {
     });
     const roomShareId = newRoom.title.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,20) + "-" + Date.now().toString(36);
     const isAudition = newRoomConfig.opportunityType === "audition";
+    const isInterviewEligible = INTERVIEW_ELIGIBLE_TYPES.includes(newRoomConfig.opportunityType);
+    const isCompetition = newRoomConfig.opportunityType === "competition";
     setRooms(p => [...p, {
       ...newRoom,
       id,
@@ -7381,8 +7502,20 @@ export default function AgencyShell() {
       enableShortlist: isAudition ? false : newRoomConfig.useShortlist,
       enableWaitlist: newRoomConfig.useWaitlist,
       enableEarlyInvites: isAudition ? newRoomConfig.useEarlyInvites : false,
+      enableInterviews: isInterviewEligible ? newRoomConfig.useInterviews : false,
+      interviewFormat: isInterviewEligible ? "in_person" : null,
+      interviewDuration: isInterviewEligible ? "30" : null,
       auditionFormat: isAudition ? newRoomConfig.auditionFormat : null,
       selectionType: newRoomConfig.selectionType,
+      ...(isCompetition ? {
+        scoringCriteria: [
+          {id:"sc"+Date.now()+"a",name:"Technique",weight:30},
+          {id:"sc"+Date.now()+"b",name:"Creativity",weight:30},
+          {id:"sc"+Date.now()+"c",name:"Artistry",weight:20},
+          {id:"sc"+Date.now()+"d",name:"Stage Presence",weight:20},
+        ],
+        scoringScale: 10,
+      } : {}),
       shareId: roomShareId,
       collaborationShareId: roomShareId + "-collab",
       shareSettings: {requireLogin:true,requirePassword:false,password:"",welcomeMessage:""},
@@ -7393,7 +7526,7 @@ export default function AgencyShell() {
     setShowNewRoom(false);
     setNewRoomStep(0);
     setNewRoom({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
-    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,auditionFormat:"one_date",castingType:"open"});
+    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"});
     const oppLabel = getOpportunityType(newRoomConfig.opportunityType || "casting").label;
     openRoom(id);
     showToast(`${oppLabel} created!`);
@@ -8291,6 +8424,11 @@ export default function AgencyShell() {
                   }
                 }}>
                   <I n="calendar" s={18}/><span className="sb-label">Rounds</span><span className="sb-tip">Rounds</span>
+                </button>
+              )}
+              {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && !isExternalMode && (
+                <button className={`sidebar-item ${roomPage==="interviews"?"active":""}`} onClick={()=>setRoomPage("interviews")}>
+                  <I n="chat" s={18}/><span className="sb-label">Interviews</span><span className="sb-tip">Interviews</span>
                 </button>
               )}
               {!isExternalMode && <button className={`sidebar-item ${roomPage==="communication"?"active":""}`} onClick={()=>setRoomPage("communication")}>
@@ -10936,6 +11074,29 @@ export default function AgencyShell() {
                 );
               })()}
 
+              {/* Interview status banner — interview-eligible types with interviews enabled */}
+              {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && (() => {
+                const eligible = roomCandidates.filter(c => c.status === "shortlisted" || c.status === "selected");
+                const getStatus = (cId) => interviewStatuses[cId] || "pending";
+                const scheduled = eligible.filter(c => getStatus(c.id) === "scheduled").length;
+                const completed = eligible.filter(c => getStatus(c.id) === "completed").length;
+                const invited = eligible.filter(c => getStatus(c.id) === "invited").length;
+                const total = eligible.length;
+                if (total === 0) return null;
+                return (
+                  <div style={{padding:"14px 18px",background:"linear-gradient(90deg,rgba(14,165,168,.08),rgba(14,165,168,.02))",border:"1px solid rgba(14,165,168,.18)",borderRadius:14,marginBottom:14,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:"rgba(14,165,168,.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:"#0EA5A8",flexShrink:0}}><I n="chat" s={18}/></div>
+                    <div style={{flex:1,minWidth:200}}>
+                      <div style={{fontSize:13,fontWeight:600,marginBottom:2}}>Interview Stage</div>
+                      <div style={{fontSize:12,color:"var(--g6)"}}><strong>{completed}</strong> completed · <strong>{scheduled}</strong> scheduled · <strong>{invited}</strong> invited · {total - completed - scheduled - invited} pending</div>
+                    </div>
+                    <button className="btn btn-p btn-sm" onClick={() => setRoomPage("interviews")}>
+                      <I n="arrow" s={12}/> Open Interviews
+                    </button>
+                  </div>
+                );
+              })()}
+
               <div className="room-timeline">
                 <div className={`rt-pill ${currentRoom.status === "published" ? "active" : ""}`}>
                   <div className="rt-label">Deadline</div>
@@ -10947,17 +11108,31 @@ export default function AgencyShell() {
                 </div>
                 {currentRoom.format !== "online" && (
                   <div className="rt-pill">
-                    <div className="rt-label">Casting Date</div>
+                    <div className="rt-label">{
+                      currentRoom.opportunityType === "audition" ? "Audition Date" :
+                      currentRoom.opportunityType === "residency" ? "Residency Period" :
+                      currentRoom.opportunityType === "competition" ? "Event Date" :
+                      currentRoom.opportunityType === "education" ? "Programme Start" :
+                      "Casting Date"
+                    }</div>
                     <div className="rt-value">{currentRoom.castingDate || "Not set"}</div>
                   </div>
                 )}
                 <div className="rt-pill">
-                  <div className="rt-label">Shooting Dates</div>
+                  <div className="rt-label">{
+                    currentRoom.opportunityType === "audition" ? "Season Dates" :
+                    currentRoom.opportunityType === "residency" ? "Programme Dates" :
+                    currentRoom.opportunityType === "education" ? "Course Dates" :
+                    currentRoom.opportunityType === "job_call" ? "Start Date" :
+                    currentRoom.opportunityType === "competition" ? "Event Dates" :
+                    currentRoom.opportunityType === "open_call" ? "Project Dates" :
+                    "Shooting Dates"
+                  }</div>
                   <div className="rt-value">{currentRoom.shootingDates || "Not set"}</div>
                 </div>
                 <div className="rt-pill">
                   <div className="rt-label">Format</div>
-                  <div className="rt-value">{currentRoom.format === "in_person" ? "In Person" : currentRoom.format === "online" ? "Online" : "Self-tape"}</div>
+                  <div className="rt-value">{currentRoom.format === "in_person" ? "In Person" : currentRoom.format === "online" ? "Online" : currentRoom.format === "hybrid" ? "Hybrid" : "Self-tape"}</div>
                 </div>
               </div>
 
@@ -11067,7 +11242,7 @@ export default function AgencyShell() {
                     {key:"materials", label:"Set required materials", hint:"Define what materials (headshot, showreel, etc.) candidates should submit.", auto:roomMaterials.length > 0, nav:()=>setRoomPage("settings"), action:"Configure"},
                     {key:"team", label:"Invite team members", hint:"Add collaborators to help review and select candidates.", auto:currentRoom.teamMemberIds?.length > 0, nav:()=>setShowTeamModal(true), action:"Invite Team"},
                     {key:"deadline", label:"Set a deadline", hint:"Set a submission deadline to keep your casting on track.", auto:!!currentRoom.deadline, nav:()=>setRoomPage("settings"), action:"Set Deadline"},
-                    {key:"publish", label:"Publish casting call", hint:"Make your casting visible and start accepting applications.", auto:currentRoom.status==="published", nav:()=>{setRooms(p=>p.map(r=>r.id===currentRoom.id?{...r,status:"published"}:r));showToast("Published!");}, action:"Publish Now"},
+                    {key:"publish", label:"Publish opportunity", hint:"Make your opportunity visible and start accepting applications.", auto:currentRoom.status==="published", nav:()=>{setRooms(p=>p.map(r=>r.id===currentRoom.id?{...r,status:"published"}:r));showToast("Published!");}, action:"Publish Now"},
                     {key:"review", label:"Review all applications", hint:"Go through each application and categorize candidates.", auto:roomCandidates.filter(c=>c.status==="new").length===0, nav:()=>setRoomPage("candidates"), action:"Start Reviewing"},
                     {key:"shortlist", label:"Send shortlist notifications", hint:"Notify shortlisted candidates about their status.", auto:broadcastLog.some(b=>roomTemplates.find(t=>t.id===b.templateId)?.category==="shortlist"), nav:()=>setRoomPage("communication"), action:"Send Notifications"},
                     {key:"decisions", label:"Send final decisions", hint:"Inform all candidates of the final casting decisions.", auto:false, nav:()=>setRoomPage("communication"), action:"Send Decisions"},
@@ -11108,9 +11283,17 @@ export default function AgencyShell() {
                   );
                 })()}
 
-                {/* Job Post Snapshot */}
+                {/* Post Snapshot */}
                 <div className="room-stat-card">
-                  <h3>Job Post</h3>
+                  <h3>{
+                    currentRoom.opportunityType === "education" ? "Programme Info" :
+                    currentRoom.opportunityType === "competition" ? "Competition Info" :
+                    currentRoom.opportunityType === "residency" ? "Residency Info" :
+                    currentRoom.opportunityType === "job_call" ? "Job Post" :
+                    currentRoom.opportunityType === "open_call" ? "Open Call Info" :
+                    currentRoom.opportunityType === "audition" ? "Audition Post" :
+                    "Casting Post"
+                  }</h3>
                   <div style={{fontSize:12,color:"var(--g5)",lineHeight:1.5,marginBottom:12,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{currentRoom.description}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
                     {[
@@ -11159,6 +11342,72 @@ export default function AgencyShell() {
                 </div>
                 <button className="btn btn-p mobile-hide" onClick={() => { setShareResultsSelection({selected:true,shortlisted:false,potential:false,not_selected:false}); setShowShareResults(true); }}><I n="send" s={14}/> Share Results</button>
               </div>
+
+              {/* Competition Leaderboard */}
+              {currentRoom.opportunityType === "competition" && currentRoom.enableScoring && (() => {
+                const criteria = currentRoom.scoringCriteria || [];
+                const scale = currentRoom.scoringScale || 10;
+                const scored = roomCandidates.map(c => {
+                  const myScores = candidateScores[c.id] || {};
+                  let weighted = 0; let totalWeight = 0;
+                  criteria.forEach(crit => {
+                    const score = myScores[crit.id];
+                    if (typeof score === "number") { weighted += (score/scale) * crit.weight; totalWeight += crit.weight; }
+                  });
+                  const final = totalWeight > 0 ? (weighted / totalWeight) * 100 : null;
+                  return { c, info:getCandidateInfo(c), myScores, final };
+                }).filter(s => s.final !== null).sort((a,b) => b.final - a.final);
+                if (scored.length === 0) return null;
+                return (
+                  <div className="room-stat-card" style={{marginBottom:18}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
+                      <div>
+                        <h3 style={{margin:0,display:"flex",alignItems:"center",gap:6}}><I n="trophy" s={16}/> Leaderboard</h3>
+                        <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>Ranked by weighted average across {criteria.length} criteria · scale 1–{scale}</div>
+                      </div>
+                      <div style={{fontSize:11,color:"var(--g4)"}}>{scored.length} scored</div>
+                    </div>
+                    <div style={{overflowX:"auto"}}>
+                      <table style={{width:"100%",fontSize:12,borderCollapse:"collapse"}}>
+                        <thead>
+                          <tr style={{borderBottom:"1px solid var(--g1)",textAlign:"left"}}>
+                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",width:50}}>Rank</th>
+                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>Candidate</th>
+                            {criteria.map(crit => (
+                              <th key={crit.id} style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"center"}}>{crit.name}<div style={{fontSize:9,fontWeight:500,color:"var(--g4)",marginTop:2}}>{crit.weight}%</div></th>
+                            ))}
+                            <th style={{padding:"8px 6px",fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em",textAlign:"right"}}>Score</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {scored.map((row, idx) => (
+                            <tr key={row.c.id} style={{borderBottom:"1px solid var(--g1)",cursor:"pointer"}} onClick={() => setViewCandidate(row.c.id)}>
+                              <td style={{padding:"10px 6px"}}>
+                                <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:8,fontWeight:700,fontSize:12, background: idx === 0 ? "rgba(245,166,35,.15)" : idx === 1 ? "rgba(160,160,170,.15)" : idx === 2 ? "rgba(176,108,72,.15)" : "var(--g1)", color: idx === 0 ? "#F5A623" : idx === 1 ? "#8C8C9A" : idx === 2 ? "#B06C48" : "var(--g5)"}}>{idx+1}</span>
+                              </td>
+                              <td style={{padding:"10px 6px"}}>
+                                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <div className="team-avatar" style={{width:28,height:28,fontSize:10}}>{row.info.name?.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                                  <div>
+                                    <div style={{fontWeight:600}}>{row.info.name}</div>
+                                    <div style={{fontSize:10,color:"var(--g4)"}}>#{row.c.number} · {row.c.status}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              {criteria.map(crit => (
+                                <td key={crit.id} style={{padding:"10px 6px",textAlign:"center",fontFamily:"var(--mono)",color:"var(--g6)"}}>{row.myScores[crit.id] ?? "—"}</td>
+                              ))}
+                              <td style={{padding:"10px 6px",textAlign:"right"}}>
+                                <span style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:14,color:"var(--ac)"}}>{row.final.toFixed(1)}%</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className={`cand-toolbar${!mobileSearchOpen?" search-collapsed":""}`}>
                 <button className="search-toggle-btn" onClick={() => setMobileSearchOpen(o => !o)}>
@@ -12034,6 +12283,283 @@ export default function AgencyShell() {
             );
           })()}
 
+          {/* ═══ ROOM: INTERVIEWS PAGE ═══ */}
+          {viewRoom && currentRoom && roomPage === "interviews" && INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && (() => {
+            const eligible = roomCandidates.filter(c => c.status === "shortlisted" || c.status === "selected");
+            const slots = interviewSlots.filter(s => s.roomId === currentRoom.id);
+            const getStatus = (cId) => interviewStatuses[cId] || "pending";
+            const counts = {
+              pending: eligible.filter(c => getStatus(c.id) === "pending").length,
+              invited: eligible.filter(c => getStatus(c.id) === "invited").length,
+              scheduled: eligible.filter(c => getStatus(c.id) === "scheduled").length,
+              completed: eligible.filter(c => getStatus(c.id) === "completed").length,
+            };
+            const filtered = interviewFilter === "all" ? eligible : eligible.filter(c => getStatus(c.id) === interviewFilter);
+            const setStatus = (cId, st) => setInterviewStatuses(p => ({...p, [cId]:st}));
+            const fmtLabel = currentRoom.interviewFormat === "video" ? "Video Call" : currentRoom.interviewFormat === "phone" ? "Phone" : "In Person";
+            return (
+              <>
+                <div className="pg-header">
+                  <h1>Interview <em>Stage</em></h1>
+                  <p className="pg-sub">Invite shortlisted candidates for a final interview before making your selection. Default format: {fmtLabel} · {currentRoom.interviewDuration || "30"} min.</p>
+                </div>
+
+                <div className="room-stats room-stats-3" style={{marginBottom:18}}>
+                  {[
+                    {key:"pending", label:"Pending Invite", count:counts.pending, color:"var(--g5)", icon:"clock"},
+                    {key:"invited", label:"Invited", count:counts.invited, color:"var(--amber)", icon:"send"},
+                    {key:"scheduled", label:"Scheduled", count:counts.scheduled, color:"var(--ac)", icon:"calendar"},
+                    {key:"completed", label:"Completed", count:counts.completed, color:"var(--green)", icon:"check"},
+                  ].map(s => (
+                    <div key={s.key} className="room-stat-card" style={{cursor:"pointer",borderColor: interviewFilter===s.key ? "var(--ac)" : undefined}} onClick={() => setInterviewFilter(interviewFilter === s.key ? "all" : s.key)}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                        <div style={{width:28,height:28,borderRadius:8,background:"var(--g1)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:s.color}}><I n={s.icon} s={14}/></div>
+                        <div style={{fontSize:11,fontWeight:600,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>{s.label}</div>
+                      </div>
+                      <div style={{fontSize:28,fontWeight:700,fontFamily:"var(--mono)",color:s.color}}>{s.count}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="room-stat-card" style={{marginBottom:18}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
+                    <h3 style={{margin:0}}>Candidates {interviewFilter !== "all" && <span style={{fontSize:11,fontWeight:500,color:"var(--g4)",marginLeft:6}}>· {interviewFilter}</span>}</h3>
+                    <div style={{display:"flex",gap:6}}>
+                      {["all","pending","invited","scheduled","completed"].map(f => (
+                        <button key={f} className={`chip ${interviewFilter===f?"on":""}`} onClick={() => setInterviewFilter(f)}>{f === "all" ? "All" : f.charAt(0).toUpperCase()+f.slice(1)}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {filtered.length === 0 ? (
+                    <div style={{padding:"24px 0",textAlign:"center",color:"var(--g4)",fontSize:13}}>
+                      {eligible.length === 0 ? "No shortlisted candidates yet. Shortlist candidates from the Candidates tab to invite them to interviews." : "No candidates match this filter."}
+                    </div>
+                  ) : (
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {filtered.map(cand => {
+                        const info = getCandidateInfo(cand);
+                        const st = getStatus(cand.id);
+                        const stColor = st === "completed" ? "var(--green)" : st === "scheduled" ? "var(--ac)" : st === "invited" ? "var(--amber)" : "var(--g4)";
+                        const fb = interviewFeedback[cand.id];
+                        return (
+                          <div key={cand.id} style={{display:"flex",flexDirection:"column",gap:8,padding:"10px 12px",border:"1px solid var(--g1)",borderRadius:10}}>
+                            <div style={{display:"flex",alignItems:"center",gap:12}}>
+                              <div className="team-avatar" style={{width:36,height:36,fontSize:12}}>{info.name?.split(" ").map(n=>n[0]).join("").slice(0,2) || "?"}</div>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontSize:13,fontWeight:600,color:"var(--tx)"}}>{info.name}</div>
+                                <div style={{fontSize:11,color:"var(--g4)",display:"flex",alignItems:"center",gap:6}}>
+                                  <span style={{padding:"2px 6px",borderRadius:6,background:"var(--g1)",fontSize:10,fontWeight:600,color:stColor,textTransform:"uppercase",letterSpacing:".04em"}}>{st}</span>
+                                  <span>·</span>
+                                  <span>{cand.status}</span>
+                                  {fb?.rating && <><span>·</span><span style={{color:"#F5A623"}}>{"★".repeat(fb.rating)}{"☆".repeat(5-fb.rating)}</span></>}
+                                </div>
+                              </div>
+                              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                                {st === "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "invited")}><I n="send" s={12}/> Invite</button>}
+                                {st === "invited" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "scheduled")}><I n="calendar" s={12}/> Mark Scheduled</button>}
+                                {st === "scheduled" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "completed")}><I n="check" s={12}/> Mark Completed</button>}
+                                {st !== "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "pending")} title="Reset"><I n="back" s={12}/></button>}
+                              </div>
+                            </div>
+                            {st === "completed" && (
+                              <div style={{padding:"10px 12px",background:"var(--g0)",borderRadius:8,marginLeft:48}}>
+                                <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",textTransform:"uppercase",letterSpacing:".04em",marginBottom:8}}>Interview Feedback</div>
+                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                                  <span style={{fontSize:11,color:"var(--g4)",width:60}}>Rating:</span>
+                                  <div style={{display:"flex",gap:2}}>
+                                    {[1,2,3,4,5].map(n => (
+                                      <button key={n} onClick={() => setInterviewFeedback(p => ({...p, [cand.id]: {...(p[cand.id]||{}), rating:n}}))} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:0,color: (fb?.rating||0) >= n ? "#F5A623" : "var(--g2)"}}>★</button>
+                                    ))}
+                                  </div>
+                                  {fb?.rating && <span style={{fontSize:11,color:"var(--g4)"}}>{fb.rating}/5</span>}
+                                </div>
+                                <textarea placeholder="Interview notes — strengths, concerns, follow-ups…" value={fb?.notes || ""} onChange={e => setInterviewFeedback(p => ({...p, [cand.id]: {...(p[cand.id]||{}), notes:e.target.value, completedAt: p[cand.id]?.completedAt || "Just now"}}))} style={{width:"100%",fontSize:12,minHeight:60,padding:"8px 10px",borderRadius:8,border:"1px solid var(--g1)",background:"var(--sf)",resize:"vertical"}}/>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {(() => {
+                  const isVideo = currentRoom.interviewFormat === "video";
+                  const provider = currentRoom.meetingProvider || "google_meet";
+                  const providerLabel = provider === "google_meet" ? "Google Meet" : provider === "zoom" ? "Zoom" : provider === "teams" ? "Microsoft Teams" : "Custom";
+                  const generateMeetingUrl = () => {
+                    const code = Math.random().toString(36).slice(2, 5) + "-" + Math.random().toString(36).slice(2, 6) + "-" + Math.random().toString(36).slice(2, 5);
+                    if (provider === "zoom") return `https://us06web.zoom.us/j/${Math.floor(Math.random()*1e10)}`;
+                    if (provider === "teams") return `https://teams.microsoft.com/l/meetup-join/${code}`;
+                    if (provider === "google_meet") return `https://meet.google.com/${code}`;
+                    return "";
+                  };
+                  const groupedSlots = slots.reduce((acc, s) => { (acc[s.date || "Unscheduled"] = acc[s.date || "Unscheduled"] || []).push(s); return acc; }, {});
+                  const dateKeys = Object.keys(groupedSlots).sort();
+                  const candidateSlotConflicts = (() => {
+                    const seen = {};
+                    slots.forEach(s => { if (s.candidateId) { seen[s.candidateId] = (seen[s.candidateId]||0) + 1; } });
+                    return Object.fromEntries(Object.entries(seen).filter(([_, n]) => n > 1));
+                  })();
+                  const timeOverlap = (slotsOnDate) => {
+                    const conflicts = new Set();
+                    for (let i = 0; i < slotsOnDate.length; i++) {
+                      for (let j = i+1; j < slotsOnDate.length; j++) {
+                        const a = slotsOnDate[i], b = slotsOnDate[j];
+                        if (!a.time || !b.time) continue;
+                        const [ah,am] = a.time.split(":").map(Number);
+                        const [bh,bm] = b.time.split(":").map(Number);
+                        const aStart = ah*60+am, aEnd = aStart + (a.duration||30);
+                        const bStart = bh*60+bm, bEnd = bStart + (b.duration||30);
+                        if (aStart < bEnd && bStart < aEnd) { conflicts.add(a.id); conflicts.add(b.id); }
+                      }
+                    }
+                    return conflicts;
+                  };
+                  return (
+                    <div className="room-stat-card">
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,gap:8,flexWrap:"wrap"}}>
+                        <div>
+                          <h3 style={{margin:0}}>Interview Slots</h3>
+                          <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>
+                            {currentRoom.interviewTimezone || "Europe/London"} · {currentRoom.interviewBuffer ? `${currentRoom.interviewBuffer} min buffer` : "no buffer"} · {isVideo ? `Video via ${providerLabel}` : currentRoom.interviewFormat === "phone" ? "Phone" : "In Person"}
+                          </div>
+                        </div>
+                        {currentRoom.allowCandidateSelfBook && (
+                          <div style={{padding:"4px 10px",background:"rgba(14,165,168,.1)",border:"1px solid rgba(14,165,168,.3)",borderRadius:20,fontSize:11,fontWeight:600,color:"#0EA5A8",display:"inline-flex",alignItems:"center",gap:4}}>
+                            <I n="link" s={11}/> Self-booking enabled
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bulk slot creator */}
+                      <div style={{padding:"14px 16px",border:"1px dashed var(--g2)",borderRadius:12,marginBottom:14,background:"var(--g0)"}}>
+                        <div style={{fontSize:12,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:6}}><I n="plus" s={12}/> Bulk Create Slots</div>
+                        <div style={{display:"grid",gridTemplateColumns:"1.4fr 0.9fr 0.9fr 0.9fr auto",gap:8,alignItems:"end"}}>
+                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Date</div><input type="text" placeholder="e.g. Jun 5, 2026" value={bulkSlotForm.date} onChange={e => setBulkSlotForm(p => ({...p, date:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
+                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Start</div><input type="time" value={bulkSlotForm.startTime} onChange={e => setBulkSlotForm(p => ({...p, startTime:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
+                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>End</div><input type="time" value={bulkSlotForm.endTime} onChange={e => setBulkSlotForm(p => ({...p, endTime:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
+                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Slot length</div>
+                            <select value={bulkSlotForm.duration} onChange={e => setBulkSlotForm(p => ({...p, duration:parseInt(e.target.value)}))} style={{fontSize:12,width:"100%"}}>
+                              <option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option>
+                            </select>
+                          </div>
+                          <button className="btn btn-p btn-sm" disabled={!bulkSlotForm.date || !bulkSlotForm.startTime || !bulkSlotForm.endTime} onClick={() => {
+                            const [sh,sm] = bulkSlotForm.startTime.split(":").map(Number);
+                            const [eh,em] = bulkSlotForm.endTime.split(":").map(Number);
+                            const startMin = sh*60+sm, endMin = eh*60+em;
+                            const buf = currentRoom.interviewBuffer || 0;
+                            const step = bulkSlotForm.duration + buf;
+                            const newSlots = [];
+                            for (let m = startMin; m + bulkSlotForm.duration <= endMin; m += step) {
+                              const hh = String(Math.floor(m/60)).padStart(2,"0");
+                              const mm = String(m%60).padStart(2,"0");
+                              newSlots.push({
+                                id: "is"+Date.now()+"_"+m,
+                                roomId: currentRoom.id,
+                                date: bulkSlotForm.date,
+                                time: `${hh}:${mm}`,
+                                duration: bulkSlotForm.duration,
+                                location: isVideo ? providerLabel : (fmtLabel),
+                                timezone: currentRoom.interviewTimezone || "Europe/London",
+                                meetingUrl: isVideo && provider !== "custom" ? generateMeetingUrl() : "",
+                                candidateId: null,
+                                status: "open",
+                              });
+                            }
+                            if (newSlots.length === 0) { showToast("End time must be after start time"); return; }
+                            setInterviewSlots(p => [...p, ...newSlots]);
+                            showToast(`${newSlots.length} slot${newSlots.length>1?"s":""} created`);
+                          }}>
+                            <I n="plus" s={12}/> Generate
+                          </button>
+                        </div>
+                      </div>
+
+                      {Object.keys(candidateSlotConflicts).length > 0 && (
+                        <div style={{padding:"10px 14px",background:"rgba(245,166,35,.1)",border:"1px solid rgba(245,166,35,.3)",borderRadius:10,marginBottom:12,display:"flex",alignItems:"center",gap:10,fontSize:12}}>
+                          <I n="alert" s={14}/> <span style={{color:"#B07300"}}><strong>Conflict:</strong> {Object.keys(candidateSlotConflicts).length} candidate{Object.keys(candidateSlotConflicts).length>1?"s are":" is"} assigned to multiple slots.</span>
+                        </div>
+                      )}
+
+                      {slots.length === 0 ? (
+                        <div style={{padding:"24px 0",textAlign:"center",color:"var(--g4)",fontSize:13}}>No slots yet. Use Bulk Create above to generate slots in seconds.</div>
+                      ) : (
+                        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                          {dateKeys.map(date => {
+                            const dateSlots = groupedSlots[date].sort((a,b) => (a.time||"").localeCompare(b.time||""));
+                            const overlapping = timeOverlap(dateSlots);
+                            return (
+                              <div key={date}>
+                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,paddingBottom:6,borderBottom:"1px solid var(--g1)"}}>
+                                  <I n="calendar" s={14}/> <span style={{fontSize:13,fontWeight:700}}>{date}</span>
+                                  <span style={{fontSize:11,color:"var(--g4)"}}>{dateSlots.length} slot{dateSlots.length>1?"s":""}</span>
+                                </div>
+                                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:8}}>
+                                  {dateSlots.map(slot => {
+                                    const isOverlap = overlapping.has(slot.id);
+                                    const isDoubleBooked = slot.candidateId && candidateSlotConflicts[slot.candidateId];
+                                    const cand = slot.candidateId ? eligible.find(c => c.id === slot.candidateId) : null;
+                                    const candName = cand ? getCandidateInfo(cand).name : null;
+                                    return (
+                                      <div key={slot.id} style={{padding:"12px 14px",border:`1px solid ${isOverlap||isDoubleBooked?"#F5A623":(slot.candidateId?"var(--ac)":"var(--g2)")}`,background:slot.candidateId?"rgba(96,77,255,.04)":"transparent",borderRadius:10,position:"relative"}}>
+                                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:8}}>
+                                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                            <I n="clock" s={14}/>
+                                            <input type="time" value={slot.time} onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, time:e.target.value} : s))} style={{fontSize:13,fontWeight:600,padding:"2px 6px",width:90}}/>
+                                            <span style={{fontSize:11,color:"var(--g4)"}}>· {slot.duration} min</span>
+                                          </div>
+                                          <button className="rm-del" onClick={() => setInterviewSlots(p => p.filter(s => s.id !== slot.id))}><I n="trash" s={11}/></button>
+                                        </div>
+                                        <div style={{marginBottom:8}}>
+                                          <select value={slot.candidateId || ""} onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, candidateId:e.target.value || null, status: e.target.value ? "booked" : "open"} : s))} style={{fontSize:12,width:"100%"}}>
+                                            <option value="">— Unassigned —</option>
+                                            {eligible.map(c => (
+                                              <option key={c.id} value={c.id}>{getCandidateInfo(c).name}</option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        {isVideo ? (
+                                          slot.meetingUrl ? (
+                                            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
+                                              <I n="video" s={12}/>
+                                              <a href={slot.meetingUrl} target="_blank" rel="noreferrer" style={{color:"var(--ac)",fontWeight:500,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{slot.meetingUrl}</a>
+                                              <button className="btn btn-s btn-sm" style={{padding:"2px 6px",fontSize:10}} onClick={() => { navigator.clipboard?.writeText(slot.meetingUrl); showToast("Meeting link copied"); }}><I n="copy" s={10}/></button>
+                                            </div>
+                                          ) : (
+                                            <button className="btn btn-s btn-sm" style={{width:"100%",fontSize:11}} onClick={() => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, meetingUrl: generateMeetingUrl(), location: providerLabel} : s))}>
+                                              <I n="video" s={12}/> Generate {providerLabel} link
+                                            </button>
+                                          )
+                                        ) : (
+                                          <input value={slot.location} placeholder="Location" onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, location:e.target.value} : s))} style={{fontSize:11,width:"100%"}}/>
+                                        )}
+                                        {(isOverlap || isDoubleBooked) && (
+                                          <div style={{marginTop:8,padding:"4px 8px",background:"rgba(245,166,35,.1)",borderRadius:6,fontSize:10,color:"#B07300",display:"flex",alignItems:"center",gap:4}}>
+                                            <I n="alert" s={10}/> {isOverlap ? "Time overlap with another slot" : `${candName} also booked elsewhere`}
+                                          </div>
+                                        )}
+                                        {(connectedCalendars.google || connectedCalendars.apple || connectedCalendars.microsoft) && slot.candidateId && (
+                                          <div style={{marginTop:6,fontSize:10,color:"var(--green)",display:"flex",alignItems:"center",gap:4}}>
+                                            <I n="check" s={10}/> Synced to calendar
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </>
+            );
+          })()}
+
           {/* ═══ ROOM: SINGLE CANDIDATE REVIEW ═══ */}
           {viewRoom && currentRoom && roomPage === "candidates" && viewCandidate && (() => {
             const cand = candidates.find(c => c.id === viewCandidate);
@@ -12854,7 +13380,7 @@ export default function AgencyShell() {
             <>
               <div className="pg-header">
                 <h1>Room <em>Settings</em></h1>
-                <p className="pg-sub">Configure your casting room details, requirements, and team.</p>
+                <p className="pg-sub">Configure your room details, requirements, and team.</p>
               </div>
 
               <div className="room-settings-chips" style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
@@ -13038,7 +13564,7 @@ export default function AgencyShell() {
                 <>
                   <div className="room-settings-section">
                     <h3>Status & Visibility</h3>
-                    <p className="rss-sub">Control who can see and access this casting room.</p>
+                    <p className="rss-sub">Control who can see and access this room.</p>
                     <div style={{display:"flex",gap:8}}>
                       {["draft","published","closed"].map(s => (
                         <button key={s} className={`chip ${currentRoom.status===s?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, status:s} : r))}>{s.charAt(0).toUpperCase()+s.slice(1)}</button>
@@ -13073,6 +13599,141 @@ export default function AgencyShell() {
                     </div>
                   </div>
 
+                  {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && (
+                    <div className="room-settings-section">
+                      <h3>Interview Stage</h3>
+                      <p className="rss-sub">Add a final interview step where shortlisted candidates are invited before selection.</p>
+                      <div className="settings-row">
+                        <div>
+                          <div className="sr-label">Enable Interviews</div>
+                          <div className="sr-sub">When enabled, an Interviews tab appears in the room sidebar.</div>
+                        </div>
+                        <button className={`toggle ${currentRoom.enableInterviews?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableInterviews: !r.enableInterviews} : r))} />
+                      </div>
+                      {currentRoom.enableInterviews && (
+                        <>
+                          <div className="settings-row">
+                            <div>
+                              <div className="sr-label">Interview Format</div>
+                              <div className="sr-sub">Default format for new interview slots.</div>
+                            </div>
+                            <div style={{display:"flex",gap:6}}>
+                              {[{v:"in_person",l:"In Person"},{v:"video",l:"Video Call"},{v:"phone",l:"Phone"}].map(f => (
+                                <button key={f.v} className={`chip ${(currentRoom.interviewFormat || "in_person") === f.v ? "on" : ""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewFormat: f.v} : r))}>{f.l}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="settings-row">
+                            <div>
+                              <div className="sr-label">Default Duration</div>
+                              <div className="sr-sub">Default length for each interview slot.</div>
+                            </div>
+                            <select value={currentRoom.interviewDuration || "30"} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewDuration: e.target.value} : r))} style={{width:110,fontSize:12,padding:"6px 10px"}}>
+                              <option value="15">15 minutes</option>
+                              <option value="30">30 minutes</option>
+                              <option value="45">45 minutes</option>
+                              <option value="60">60 minutes</option>
+                            </select>
+                          </div>
+                          <div className="settings-row">
+                            <div>
+                              <div className="sr-label">Buffer Between Interviews</div>
+                              <div className="sr-sub">Idle time between back-to-back interviews so you can take notes and reset.</div>
+                            </div>
+                            <select value={currentRoom.interviewBuffer ?? 0} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewBuffer: parseInt(e.target.value)} : r))} style={{width:110,fontSize:12,padding:"6px 10px"}}>
+                              <option value="0">No buffer</option>
+                              <option value="5">5 min</option>
+                              <option value="10">10 min</option>
+                              <option value="15">15 min</option>
+                              <option value="30">30 min</option>
+                            </select>
+                          </div>
+                          <div className="settings-row">
+                            <div>
+                              <div className="sr-label">Time Zone</div>
+                              <div className="sr-sub">Slot times shown in this zone. Candidates see times converted to their local zone.</div>
+                            </div>
+                            <select value={currentRoom.interviewTimezone || "Europe/London"} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewTimezone: e.target.value} : r))} style={{width:200,fontSize:12,padding:"6px 10px"}}>
+                              <option value="Europe/London">Europe/London (GMT)</option>
+                              <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                              <option value="Europe/Paris">Europe/Paris (CET)</option>
+                              <option value="America/New_York">America/New_York (ET)</option>
+                              <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                              <option value="Australia/Sydney">Australia/Sydney (AEDT)</option>
+                            </select>
+                          </div>
+                          <div className="settings-row">
+                            <div>
+                              <div className="sr-label">Allow Candidate Self-Booking</div>
+                              <div className="sr-sub">Let invited candidates pick their own slot from your available times — Calendly-style.</div>
+                            </div>
+                            <button className={`toggle ${currentRoom.allowCandidateSelfBook?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, allowCandidateSelfBook: !r.allowCandidateSelfBook} : r))} />
+                          </div>
+
+                          {/* Video meeting provider */}
+                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
+                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Video Meeting Provider</div>
+                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>For video interviews — meeting links are auto-generated per slot.</div>
+                            <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:8}}>
+                              {[
+                                {v:"google_meet",l:"Google Meet",icon:"video"},
+                                {v:"zoom",l:"Zoom",icon:"video"},
+                                {v:"teams",l:"Microsoft Teams",icon:"video"},
+                                {v:"custom",l:"Custom / Manual URL",icon:"link"},
+                              ].map(p => (
+                                <button key={p.v} className="wizard-option" style={{padding:"10px 12px",textAlign:"left",border:(currentRoom.meetingProvider||"google_meet")===p.v?"2px solid var(--ac)":"1px solid var(--g2)",background:(currentRoom.meetingProvider||"google_meet")===p.v?"rgba(96,77,255,.05)":"transparent",cursor:"pointer",borderRadius:10,display:"flex",alignItems:"center",gap:10}} onClick={() => setRooms(prev => prev.map(r => r.id === currentRoom.id ? {...r, meetingProvider: p.v} : r))}>
+                                  <I n={p.icon} s={16}/>
+                                  <span style={{fontSize:12,fontWeight:600}}>{p.l}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Calendar sync */}
+                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
+                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Calendar Sync</div>
+                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>Two-way sync interview slots with your team's calendar. Conflicts will show up across systems.</div>
+                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                              {[
+                                {key:"google", label:"Google Calendar", color:"#4285F4"},
+                                {key:"apple", label:"Apple Calendar", color:"#000000"},
+                                {key:"microsoft", label:"Microsoft Outlook", color:"#0078D4"},
+                              ].map(c => (
+                                <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",border:"1px solid var(--g2)",borderRadius:10}}>
+                                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                    <div style={{width:32,height:32,borderRadius:8,background:c.color+"15",color:c.color,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:11}}>{c.label.charAt(0)}</div>
+                                    <div>
+                                      <div style={{fontSize:13,fontWeight:600}}>{c.label}</div>
+                                      <div style={{fontSize:11,color:connectedCalendars[c.key]?"var(--green)":"var(--g4)"}}>{connectedCalendars[c.key] ? "Connected · last synced 2 min ago" : "Not connected"}</div>
+                                    </div>
+                                  </div>
+                                  <button className={connectedCalendars[c.key] ? "btn btn-s btn-sm" : "btn btn-p btn-sm"} onClick={() => { setConnectedCalendars(p => ({...p, [c.key]:!p[c.key]})); showToast(connectedCalendars[c.key] ? `${c.label} disconnected` : `${c.label} connected!`); }}>
+                                    {connectedCalendars[c.key] ? <><I n="check" s={12}/> Disconnect</> : <>Connect</>}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Reminders */}
+                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
+                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Automatic Reminders</div>
+                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>Email candidates ahead of their interview so they don't miss it.</div>
+                            <div className="settings-row">
+                              <div><div className="sr-label">24 hours before</div></div>
+                              <button className={`toggle ${currentRoom.interviewReminders?.h24?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewReminders: {...(r.interviewReminders||{}), h24: !(r.interviewReminders?.h24)}} : r))} />
+                            </div>
+                            <div className="settings-row">
+                              <div><div className="sr-label">1 hour before</div></div>
+                              <button className={`toggle ${currentRoom.interviewReminders?.h1?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewReminders: {...(r.interviewReminders||{}), h1: !(r.interviewReminders?.h1)}} : r))} />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   <div className="room-settings-section">
                     <h3>Review Tools</h3>
                     <p className="rss-sub">Choose a review method for your team. These options are mutually exclusive.</p>
@@ -13081,7 +13742,7 @@ export default function AgencyShell() {
                         <div className="sr-label">Team Votes</div>
                         <div className="sr-sub">Reviewers cast votes on each candidate. Votes appear below the status buttons.</div>
                       </div>
-                      <button className={`toggle ${currentRoom.enableVotes?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableVotes: !r.enableVotes, enableBatches: false} : r))} />
+                      <button className={`toggle ${currentRoom.enableVotes?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableVotes: !r.enableVotes, enableBatches: false, enableScoring: false} : r))} />
                     </div>
                     {currentRoom.enableVotes && (
                       <div style={{padding:"12px 16px",border:"1px solid var(--g2)",borderRadius:12,marginTop:8}}>
@@ -13110,7 +13771,7 @@ export default function AgencyShell() {
                         <div className="sr-label">Assign Batches</div>
                         <div className="sr-sub">Assign number ranges of candidates to specific team members for review.</div>
                       </div>
-                      <button className={`toggle ${currentRoom.enableBatches?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableBatches: !r.enableBatches, enableVotes: false} : r))} />
+                      <button className={`toggle ${currentRoom.enableBatches?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableBatches: !r.enableBatches, enableVotes: false, enableScoring: false} : r))} />
                     </div>
                     {currentRoom.enableBatches && (
                       <div style={{padding:"12px 16px",border:"1px solid var(--g2)",borderRadius:12,marginTop:8}}>
@@ -13127,6 +13788,48 @@ export default function AgencyShell() {
                         ))}
                       </div>
                     )}
+
+                    {currentRoom.opportunityType === "competition" && (() => {
+                      const criteria = currentRoom.scoringCriteria || [];
+                      const totalWeight = criteria.reduce((s,c) => s + (parseInt(c.weight)||0), 0);
+                      const weightOk = totalWeight === 100;
+                      return (
+                        <>
+                          <div className="settings-row" style={{border: currentRoom.enableScoring ? "1px solid var(--ac)" : "1px solid var(--g2)", borderRadius:12, padding:"12px 16px", marginTop:8, background: currentRoom.enableScoring ? "rgba(96,77,255,.03)" : "transparent"}}>
+                            <div>
+                              <div className="sr-label">Scoring System</div>
+                              <div className="sr-sub">Reviewers score each candidate against weighted criteria. Candidates auto-rank by weighted average.</div>
+                            </div>
+                            <button className={`toggle ${currentRoom.enableScoring?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableScoring: !r.enableScoring, enableVotes: false, enableBatches: false, scoringCriteria: r.scoringCriteria || [{id:"sc"+Date.now()+"a",name:"Technique",weight:30},{id:"sc"+Date.now()+"b",name:"Creativity",weight:30},{id:"sc"+Date.now()+"c",name:"Artistry",weight:20},{id:"sc"+Date.now()+"d",name:"Stage Presence",weight:20}], scoringScale: r.scoringScale || 10} : r))} />
+                          </div>
+                          {currentRoom.enableScoring && (
+                            <div style={{padding:"12px 16px",border:"1px solid var(--g2)",borderRadius:12,marginTop:8}}>
+                              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                                <div style={{fontSize:12,fontWeight:600}}>Scoring Criteria</div>
+                                <div style={{fontSize:11,fontWeight:600,color: weightOk ? "var(--green)" : "var(--amber)"}}>Weights total: {totalWeight}%{weightOk?"":" (should be 100%)"}</div>
+                              </div>
+                              {criteria.map(crit => (
+                                <div key={crit.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                                  <input value={crit.name} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, scoringCriteria: r.scoringCriteria.map(c => c.id === crit.id ? {...c, name:e.target.value} : c)} : r))} placeholder="Criterion name" style={{flex:1,fontSize:12}}/>
+                                  <input type="number" min="0" max="100" value={crit.weight} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, scoringCriteria: r.scoringCriteria.map(c => c.id === crit.id ? {...c, weight:parseInt(e.target.value)||0} : c)} : r))} style={{width:60,fontSize:12}}/>
+                                  <span style={{fontSize:11,color:"var(--g4)"}}>%</span>
+                                  <button className="rm-del" onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, scoringCriteria: r.scoringCriteria.filter(c => c.id !== crit.id)} : r))} title="Remove criterion"><I n="trash" s={12}/></button>
+                                </div>
+                              ))}
+                              <button className="btn btn-s btn-sm" style={{marginTop:4}} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, scoringCriteria: [...(r.scoringCriteria||[]), {id:"sc"+Date.now(),name:"",weight:0}]} : r))}>
+                                <I n="plus" s={12}/> Add Criterion
+                              </button>
+                              <div style={{display:"flex",gap:8,alignItems:"center",marginTop:14,paddingTop:12,borderTop:"1px solid var(--g1)"}}>
+                                <span style={{fontSize:12,fontWeight:600}}>Score Scale:</span>
+                                {[5,10].map(s => (
+                                  <button key={s} className={`chip ${(currentRoom.scoringScale||10)===s?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, scoringScale: s} : r))}>1 to {s}</button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </>
               )}
@@ -16876,11 +17579,11 @@ export default function AgencyShell() {
 
       {/* ═══ NEW OPPORTUNITY MODAL (TYPE PICKER + 5-STEP CASTING WIZARD) ═══ */}
       {showNewRoom && (
-        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,auditionFormat:"one_date",castingType:"open"}); }}>
+        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"}); }}>
           <div className="new-room-modal" style={{maxWidth: 640}} onClick={e => e.stopPropagation()}>
 
             {/* Step indicator — shown for casting + audition flows (steps 1-5) */}
-            {newRoomStep >= 1 && (newRoomConfig.opportunityType === "casting" || newRoomConfig.opportunityType === "audition") && (
+            {newRoomStep >= 1 && (
               <div className="step-bar">
                 {["Application Mode","Selection","Format","Workflow","Details"].map((label, i) => {
                   const step = i + 1;
@@ -16915,7 +17618,7 @@ export default function AgencyShell() {
                   ))}
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,auditionFormat:"one_date",castingType:"open"}); }}>Cancel</button>
+                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"}); }}>Cancel</button>
                   <button className="btn btn-p" onClick={() => {
                     const opt = getOpportunityType(newRoomConfig.opportunityType);
                     if (!opt.enabled) { showToast(`${opt.label} setup coming soon — we're building this flow next.`); return; }
@@ -16931,7 +17634,7 @@ export default function AgencyShell() {
             {newRoomStep === 1 && (
               <>
                 <h2>Application Mode</h2>
-                <p className="nrm-sub">How will candidates access this {newRoomConfig.opportunityType === "audition" ? "audition" : "casting"}?</p>
+                <p className="nrm-sub">How will candidates access this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()}?</p>
 
                 {savedRoomTemplates.length > 0 && (
                   <div style={{marginBottom:20}}>
@@ -16999,17 +17702,22 @@ export default function AgencyShell() {
             {newRoomStep === 3 && newRoomConfig.opportunityType !== "audition" && (
               <>
                 <h2>Format</h2>
-                <p className="nrm-sub">How will this casting take place?</p>
+                <p className="nrm-sub">How will this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()} take place?</p>
                 <div className="wizard-grid">
                   <div className={`wizard-option ${newRoom.format==="online"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"online"}))}>
                     <div className="wo-icon"><I n="globe" s={22}/></div>
                     <h4>Online</h4>
-                    <p>No physical casting — artists get selected based on their submissions.</p>
+                    <p>No physical sessions — selections based on submissions only.</p>
                   </div>
                   <div className={`wizard-option ${newRoom.format==="in_person"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"in_person"}))}>
                     <div className="wo-icon"><I n="users" s={22}/></div>
                     <h4>In Person</h4>
-                    <p>Artists get invited to a physical casting session at your location.</p>
+                    <p>Candidates get invited to a physical session at your location.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoom.format==="hybrid"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"hybrid"}))}>
+                    <div className="wo-icon"><I n="layers" s={22}/></div>
+                    <h4>Hybrid</h4>
+                    <p>Combination of online submissions and in-person sessions.</p>
                   </div>
                 </div>
                 <div className="ns-actions">
@@ -17045,7 +17753,7 @@ export default function AgencyShell() {
               <>
                 <h2>Workflow</h2>
                 <p className="nrm-sub">Configure your selection workflow. These can be changed later in settings.</p>
-                <div style={{marginBottom:24}}>
+                <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:14}}>
                   <div className="settings-row">
                     <div>
                       <div className="sr-label">Use a shortlist before final selection?</div>
@@ -17053,6 +17761,22 @@ export default function AgencyShell() {
                     </div>
                     <button className={`toggle ${newRoomConfig.useShortlist?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useShortlist:!p.useShortlist}))} />
                   </div>
+                  <div className="settings-row">
+                    <div>
+                      <div className="sr-label">Enable Waitlist?</div>
+                      <div className="sr-sub">Place candidates on a waitlist if all spots are filled, in case someone drops out.</div>
+                    </div>
+                    <button className={`toggle ${newRoomConfig.useWaitlist?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useWaitlist:!p.useWaitlist}))} />
+                  </div>
+                  {INTERVIEW_ELIGIBLE_TYPES.includes(newRoomConfig.opportunityType) && (
+                    <div className="settings-row">
+                      <div>
+                        <div className="sr-label">Enable Interview Stage?</div>
+                        <div className="sr-sub">Add a final interview step where shortlisted candidates are invited for a 1:1 or panel interview before selection.</div>
+                      </div>
+                      <button className={`toggle ${newRoomConfig.useInterviews?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useInterviews:!p.useInterviews}))} />
+                    </div>
+                  )}
                 </div>
                 <div className="ns-actions">
                   <button className="btn btn-g" onClick={() => setNewRoomStep(3)}><I n="back" s={14}/> Back</button>
@@ -17092,11 +17816,19 @@ export default function AgencyShell() {
             {/* ── Step 5: Details ── */}
             {newRoomStep === 5 && (
               <>
-                <h2>{newRoomConfig.opportunityType === "audition" ? "Audition Details" : "Casting Details"}</h2>
+                <h2>{getOpportunityType(newRoomConfig.opportunityType).label} Details</h2>
                 <p className="nrm-sub">Fill in the basics. You can always edit these later.</p>
                 <div className="field">
                   <label>Title *</label>
-                  <input placeholder={newRoomConfig.opportunityType === "audition" ? "e.g. Dance Audition — Season 2027/2028" : "e.g. Othello — Lead Roles"} value={newRoom.title} onChange={e => setNewRoom(p => ({...p, title:e.target.value}))}/>
+                  <input placeholder={
+                    newRoomConfig.opportunityType === "audition" ? "e.g. Dance Audition — Season 2027/2028" :
+                    newRoomConfig.opportunityType === "job_call" ? "e.g. Freelance Teachers — Ballet & Contemporary" :
+                    newRoomConfig.opportunityType === "open_call" ? "e.g. Open Call for Choreographers" :
+                    newRoomConfig.opportunityType === "residency" ? "e.g. Artist Residency — Summer 2027" :
+                    newRoomConfig.opportunityType === "competition" ? "e.g. Young Choreographer Award 2027" :
+                    newRoomConfig.opportunityType === "education" ? "e.g. Summer Intensive Workshop" :
+                    "e.g. Othello — Lead Roles"
+                  } value={newRoom.title} onChange={e => setNewRoom(p => ({...p, title:e.target.value}))}/>
                 </div>
                 <div className="field">
                   <label>Roles / Artist Types</label>
@@ -17112,7 +17844,7 @@ export default function AgencyShell() {
                     }}/>
                   </div>
                 </div>
-                {newRoomConfig.opportunityType === "audition" && (
+                {TYPES_WITH_CONTRACTS.includes(newRoomConfig.opportunityType) && (
                   <div className="field">
                     <label>Contracts Offered</label>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4}}>
@@ -17134,7 +17866,7 @@ export default function AgencyShell() {
                 <div className="ns-actions">
                   <button className="btn btn-g" onClick={() => setNewRoomStep(4)}><I n="back" s={14}/> Back</button>
                   <button className="btn btn-p" onClick={handleCreateRoom} disabled={!newRoom.title.trim()}>
-                    <I n="plus" s={14}/> {newRoomConfig.opportunityType === "audition" ? "Create Audition" : "Create Casting"}
+                    <I n="plus" s={14}/> Create {getOpportunityType(newRoomConfig.opportunityType).label}
                   </button>
                 </div>
               </>
@@ -17344,6 +18076,9 @@ export default function AgencyShell() {
             <button onClick={handleBackToWorkspace}><I n="back" s={18}/><span>Back</span></button>
             <button className={roomPage==="overview"?"active":""} onClick={()=>setRoomPage("overview")}><I n="home" s={18}/><span>Overview</span></button>
             <button className={roomPage==="candidates"?"active":""} onClick={()=>setRoomPage("candidates")}><I n="users" s={18}/><span>Candidates</span></button>
+            {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && !isExternalMode && (
+              <button className={roomPage==="interviews"?"active":""} onClick={()=>setRoomPage("interviews")}><I n="chat" s={18}/><span>Interviews</span></button>
+            )}
             {!isExternalMode && <button className={roomPage==="communication"?"active":""} onClick={()=>setRoomPage("communication")}><I n="mail" s={18}/><span>Comms</span></button>}
           </>
         ) : viewShowcase && currentShowcase ? (
