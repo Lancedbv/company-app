@@ -2669,9 +2669,9 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .cand-card .cand-badge.not_selected{background:rgba(255,71,87,.85);color:#fff}
 .cand-card .cand-badge.new{background:rgba(152,152,159,.85);color:#fff}
 .cand-card .cand-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
-.cand-card .cand-name{font-size:15px;font-weight:600;color:#fff}
-.cand-card .cand-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
-.cand-card .cand-tags span{font-size:9.5px;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.cand-card .cand-name{font-size:17px;font-weight:600;color:#fff;letter-spacing:-.01em}
+.cand-card .cand-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.cand-card .cand-tags span{font-size:11px;padding:3px 9px;border-radius:40px;background:rgba(255,255,255,.22);color:#fff;font-weight:500}
 
 /* Candidate list (table) */
 .cand-table{width:100%;border-collapse:separate;border-spacing:0 4px}
@@ -4098,17 +4098,15 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .cl-avail{display:none!important}
 .cr-actions,.cr-history{display:none!important}
 .cc-section-bio{display:none!important}
-.cc-section-experience{order:5}
-.cc-section-education{order:5}
 .cl-headshot,.cl-headshot-ph{order:1;aspect-ratio:1/1!important;border-radius:16px!important}
 .cc-section-motivation{order:2}
 .cl-info{order:3}
 .cc-section-videos{order:4}
-.cc-section-experience{order:5}
-.cc-section-education{order:6}
-.cc-section-photos{order:7}
-.cc-section-comp{order:8}
-.cand-right{order:7;display:flex!important;flex-direction:column!important;gap:12px!important;padding-top:16px!important;border-top:1px solid var(--g2)!important;margin-top:8px!important;padding-bottom:80px!important}
+.cc-section-comp{order:5}
+.cc-section-questions{order:6}
+.cc-section-resume{order:7}
+.cc-section-photos{order:8}
+.cand-right{order:9;display:flex!important;flex-direction:column!important;gap:12px!important;padding-top:16px!important;border-top:1px solid var(--g2)!important;margin-top:8px!important;padding-bottom:80px!important}
 .cand-right::before{content:"Review";display:block;font-size:11px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .cand-right .cr-notes,.cand-right .cr-showcase-add{order:1}
 /* Selection action bar — sit ABOVE bottom nav cleanly */
