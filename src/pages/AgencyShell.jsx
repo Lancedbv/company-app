@@ -2669,9 +2669,9 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .cand-card .cand-badge.not_selected{background:rgba(255,71,87,.85);color:#fff}
 .cand-card .cand-badge.new{background:rgba(152,152,159,.85);color:#fff}
 .cand-card .cand-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
-.cand-card .cand-name{font-size:14px;font-weight:600;color:#fff}
+.cand-card .cand-name{font-size:15px;font-weight:600;color:#fff}
 .cand-card .cand-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
-.cand-card .cand-tags span{font-size:8px;padding:1px 6px;border-radius:40px;background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.cand-card .cand-tags span{font-size:9.5px;padding:2px 7px;border-radius:40px;background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
 
 /* Candidate list (table) */
 .cand-table{width:100%;border-collapse:separate;border-spacing:0 4px}
@@ -12635,7 +12635,7 @@ export default function AgencyShell() {
                       <div className="cc-motivation">{cand.motivation || "No motivation letter provided."}</div>
                     </div>
 
-                    {/* Videos first */}
+                    {/* Videos */}
                     {cand.videos.length > 0 && (
                       <div className="cc-section cc-section-videos">
                         <h3>Videos</h3>
@@ -12664,28 +12664,7 @@ export default function AgencyShell() {
                       </div>
                     )}
 
-                    {/* Photos */}
-                    {(() => {
-                      const artist = cand.artistId ? artists.find(x => x.id === cand.artistId) : null;
-                      const photos = artist?.media?.filter(m => m.type === "photo") || [];
-                      if (photos.length === 0) return null;
-                      const photoItems = photos.map(p => ({url:p.url, label:p.label}));
-                      return (
-                        <div className="cc-section cc-section-photos">
-                          <h3>Photos</h3>
-                          <div className="cc-photo-gallery">
-                            {photos.map((p, i) => (
-                              <div className="cc-photo-item" key={i} onClick={() => openLightbox(photoItems, i)}>
-                                <img src={p.url} alt={p.label}/>
-                                {p.label && <div className="cc-ph-label">{p.label}</div>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Additional Questions — what the applicant answered to the room's questions */}
+                    {/* Additional Questions */}
                     {(() => {
                       const askable = (roomQuestions || []).filter(q => cand.answers && cand.answers[q.id]);
                       if (askable.length === 0) return null;
@@ -12756,6 +12735,27 @@ export default function AgencyShell() {
                         </div>
                       </div>
                     )}
+
+                    {/* Photos — last */}
+                    {(() => {
+                      const artist = cand.artistId ? artists.find(x => x.id === cand.artistId) : null;
+                      const photos = artist?.media?.filter(m => m.type === "photo") || [];
+                      if (photos.length === 0) return null;
+                      const photoItems = photos.map(p => ({url:p.url, label:p.label}));
+                      return (
+                        <div className="cc-section cc-section-photos">
+                          <h3>Photos</h3>
+                          <div className="cc-photo-gallery">
+                            {photos.map((p, i) => (
+                              <div className="cc-photo-item" key={i} onClick={() => openLightbox(photoItems, i)}>
+                                <img src={p.url} alt={p.label}/>
+                                {p.label && <div className="cc-ph-label">{p.label}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Right column */}
