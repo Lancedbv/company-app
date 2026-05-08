@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Chart from "react-apexcharts";
+import UniversalAuth from "./UniversalAuth";
 import { QRCodeSVG } from "qrcode.react";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -8305,37 +8306,7 @@ export default function AgencyShell() {
   // ── Auth screens ──
   if (auth !== "app") {
     return (
-      <div className="auth-page">
-        <style>{CSS}</style>
-        <div className="auth-blob auth-blob-1" />
-        <div className="auth-blob auth-blob-2" />
-        <div className="auth-blob auth-blob-3" />
-        <div className="auth-blob auth-blob-4" />
-        <div className="auth-card">
-          <div className="logo-big"><a href="https://lanced.eu" target="_blank" rel="noopener noreferrer"><img src="/lanced-logo.svg" alt="Lanced" /></a></div>
-          {auth === "login" ? (
-            <>
-              <h1>Welcome back</h1>
-              <p className="auth-sub">Sign in to your company workspace</p>
-              <input type="email" placeholder="Email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} />
-              <input type="password" placeholder="Password" value={authPass} onChange={e => setAuthPass(e.target.value)} />
-              <button className="auth-btn" onClick={() => setAuth("app")}>Sign In</button>
-              <p className="auth-switch">Don't have an account? <a onClick={() => setAuth("signup")}>Create one</a></p>
-            </>
-          ) : (
-            <>
-              <h1>Create your account</h1>
-              <p className="auth-sub">Set up your company on Lanced</p>
-              <input type="text" placeholder="Company name" value={authName} onChange={e => setAuthName(e.target.value)} />
-              <input type="email" placeholder="Email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} />
-              <input type="password" placeholder="Password" value={authPass} onChange={e => setAuthPass(e.target.value)} />
-              <button className="auth-btn" onClick={() => setAuth("app")}>Create Account</button>
-              <p className="auth-switch">Already have an account? <a onClick={() => setAuth("login")}>Sign in</a></p>
-            </>
-          )}
-        </div>
-        {interestedBtnPopup}
-      </div>
+      <UniversalAuth onAuth={() => setAuth("app")} />
     );
   }
 
