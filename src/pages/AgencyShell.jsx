@@ -4073,6 +4073,7 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .msg-list-header-row{display:none!important}
 /* Messages page — fully white native feel */
 .shell.on-messages,.shell.on-messages .main{background:#fff!important;background-image:none!important}
+.shell.on-messages .dash-bg{display:none!important}
 .shell.on-messages::before{display:none!important}
 .shell.on-messages .mobile-topbar{background:#fff!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-bottom:1px solid var(--g1)}
 .shell.on-messages .content{background:#fff!important;padding-bottom:0!important}
@@ -8814,7 +8815,7 @@ export default function AgencyShell() {
       <div className={`main${page === "messages" && !viewShowcase && !viewRoom ? " on-messages" : ""}`}>
 
         {/* Top action bar — sticky, translucent, content scrolls beneath */}
-        <div className={`agency-topbar${(page === "aria" || page === "dashboard") ? " on-blob-bg" : ""}`}>
+        <div className="agency-topbar on-blob-bg">
           <button className="topbar-pill topbar-premium" onClick={() => showToast("Premium plans — coming soon")}>
             <span>Go Premium</span>
           </button>
@@ -9025,15 +9026,16 @@ export default function AgencyShell() {
 
         <div className="content">
 
+          <div className="dash-bg" aria-hidden="true">
+            <div className="dash-blob dash-blob-1"/>
+            <div className="dash-blob dash-blob-2"/>
+            <div className="dash-blob dash-blob-3"/>
+            <div className="dash-blob dash-blob-4"/>
+          </div>
+
           {/* ═══ WORKSPACE: DASHBOARD ═══ */}
           {!viewShowcase && !viewRoom && page === "dashboard" && (
             <>
-              <div className="dash-bg" aria-hidden="true">
-                <div className="dash-blob dash-blob-1"/>
-                <div className="dash-blob dash-blob-2"/>
-                <div className="dash-blob dash-blob-3"/>
-                <div className="dash-blob dash-blob-4"/>
-              </div>
 
               {/* Banner */}
               <div className="dash-banner">
