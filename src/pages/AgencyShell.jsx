@@ -94,28 +94,43 @@ const INTERVIEW_ELIGIBLE_TYPES = ["open_call","residency","job_call"];
 const TYPES_WITH_CONTRACTS = ["audition","job_call","residency","education"];
 
 const AUDITION_FORMATS = [
-  {val:"one_date",title:"One Date",desc:"A single audition day at one location",icon:"calendar"},
-  {val:"multi_date",title:"Multi-Date Timeslots",desc:"Multiple audition days, candidates pick a slot",icon:"calendar"},
-  {val:"multi_groups",title:"Multi Groups",desc:"Same date, candidates split into multiple groups",icon:"users"},
-  {val:"multi_locations",title:"Multiple Locations",desc:"Auditions across cities or studios",icon:"globe"},
+  {val:"private",title:"Private Auditions",desc:"Individual time-slot booking — artists pick their own audition slot",icon:"calendar"},
+  {val:"regular",title:"Regular Audition",desc:"Everyone is invited to the same event — no groups required",icon:"users"},
+  {val:"groups",title:"Group Audition",desc:"Artists are divided into groups — by self-booking, company assignment, or on the day",icon:"layers"},
+  {val:"multi_location",title:"Multi-Location",desc:"Auditions across cities or studios — each location runs independently",icon:"globe"},
+];
+
+const ACCESS_TYPES = [
+  {val:"open",title:"Open Audition",desc:"Anyone can apply and auto-joins as a participant",icon:"globe"},
+  {val:"closed",title:"Closed Audition",desc:"Invite-only — company reviews applications and selects who gets invited",icon:"lock"},
+];
+
+const CAPACITY_MODES = [
+  {val:"hard",title:"Hard Limit",desc:"When a group or slot is full, artists join a waitlist"},
+  {val:"soft",title:"Soft Limit",desc:"Capacity is a guideline — groups can exceed the limit"},
 ];
 
 const CONTRACT_TYPES = ["Full Time","Part Time","Freelance","Contract","Internship","Apprenticeship","Project-Based","Seasonal"];
 
 /* ━━━ ROUNDS ━━━ */
 const ROUND_PRESETS = [
-  {key:"multi_group", label:"Multi Group", icon:"users", color:"#1A56DB", desc:"Large open calls (80–200+ artists). Groups run in parallel or back-to-back, with capacity limits per group.", artistConfirms:"Confirms attendance + selects a group slot", defaultView:"group"},
+  {key:"multi_group", label:"Multi Group", icon:"users", color:"#1A56DB", desc:"Large open calls (80–200+ artists). Groups run in parallel or back-to-back, with capacity limits per group.", artistConfirms:"Confirms attendance + selects a group slot", defaultView:"grid"},
   {key:"single_group", label:"Single Group", icon:"users", color:"#7A66FF", desc:"Smaller callbacks or one-batch auditions where everyone performs together.", artistConfirms:"Confirms attendance only", defaultView:"grid"},
   {key:"interview", label:"Interview", icon:"chat", color:"#0EA5A8", desc:"Structured 1:1 or panel interviews. Time-slotted. Common as a final-stage filter or for craft roles (musicians, directors).", artistConfirms:"Confirms + picks a time slot (or assigned)", defaultView:"schedule"},
-  {key:"finals", label:"Finals", icon:"trophy", color:"#F5A623", desc:"Final decision round. Triggers contract/offer flow on selection. Always the terminal round.", artistConfirms:"Carried over from prior round (no re-confirmation)", defaultView:"decision"},
+  {key:"finals", label:"Finals", icon:"trophy", color:"#F5A623", desc:"Final decision round. Triggers contract/offer flow on selection. Always the terminal round.", artistConfirms:"Carried over from prior round (no re-confirmation)", defaultView:"grid"},
   {key:"solo_audition", label:"Solo Audition", icon:"mic", color:"#FF6B81", desc:"For musicians, singers, soloists. Single artist performs at a scheduled slot. Functionally similar to Interview but with longer slots and audition-style notes.", artistConfirms:"Confirms + picks a time slot", defaultView:"schedule"},
 ];
 const getRoundPreset = (key) => ROUND_PRESETS.find(p => p.key === key) || ROUND_PRESETS[0];
 
 const GROUP_CREATION_MODES = [
-  {key:"predefined", label:"Pre-defined groups", desc:"Create groups in setup; assign artists to specific groups in the invitation.", icon:"layers"},
-  {key:"self_book", label:"Artists self-book", desc:"Define slot structure; artists pick a group from the invitation. First-come-first-served until capacity.", icon:"calendar"},
-  {key:"divide_on_day", label:"Divide on day", desc:"No groups in setup. Create groups during Registration based on who actually arrives.", icon:"users"},
+  {key:"self_book", label:"Artists self-book", desc:"Artists pick their group when confirming. First-come-first-served until capacity.", icon:"calendar", round1:true, callback:true},
+  {key:"company_assigns_after_confirm", label:"Company assigns after confirm", desc:"Artists confirm attendance, then company assigns them to groups manually.", icon:"users", round1:true, callback:true},
+  {key:"divide_on_day", label:"Divide on day", desc:"No groups in setup. Create groups during Registration based on who actually arrives.", icon:"users", round1:true, callback:false},
+];
+const CALLBACK_MODES = [
+  {key:"self_book", label:"Self-book", desc:"Artists pick their new group slot when they receive the callback invitation.", icon:"calendar"},
+  {key:"auto_assign", label:"Auto-assign from previous round", desc:"Carry forward group assignments from the previous round. Artists stay in the same groups.", icon:"arrow"},
+  {key:"company_assigns_after_confirm", label:"Company assigns", desc:"Artists confirm, then you manually assign them to groups.", icon:"users"},
 ];
 
 const ROUND_PHASES = [
@@ -134,11 +149,14 @@ const ROUND_VIEWS = [
 ];
 
 const RULE_CRITERIA = [
-  {key:"gender", label:"Gender", type:"select", options:["Female","Male","Non-binary","Any"]},
+  {key:"gender", label:"Gender", type:"multi", options:["Female","Male","Non-binary"]},
   {key:"role", label:"Role", type:"select", options:["Ensemble","Soloist","First Soloist","Principal","Apprentice","Any"]},
   {key:"discipline", label:"Discipline", type:"select", options:["Classical","Contemporary","Modern","Hip-Hop","Jazz","Tap","Any"]},
-  {key:"age_range", label:"Age range", type:"range"},
-  {key:"track", label:"Track", type:"select", options:["Internship-track","Full-time track","Apprenticeship","Any"]},
+  {key:"age", label:"Age", type:"select", options:["16-18","18-21","21-25","25-30","30-35","35-40","40+","Any"]},
+  {key:"contract", label:"Contract", type:"select", options:["Full-time","Part-time","Freelance","Project-based","Internship","Any"]},
+  {key:"experience", label:"Experience", type:"select", options:["Student","1-3 years","3-5 years","5-10 years","10+ years","Any"]},
+  {key:"height", label:"Height", type:"range"},
+  {key:"nationality", label:"Nationality", type:"text"},
 ];
 
 /* Info-tip content keyed by topic — used by <InfoTip topic="..." /> across the app */
@@ -292,6 +310,12 @@ const MOCK_NOTIFICATIONS = [
   {id:"nr1",cat:"room",icon:"user-plus",color:"var(--green)",title:"3 new applications",body:"Dance Audition — Season 2027/2028 received 3 new applications today.",time:"15m ago",read:false,link:{context:"room",id:"room1"}},
   {id:"nr2",cat:"room",icon:"inbox",color:"var(--ac)",title:"Daily summary",body:"Dance Audition: 35/48 reviewed (73%). 8 selected, 10 shortlisted, 10 potential.",time:"Today, 9:00 AM",read:true,link:{context:"room",id:"room1"}},
   {id:"nr3",cat:"room",icon:"star",color:"var(--amber)",title:"External reviewer active",body:"Sarah Chen is currently reviewing candidates in the Dance Audition room.",time:"Just now",read:false,link:{context:"room",id:"room1"}},
+  // Audition workflow
+  {id:"na1",cat:"room",icon:"check-circle",color:"var(--green)",title:"Confirmation received",body:"Amara Osei confirmed attendance for the Orchestra Auditions — Berlin Studio, May 18.",time:"20m ago",read:false,link:{context:"room",id:"room4"}},
+  {id:"na2",cat:"room",icon:"check-circle",color:"var(--green)",title:"Confirmation received",body:"Kai Tanaka confirmed attendance and booked slot 09:40 — Berlin Studio, May 18.",time:"35m ago",read:true,link:{context:"room",id:"room4"}},
+  {id:"na3",cat:"room",icon:"clock",color:"var(--amber)",title:"Reschedule request",body:"Kwame Asante is asking to reschedule for the Orchestra Auditions — Amsterdam HQ.",time:"45m ago",read:false,link:{context:"room",id:"room4"}},
+  {id:"na4",cat:"room",icon:"send",color:"var(--ac)",title:"Invitations sent",body:"6 invitations sent for Orchestra Auditions — Berlin Studio. Awaiting confirmations.",time:"2h ago",read:true,link:{context:"room",id:"room4"}},
+  {id:"na5",cat:"room",icon:"x-circle",color:"var(--red)",title:"Declined",body:"Mila Johansson declined the invitation for Orchestra Auditions — Amsterdam HQ.",time:"1h ago",read:true,link:{context:"room",id:"room4"}},
   // Client
   {id:"nc1",cat:"client",icon:"mail",color:"#F97316",title:"New message from Sarah Chen",body:"\"We'd love to confirm Amara and Kai for the season — when can we schedule callbacks?\"",time:"11m ago",read:false,link:{context:"room",id:"room1"}},
   {id:"nc3",cat:"client",icon:"mail",color:"#F97316",title:"New message from Lisa Wang",body:"\"We need to discuss the orchestra audition schedule for next week.\"",time:"1h ago",read:false,link:{context:"room",id:"room4"}},
@@ -332,13 +356,18 @@ const MOCK_ROOMS = [
     ],
     opportunityType:"audition",
     type:"open", format:"in_person", status:"published", featured:true,
-    auditionFormat:"multi_date",
+    accessType:"closed",
+    auditionFormat:"groups",
+    groupCreationMode:"self_book",
+    capacityMode:"soft",
+    roundsEnabled:true,
+    auditionDates:[{date:"May 1, 2026",label:"Day 1 — Open Round"},{date:"May 2, 2026",label:"Day 2 — Callbacks"},{date:"May 10, 2026",label:"Day 3 — Finals"}],
     enableShortlist:false, enableWaitlist:true, enableEarlyInvites:true,
     contracts:["Full Time","Apprenticeship"],
     deadline:"Apr 15, 2026", resultsDate:"May 10, 2026",
     castingDate:"May 1 — May 10, 2026", rehearsalDates:"Aug 24 — Sep 4, 2026", fittingDates:null, shootingDates:"Season runs Sep 2027 — Jun 2028",
     teamMemberIds:["tm1","tm2","tm-ext1"], createdAt:"Mar 10, 2026",
-    stats:{total:48,shortlisted:8,potential:12,rejected:15,offered:0,reviewed:35},
+    stats:{total:48,selected:10,potential:18,rejected:7,new:13,offered:0,reviewed:35},
     banner:"/demo/banners/pexels-mart-production-7319706.jpg",
     shareId:"tl-dance-2728", collaborationShareId:"tl-dance-2728-collab",
     shareSettings:{requireLogin:true,requirePassword:false,password:"",welcomeMessage:""}
@@ -361,7 +390,7 @@ const MOCK_ROOMS = [
     roles:["Ballet Teacher","Modern Teacher","Contemporary Teacher"], description:"Hiring freelance teachers across our school program. Open to applications year-round; flexible scheduling for working artists.",
     opportunityType:"job_call",
     type:"open", format:"hybrid", status:"published",
-    enableShortlist:true, enableWaitlist:true, enableInterviews:false,
+    enableShortlist:true, enableWaitlist:true, enableInterviews:true,
     contracts:["Freelance","Part Time","Contract"],
     deadline:"May 30, 2026", resultsDate:"Rolling",
     castingDate:null, rehearsalDates:null, fittingDates:null, shootingDates:null,
@@ -376,13 +405,22 @@ const MOCK_ROOMS = [
     roles:["Violin","Viola","Cello","Double Bass","Flute","Oboe","Percussion"], description:"Individual auditions for orchestra contracts across the 2027 season. Each instrument is auditioned separately with prepared excerpts and sight-reading.",
     opportunityType:"audition",
     type:"open", format:"in_person", status:"draft",
-    auditionFormat:"multi_date",
+    accessType:"closed",
+    auditionFormat:"multi_location",
+    roundsEnabled:true,
+    enableInterviews:true,
+    interviewFormat:"in_person", interviewDuration:"45",
+    locations:[
+      {id:"loc_1",name:"Berlin Studio",city:"Berlin",address:"Friedrichstr. 112, 10117 Berlin",dates:["May 18, 2026","May 19, 2026"],subFormat:"private"},
+      {id:"loc_2",name:"Amsterdam HQ",city:"Amsterdam",address:"Leidseplein 26, 1017 PT Amsterdam",dates:["May 25, 2026","May 26, 2026"],subFormat:"groups"},
+    ],
+    auditionDates:[{date:"May 18, 2026",label:"Berlin — Day 1"},{date:"May 19, 2026",label:"Berlin — Day 2"},{date:"May 25, 2026",label:"Amsterdam — Day 1"},{date:"May 26, 2026",label:"Amsterdam — Day 2"}],
     enableShortlist:false, enableWaitlist:true, enableEarlyInvites:false,
     contracts:["Full Time","Seasonal","Contract"],
     deadline:"Apr 20, 2026", resultsDate:"May 15, 2026",
     castingDate:"May 18 — May 29, 2026", rehearsalDates:"Aug 10 — Sep 4, 2026", fittingDates:null, shootingDates:"Season runs Sep 2027 — Jul 2028",
     teamMemberIds:["tm1","tm2"], createdAt:"Mar 18, 2026",
-    stats:{total:24,shortlisted:0,potential:6,rejected:4,offered:0,reviewed:14},
+    stats:{total:12,shortlisted:2,potential:1,rejected:1,offered:0,reviewed:8},
     banner:"/demo/banners/shutterstock_1505137721.jpg",
     shareId:"tl-orchestra-2027", collaborationShareId:"tl-orchestra-2027-collab",
     shareSettings:{requireLogin:true,requirePassword:false,password:"",welcomeMessage:""}
@@ -459,49 +497,49 @@ const MOCK_ROOMS = [
 ];
 
 const MOCK_CANDIDATES = [
-  {id:"cand1",roomId:"room1",artistId:"a1",number:1,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 12, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Incredible movement quality. Perfect for the lead role.",time:"Mar 13"},{from:"tm2",text:"Agreed — her showreel is outstanding.",time:"Mar 13"}],motivation:"Dear Artistic Team,\n\nI greatly value your work and believe my skills and experiences align with your company. I would love to join your audition for your next season and look forward to contributing my passion for contemporary and Afro-fusion dance.",videos:[{label:"Showreel",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"},{label:"Studio Footage",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}],availability:{available:true,conflicts:[]}},
-  {id:"cand2",roomId:"room1",artistId:"a2",number:2,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 12, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Strong technique, great stage presence.",time:"Mar 14"}],motivation:"I am excited to apply for this opportunity. My background in hip-hop and contemporary dance has prepared me well for commercial projects.",videos:[{label:"Showreel",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"},{label:"Ballet Variation",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand3",roomId:"room1",artistId:"a3",number:3,status:"shortlisted",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 13, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Beautiful lines, would be great in ensemble.",time:"Mar 14"}],motivation:"I would love the opportunity to dance in this campaign. My training in ballet and contemporary gives me strong versatility.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand4",roomId:"room1",artistId:"a4",number:4,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Mar 13, 2026",reviewedBy:["tm1","tm2"],notes:[],motivation:"Applying for the ensemble position. I have extensive experience in commercial dance and am available for the full shoot schedule.",videos:[{label:"Showreel",url:"#",thumb:null},{label:"Studio Footage",url:"#",thumb:null}],availability:{available:false,conflicts:["May 3-4 (prior booking)"]}},
+  {id:"cand1",roomId:"room1",artistId:"a1",number:1,status:"selected",confirmationStatus:"confirmed",earlyInvited:true,earlyInviteStatus:"confirmed",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 12, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Incredible movement quality. Perfect for the lead role.",time:"Mar 13"},{from:"tm2",text:"Agreed — her showreel is outstanding.",time:"Mar 13"}],motivation:"Dear Artistic Team,\n\nI greatly value your work and believe my skills and experiences align with your company. I would love to join your audition for your next season and look forward to contributing my passion for contemporary and Afro-fusion dance.",videos:[{label:"Showreel",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"},{label:"Studio Footage",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}],availability:{available:true,conflicts:[]}},
+  {id:"cand2",roomId:"room1",artistId:"a2",number:2,status:"selected",confirmationStatus:"confirmed",earlyInvited:true,earlyInviteStatus:"confirmed",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 12, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Strong technique, great stage presence.",time:"Mar 14"}],motivation:"I am excited to apply for this opportunity. My background in hip-hop and contemporary dance has prepared me well for commercial projects.",videos:[{label:"Showreel",url:"#",thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"},{label:"Ballet Variation",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand3",roomId:"room1",artistId:"a3",number:3,status:"selected",earlyInvited:true,earlyInviteStatus:"pending",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 13, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Beautiful lines, would be great in ensemble.",time:"Mar 14"}],motivation:"I would love the opportunity to dance in this campaign. My training in ballet and contemporary gives me strong versatility.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand4",roomId:"room1",artistId:"a4",number:4,status:"selected",earlyInvited:true,earlyInviteStatus:"declined",labels:[],rejectionReason:null,appliedAt:"Mar 13, 2026",reviewedBy:["tm1","tm2"],notes:[],motivation:"Applying for the ensemble position. I have extensive experience in commercial dance and am available for the full shoot schedule.",videos:[{label:"Showreel",url:"#",thumb:null},{label:"Studio Footage",url:"#",thumb:null}],availability:{available:false,conflicts:["May 3-4 (prior booking)"]}},
   {id:"cand5",roomId:"room1",artistId:"a5",number:5,status:"potential",labels:["Internship"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Interesting style but needs more experience.",time:"Mar 15"}],motivation:"I'm a rising dancer eager to gain commercial experience. This would be an amazing opportunity.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand6",roomId:"room1",artistId:null,number:6,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:[],notes:[],motivation:"I recently graduated from London Contemporary Dance School and am looking for my first professional engagement.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Elena Rossi",email:"elena@example.com",age:22,height:"5'6\"",nationality:"Italian",gender:"Female",location:"London, UK",img:"/demo/artists/boris-de-jong/pexels-cottonbro-5102571.jpg"}},
   {id:"cand7",roomId:"room1",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Height Requirement",appliedAt:"Mar 12, 2026",reviewedBy:["tm1"],notes:[],motivation:"Excited to audition for the new season at Theater Lanced.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Tom Richards",email:"tom@example.com",age:19,height:"5'5\"",nationality:"British",gender:"Male",location:"Manchester, UK",img:"/demo/artists/boris-de-jong/pexels-cottonbro-5103506.jpg"}},
   {id:"cand8",roomId:"room1",artistId:null,number:8,status:"not_selected",labels:[],rejectionReason:"Experience Level",appliedAt:"Mar 13, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Promising but too junior for this project.",time:"Mar 14"}],motivation:"I would love to be part of this campaign.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Yuki Tanaka",email:"yuki@example.com",age:20,height:"5'7\"",nationality:"Japanese",gender:"Female",location:"Tokyo, JP",img:"/demo/artists/boris-de-jong/pexels-cottonbro-6221374.jpg"}},
   {id:"cand9",roomId:"room1",artistId:"a6",number:9,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:[],notes:[],motivation:"Excited to audition for this opportunity.",videos:[],availability:{available:true,conflicts:[]}},
   {id:"cand10",roomId:"room1",artistId:"a7",number:10,status:"new",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:[],notes:[],motivation:"I believe my editorial experience would bring a unique dimension to this campaign.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand11",roomId:"room1",artistId:"a8",number:11,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Great vocal presence, could add a musical layer.",time:"Mar 16"}],motivation:"Would love to contribute my vocal talent to this project.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand11",roomId:"room1",artistId:"a8",number:11,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Great vocal presence, could add a musical layer.",time:"Mar 16"}],motivation:"Would love to contribute my vocal talent to this project.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand12",roomId:"room1",artistId:"a9",number:12,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 18, 2026",reviewedBy:[],notes:[],motivation:"Eager to bring my contemporary dance background to the company's new season.",videos:[],availability:{available:true,conflicts:[]}},
   {id:"cand13",roomId:"room1",artistId:"a10",number:13,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Interesting physicality, worth a callback.",time:"Mar 15"}],motivation:"My physical theatre training makes me well-suited for expressive commercial work.",videos:[{label:"Demo Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand14",roomId:"room1",artistId:"a11",number:14,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Incredible presence. Exactly the look we need.",time:"Mar 15"},{from:"tm2",text:"Absolutely. She would be perfect for the hero shots.",time:"Mar 15"}],motivation:"It would be an honor to join Theater Lanced for the 2027/2028 season.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand15",roomId:"room1",artistId:"a12",number:15,status:"selected",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"World-class choreographer. Could also help direct movement.",time:"Mar 16"}],motivation:"I bring years of experience blending African and contemporary movement vocabulary.",videos:[{label:"Choreography Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand16",roomId:"room1",artistId:"a13",number:16,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Classical technique is flawless. Beautiful mover.",time:"Mar 17"}],motivation:"I would love to showcase my classical training in a commercial context.",videos:[{label:"Variation",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand17",roomId:"room1",artistId:"a14",number:17,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"His energy is unmatched. Must have for this campaign.",time:"Mar 15"}],motivation:"Ready to bring the heat. This campaign speaks to everything I stand for.",videos:[{label:"Battle Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand14",roomId:"room1",artistId:"a11",number:14,status:"selected",confirmationStatus:"pending",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Incredible presence. Exactly the look we need.",time:"Mar 15"},{from:"tm2",text:"Absolutely. She would be perfect for the hero shots.",time:"Mar 15"}],motivation:"It would be an honor to join Theater Lanced for the 2027/2028 season.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand15",roomId:"room1",artistId:"a12",number:15,status:"selected",confirmationStatus:"confirmed",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"World-class choreographer. Could also help direct movement.",time:"Mar 16"}],motivation:"I bring years of experience blending African and contemporary movement vocabulary.",videos:[{label:"Choreography Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand16",roomId:"room1",artistId:"a13",number:16,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Classical technique is flawless. Beautiful mover.",time:"Mar 17"}],motivation:"I would love to showcase my classical training in a commercial context.",videos:[{label:"Variation",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand17",roomId:"room1",artistId:"a14",number:17,status:"selected",confirmationStatus:"declined",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"His energy is unmatched. Must have for this campaign.",time:"Mar 15"}],motivation:"Ready to bring the heat. This campaign speaks to everything I stand for.",videos:[{label:"Battle Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand18",roomId:"room1",artistId:"a15",number:18,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Beautiful voice but this is primarily a dance campaign.",time:"Mar 18"}],motivation:"I can bring both vocal and movement skills to the table.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand19",roomId:"room1",artistId:"a16",number:19,status:"shortlisted",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm2"],notes:[],motivation:"My Latin dance background offers a unique flavor to any movement project.",videos:[{label:"Salsa Solo",url:"#",thumb:null}],availability:{available:false,conflicts:["Mar 28-30 (prior booking)"]}},
+  {id:"cand19",roomId:"room1",artistId:"a16",number:19,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm2"],notes:[],motivation:"My Latin dance background offers a unique flavor to any movement project.",videos:[{label:"Salsa Solo",url:"#",thumb:null}],availability:{available:false,conflicts:["Mar 28-30 (prior booking)"]}},
   {id:"cand20",roomId:"room1",artistId:"a17",number:20,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:[],notes:[],motivation:"Excited to combine my acting and Kathak skills for this opportunity.",videos:[{label:"Screen Test",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand21",roomId:"room1",artistId:"a18",number:21,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:[],notes:[],motivation:"Looking forward to bringing my fitness modeling experience to this shoot.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand22",roomId:"room1",artistId:"a19",number:22,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Perfect for the Afro-contemporary segment.",time:"Mar 15"},{from:"tm2",text:"Her dancehall skills are next level.",time:"Mar 16"}],motivation:"This campaign celebrates exactly the kind of movement I live for every day.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand22",roomId:"room1",artistId:"a19",number:22,status:"selected",confirmationStatus:"rescheduling",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Perfect for the Afro-contemporary segment.",time:"Mar 15"},{from:"tm2",text:"Her dancehall skills are next level.",time:"Mar 16"}],motivation:"This campaign celebrates exactly the kind of movement I live for every day.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand23",roomId:"room1",artistId:"a20",number:23,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Good improviser but might not fit the commercial style.",time:"Mar 18"}],motivation:"I thrive in improvised movement contexts and would bring authenticity to this project.",videos:[],availability:{available:true,conflicts:[]}},
   {id:"cand24",roomId:"room1",artistId:"a21",number:24,status:"not_selected",labels:[],rejectionReason:"Style Mismatch",appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Amazing vocalist but looking for dancers primarily.",time:"Mar 16"}],motivation:"I would bring my Latin pop energy and stage presence.",videos:[{label:"Live Performance",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand25",roomId:"room1",artistId:"a22",number:25,status:"shortlisted",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Sharp mover, great for the commercial segments.",time:"Mar 17"}],motivation:"I have been training for years for an opportunity to dance with Theater Lanced.",videos:[{label:"Commercial Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand25",roomId:"room1",artistId:"a22",number:25,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Sharp mover, great for the commercial segments.",time:"Mar 17"}],motivation:"I have been training for years for an opportunity to dance with Theater Lanced.",videos:[{label:"Commercial Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand26",roomId:"room1",artistId:"a23",number:26,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 18, 2026",reviewedBy:[],notes:[],motivation:"My editorial experience would translate well to this campaign's visual language.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand27",roomId:"room1",artistId:"a24",number:27,status:"selected",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm2",text:"Incredible fusion of classical and street. Yes.",time:"Mar 15"}],motivation:"I bridge classical and street dance worlds and this campaign celebrates that fusion.",videos:[{label:"Fusion Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand27",roomId:"room1",artistId:"a24",number:27,status:"selected",confirmationStatus:"confirmed",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm2",text:"Incredible fusion of classical and street. Yes.",time:"Mar 15"}],motivation:"I bridge classical and street dance worlds and this campaign celebrates that fusion.",videos:[{label:"Fusion Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand28",roomId:"room1",artistId:"a25",number:28,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:["tm2"],notes:[],motivation:"My physical theatre background allows me to bring narrative depth to movement.",videos:[{label:"Demo Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand29",roomId:"room1",artistId:"a26",number:29,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Authentic Afrobeats energy. Would be great in the group sections.",time:"Mar 16"}],motivation:"Bringing authentic West African dance energy is what I do best.",videos:[{label:"Afrobeats Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand29",roomId:"room1",artistId:"a26",number:29,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Authentic Afrobeats energy. Would be great in the group sections.",time:"Mar 16"}],motivation:"Bringing authentic West African dance energy is what I do best.",videos:[{label:"Afrobeats Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand30",roomId:"room1",artistId:"a27",number:30,status:"new",labels:["Internship"],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:[],notes:[],motivation:"I am eager to gain experience on a major commercial campaign.",videos:[],availability:{available:true,conflicts:[]}},
   {id:"cand31",roomId:"room1",artistId:"a28",number:31,status:"not_selected",labels:[],rejectionReason:"Style Mismatch",appliedAt:"Mar 16, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Wonderful singer but not the right fit for a dance-focused campaign.",time:"Mar 17"}],motivation:"My vocal artistry and stage presence could complement the visual elements.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand32",roomId:"room1",artistId:"a29",number:32,status:"shortlisted",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Her fusion style is captivating.",time:"Mar 17"}],motivation:"My blend of Oriental and contemporary movement offers something unique.",videos:[{label:"Fusion Solo",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand32",roomId:"room1",artistId:"a29",number:32,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Her fusion style is captivating.",time:"Mar 17"}],motivation:"My blend of Oriental and contemporary movement offers something unique.",videos:[{label:"Fusion Solo",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand33",roomId:"room1",artistId:"a30",number:33,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Strong physical presence. Could work for the acting segments.",time:"Mar 18"}],motivation:"I bring versatility as both an actor and a physical performer.",videos:[{label:"Monologue",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand34",roomId:"room1",artistId:"a31",number:34,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 20, 2026",reviewedBy:[],notes:[],motivation:"Would love to combine my movement and acting work in a season-long company role.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand35",roomId:"room1",artistId:"a32",number:35,status:"selected",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"A true visionary. Could also help with creative direction.",time:"Mar 15"},{from:"tm2",text:"His multidisciplinary approach is exactly what we need.",time:"Mar 15"}],motivation:"I can bring both performance and choreographic vision to this project.",videos:[{label:"Installation Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand35",roomId:"room1",artistId:"a32",number:35,status:"selected",confirmationStatus:"pending",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 14, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"A true visionary. Could also help with creative direction.",time:"Mar 15"},{from:"tm2",text:"His multidisciplinary approach is exactly what we need.",time:"Mar 15"}],motivation:"I can bring both performance and choreographic vision to this project.",videos:[{label:"Installation Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand36",roomId:"room1",artistId:null,number:36,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 18, 2026",reviewedBy:[],notes:[],motivation:"Fresh out of dance school and ready for my first big opportunity.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Maya Johnson",email:"maya.j@example.com",age:21,height:"5'7\"",nationality:"American",gender:"Female",location:"Chicago, US",img:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg"}},
   {id:"cand37",roomId:"room1",artistId:null,number:37,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Raw talent, worth considering for a smaller role.",time:"Mar 17"}],motivation:"Dance is my life and this campaign speaks to my soul.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Lucas Fernandes",email:"lucas.f@example.com",age:24,height:"5'11\"",nationality:"Brazilian",gender:"Male",location:"Rio de Janeiro, BR",img:"/demo/artists/boris-de-jong/pexels-cottonbro-6221579.jpg"}},
-  {id:"cand38",roomId:"room1",artistId:null,number:38,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Stunning movement quality. Self-taught is impressive.",time:"Mar 16"}],motivation:"I taught myself to dance through YouTube and workshops. This would be life-changing.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Amina Diallo",email:"amina.d@example.com",age:23,height:"5'8\"",nationality:"Senegalese",gender:"Female",location:"Dakar, SN",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-H2_oNczw1yQ-unsplash.jpg"}},
+  {id:"cand38",roomId:"room1",artistId:null,number:38,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Stunning movement quality. Self-taught is impressive.",time:"Mar 16"}],motivation:"I taught myself to dance through YouTube and workshops. This would be life-changing.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Amina Diallo",email:"amina.d@example.com",age:23,height:"5'8\"",nationality:"Senegalese",gender:"Female",location:"Dakar, SN",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-H2_oNczw1yQ-unsplash.jpg"}},
   {id:"cand39",roomId:"room1",artistId:null,number:39,status:"not_selected",labels:[],rejectionReason:"Availability",appliedAt:"Mar 14, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Great dancer but unavailable for shoot dates.",time:"Mar 15"}],motivation:"I would love to be involved in any way possible.",videos:[],availability:{available:false,conflicts:["Apr 1-15 (touring)"]},externalApplicant:{name:"James O'Brien",email:"james.ob@example.com",age:28,height:"6'0\"",nationality:"Irish",gender:"Male",location:"Dublin, IE",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-UicC_FIozPc-unsplash (1).jpg"}},
   {id:"cand40",roomId:"room1",artistId:null,number:40,status:"new",labels:["Internship"],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:[],notes:[],motivation:"Currently studying dance and looking for professional experience.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Sofia Andersson",email:"sofia.a@example.com",age:20,height:"5'6\"",nationality:"Swedish",gender:"Female",location:"Malmö, SE",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-oa7hEAEYMlI-unsplash.jpg"}},
   {id:"cand41",roomId:"room1",artistId:null,number:41,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 17, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Has a unique style. Could fit the avant-garde segments.",time:"Mar 18"}],motivation:"My movement style blends martial arts with contemporary dance.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Hiroshi Yamamoto",email:"hiroshi.y@example.com",age:26,height:"5'9\"",nationality:"Japanese",gender:"Male",location:"Osaka, JP",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-xF2kGH4rqQk-unsplash.jpg"}},
   {id:"cand42",roomId:"room1",artistId:null,number:42,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 20, 2026",reviewedBy:[],notes:[],motivation:"I recently relocated and am looking for my break in the industry.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Fatima Al-Rashid",email:"fatima.ar@example.com",age:22,height:"5'5\"",nationality:"Jordanian",gender:"Female",location:"Amman, JO",img:"/demo/artists/jusef-al-haddad/karsten-winegeart-yRhMsT3udy0-unsplash.jpg"}},
-  {id:"cand43",roomId:"room1",artistId:null,number:43,status:"shortlisted",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Exceptional mover. Very polished.",time:"Mar 16"},{from:"tm2",text:"Agreed, top-tier external candidate.",time:"Mar 16"}],motivation:"I have been training for years for an opportunity like this.",videos:[{label:"Showreel",url:"#",thumb:null},{label:"Studio Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Daniel Kim",email:"daniel.k@example.com",age:25,height:"5'10\"",nationality:"Korean",gender:"Male",location:"Seoul, KR",img:"/demo/banners/pexels-mart-production-7319706.jpg"}},
+  {id:"cand43",roomId:"room1",artistId:null,number:43,status:"potential",labels:["Full Time"],rejectionReason:null,appliedAt:"Mar 15, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Exceptional mover. Very polished.",time:"Mar 16"},{from:"tm2",text:"Agreed, top-tier external candidate.",time:"Mar 16"}],motivation:"I have been training for years for an opportunity like this.",videos:[{label:"Showreel",url:"#",thumb:null},{label:"Studio Footage",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Daniel Kim",email:"daniel.k@example.com",age:25,height:"5'10\"",nationality:"Korean",gender:"Male",location:"Seoul, KR",img:"/demo/banners/pexels-mart-production-7319706.jpg"}},
   {id:"cand44",roomId:"room1",artistId:null,number:44,status:"not_selected",labels:[],rejectionReason:"Height Requirement",appliedAt:"Mar 14, 2026",reviewedBy:["tm1"],notes:[],motivation:"I am passionate about movement and commercial dance.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Isabella Costa",email:"isabella.c@example.com",age:19,height:"5'2\"",nationality:"Portuguese",gender:"Female",location:"Lisbon, PT",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
   {id:"cand45",roomId:"room1",artistId:null,number:45,status:"new",labels:[],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:[],notes:[],motivation:"Hip-hop has been my life since I was twelve. This campaign is a dream.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Marcus Thompson",email:"marcus.t@example.com",age:23,height:"6'1\"",nationality:"British",gender:"Male",location:"Birmingham, UK",img:"/demo/banners/shutterstock_1234830199.jpg"}},
   {id:"cand46",roomId:"room1",artistId:null,number:46,status:"potential",labels:["Freelance"],rejectionReason:null,appliedAt:"Mar 16, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Interesting background in capoeira. Could add diversity.",time:"Mar 17"}],motivation:"My capoeira and contemporary fusion creates dynamic movement.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Ana Souza",email:"ana.s@example.com",age:27,height:"5'6\"",nationality:"Brazilian",gender:"Female",location:"Salvador, BR",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
@@ -517,6 +555,20 @@ const MOCK_CANDIDATES = [
   {id:"cand_j6",roomId:"room3",artistId:null,number:6,status:"potential",labels:[],rejectionReason:null,appliedAt:"Mar 19, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Background looks promising, want to see her teach.",time:"Mar 20"}],motivation:"Modern technique specialist, Limón-trained.",videos:[],availability:{available:true,conflicts:["Tuesdays unavailable"]},externalApplicant:{name:"Priya Sharma",email:"priya.s@example.com",age:29,height:"5'5\"",nationality:"Indian-British",gender:"Female",location:"London, UK",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
   {id:"cand_j7",roomId:"room3",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Experience Level",appliedAt:"Mar 18, 2026",reviewedBy:["tm1"],notes:[],motivation:"Recent graduate looking for first teaching role.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Alex Petrov",email:"alex.p@example.com",age:23,height:"5'9\"",nationality:"Bulgarian",gender:"Male",location:"Sofia, BG",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
 
+  // ── room4 (Orchestra Auditions — Multi-Location) ──
+  {id:"cand_o1",roomId:"room4",artistId:"a1",number:1,status:"selected",confirmationStatus:"confirmed",locationId:"loc_1",labels:["Full Time"],rejectionReason:null,appliedAt:"Apr 2, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Outstanding first violin. Must have.",time:"Apr 4"}],motivation:"I have been performing as concertmaster for five years and am ready for a new challenge.",videos:[{label:"Concerto Excerpt",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_o2",roomId:"room4",artistId:"a2",number:2,status:"selected",confirmationStatus:"confirmed",locationId:"loc_1",labels:["Full Time"],rejectionReason:null,appliedAt:"Apr 3, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm2",text:"Strong viola tone, great section player.",time:"Apr 5"}],motivation:"Looking to join a top-tier orchestra for the upcoming season.",videos:[{label:"Solo Recital",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_o3",roomId:"room4",artistId:"a3",number:3,status:"selected",confirmationStatus:"pending",locationId:"loc_1",labels:["Seasonal"],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm1"],notes:[],motivation:"Cellist with chamber music background, eager to explore orchestral repertoire.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_o4",roomId:"room4",artistId:"a5",number:4,status:"shortlisted",locationId:"loc_1",labels:[],rejectionReason:null,appliedAt:"Apr 5, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Promising flautist, schedule a callback.",time:"Apr 7"}],motivation:"Principal flute at regional orchestra, seeking advancement.",videos:[{label:"Orchestral Excerpts",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_o5",roomId:"room4",artistId:"a8",number:5,status:"new",locationId:"loc_1",labels:[],rejectionReason:null,appliedAt:"Apr 8, 2026",reviewedBy:[],notes:[],motivation:"Recent conservatory graduate with strong sight-reading skills.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_o6",roomId:"room4",artistId:"a10",number:6,status:"selected",confirmationStatus:"confirmed",locationId:"loc_2",labels:["Full Time"],rejectionReason:null,appliedAt:"Apr 3, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Exceptional percussionist — principal-caliber.",time:"Apr 5"}],motivation:"I bring 10 years of professional orchestral percussion experience.",videos:[{label:"Audition Recording",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_o7",roomId:"room4",artistId:"a12",number:7,status:"selected",confirmationStatus:"pending",locationId:"loc_2",labels:["Seasonal"],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Solid oboist, would fit the section well.",time:"Apr 6"}],motivation:"Seeking seasonal orchestral work to complement my teaching schedule.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_o8",roomId:"room4",artistId:"a15",number:8,status:"selected",confirmationStatus:"declined",locationId:"loc_2",labels:["Full Time"],rejectionReason:null,appliedAt:"Apr 2, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Great talent but declined — scheduling conflict.",time:"Apr 8"}],motivation:"Interested in the double bass position for the 2027 season.",videos:[{label:"Recital",url:"#",thumb:null}],availability:{available:false,conflicts:["May 25-26 (prior engagement)"]}},
+  {id:"cand_o9",roomId:"room4",artistId:null,number:9,status:"shortlisted",locationId:"loc_2",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Promising young violinist from Amsterdam.",time:"Apr 8"}],motivation:"Local musician eager to join the orchestra.",videos:[{label:"Showreel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Lotte de Vries",email:"lotte.dv@example.com",age:24,height:"5'6\"",nationality:"Dutch",gender:"Female",location:"Amsterdam, NL",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_o10",roomId:"room4",artistId:null,number:10,status:"new",locationId:"loc_2",labels:[],rejectionReason:null,appliedAt:"Apr 9, 2026",reviewedBy:[],notes:[],motivation:"Viola player with Baroque and modern experience.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Klaus Weber",email:"klaus.w@example.com",age:31,height:"5'11\"",nationality:"German",gender:"Male",location:"Berlin, DE",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_o11",roomId:"room4",artistId:null,number:11,status:"potential",locationId:"loc_1",labels:[],rejectionReason:null,appliedAt:"Apr 7, 2026",reviewedBy:["tm2"],notes:[{from:"tm2",text:"Interesting background in both jazz and classical percussion.",time:"Apr 9"}],motivation:"Versatile percussionist looking for orchestral opportunities.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Marco Bianchi",email:"marco.b@example.com",age:28,height:"5'10\"",nationality:"Italian",gender:"Male",location:"Milan, IT",img:"/demo/banners/fabian-centeno-k4s5mtsyuli-unsplash.jpg"}},
+  {id:"cand_o12",roomId:"room4",artistId:null,number:12,status:"not_selected",locationId:"loc_2",labels:[],rejectionReason:"Experience Level",appliedAt:"Apr 5, 2026",reviewedBy:["tm1"],notes:[],motivation:"Student cellist applying for professional experience.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Emma Lindgren",email:"emma.l@example.com",age:20,height:"5'5\"",nationality:"Swedish",gender:"Female",location:"Gothenburg, SE",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+
   // ── room5 (Residency — Movement Artists) ──
   {id:"cand_r1",roomId:"room5",artistId:"a4",number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 5, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Concept is strong — exploring memory through gesture.",time:"Apr 8"},{from:"tm2",text:"Pitch deck was very thoughtful.",time:"Apr 8"}],motivation:"My new work explores embodied memory through gesture — I need studio time and mentorship to develop it.",videos:[{label:"Studio Sketch",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
   {id:"cand_r2",roomId:"room5",artistId:"a7",number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 7, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Cross-disciplinary, mixes movement with sound design.",time:"Apr 9"}],motivation:"I'm developing a sound-and-movement piece exploring migration narratives.",videos:[],availability:{available:true,conflicts:[]}},
@@ -529,13 +581,13 @@ const MOCK_CANDIDATES = [
   {id:"cand_r9",roomId:"room5",artistId:null,number:9,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm2",text:"Beautiful previous work, strong proposal.",time:"Apr 9"}],motivation:"My new piece is a meditation on stillness and labour.",videos:[{label:"Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Yusuf Demir",email:"yusuf.d@example.com",age:33,height:"5'9\"",nationality:"Turkish",gender:"Male",location:"Istanbul, TR",img:"/demo/banners/shutterstock_1234830199.jpg"}},
 
   // ── room6 (Open Call — Choreographers) ──
-  {id:"cand_o1",roomId:"room6",artistId:"a12",number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 2, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Pitch is bold. 18 minutes, 6 dancers.",time:"Apr 5"}],motivation:"My pitch is a 18-minute work for six dancers exploring African diaspora futures.",videos:[{label:"Choreography Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
-  {id:"cand_o2",roomId:"room6",artistId:"a15",number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm2"],notes:[],motivation:"A 22-minute neoclassical work scored to a new commission from a contemporary composer.",videos:[],availability:{available:true,conflicts:[]}},
-  {id:"cand_o3",roomId:"room6",artistId:null,number:3,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 22, 2026",reviewedBy:[],notes:[],motivation:"Pitching a 12-minute trio exploring disability and dance partnering.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Hana Kim",email:"hana.k@example.com",age:34,height:"5'5\"",nationality:"Korean-American",gender:"Female",location:"Seoul, KR",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
-  {id:"cand_o4",roomId:"room6",artistId:null,number:4,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 23, 2026",reviewedBy:[],notes:[],motivation:"Co-creating with my long-time collaborator — a 20-minute piece with live music.",videos:[{label:"Past Work",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Gabriel Santos",email:"gabriel.s@example.com",age:39,height:"5'10\"",nationality:"Brazilian",gender:"Male",location:"São Paulo, BR",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
-  {id:"cand_o5",roomId:"room6",artistId:null,number:5,status:"potential",labels:[],rejectionReason:null,appliedAt:"Apr 14, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Ambitious concept — 25 dancers. Budget concerns.",time:"Apr 16"}],motivation:"A 20-minute large-ensemble work for 25 dancers — ambitious but possible.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Elena Marchetti",email:"elena.m@example.com",age:41,height:"5'6\"",nationality:"Italian",gender:"Female",location:"Milan, IT",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
-  {id:"cand_o6",roomId:"room6",artistId:null,number:6,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Has commissioned work at three major houses already.",time:"Apr 8"}],motivation:"A 15-minute solo for one of your principal dancers, scored to silence.",videos:[{label:"Previous Commission",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Davide Russo",email:"davide.r@example.com",age:45,height:"6'0\"",nationality:"Italian",gender:"Male",location:"Naples, IT",img:"/demo/banners/shutterstock_1234830199.jpg"}},
-  {id:"cand_o7",roomId:"room6",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Concept Mismatch",appliedAt:"Apr 9, 2026",reviewedBy:["tm2"],notes:[],motivation:"A pop-influenced 10-minute piece for a quartet.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Aaliyah Brooks",email:"aaliyah.b@example.com",age:27,height:"5'7\"",nationality:"American",gender:"Female",location:"New York, US",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
+  {id:"cand_oc1",roomId:"room6",artistId:"a12",number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 2, 2026",reviewedBy:["tm1","tm2"],notes:[{from:"tm1",text:"Pitch is bold. 18 minutes, 6 dancers.",time:"Apr 5"}],motivation:"My pitch is a 18-minute work for six dancers exploring African diaspora futures.",videos:[{label:"Choreography Reel",url:"#",thumb:null}],availability:{available:true,conflicts:[]}},
+  {id:"cand_oc2",roomId:"room6",artistId:"a15",number:2,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 4, 2026",reviewedBy:["tm2"],notes:[],motivation:"A 22-minute neoclassical work scored to a new commission from a contemporary composer.",videos:[],availability:{available:true,conflicts:[]}},
+  {id:"cand_oc3",roomId:"room6",artistId:null,number:3,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 22, 2026",reviewedBy:[],notes:[],motivation:"Pitching a 12-minute trio exploring disability and dance partnering.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Hana Kim",email:"hana.k@example.com",age:34,height:"5'5\"",nationality:"Korean-American",gender:"Female",location:"Seoul, KR",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
+  {id:"cand_oc4",roomId:"room6",artistId:null,number:4,status:"new",labels:[],rejectionReason:null,appliedAt:"Apr 23, 2026",reviewedBy:[],notes:[],motivation:"Co-creating with my long-time collaborator — a 20-minute piece with live music.",videos:[{label:"Past Work",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Gabriel Santos",email:"gabriel.s@example.com",age:39,height:"5'10\"",nationality:"Brazilian",gender:"Male",location:"São Paulo, BR",img:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"}},
+  {id:"cand_oc5",roomId:"room6",artistId:null,number:5,status:"potential",labels:[],rejectionReason:null,appliedAt:"Apr 14, 2026",reviewedBy:["tm3"],notes:[{from:"tm3",text:"Ambitious concept — 25 dancers. Budget concerns.",time:"Apr 16"}],motivation:"A 20-minute large-ensemble work for 25 dancers — ambitious but possible.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Elena Marchetti",email:"elena.m@example.com",age:41,height:"5'6\"",nationality:"Italian",gender:"Female",location:"Milan, IT",img:"/demo/banners/gwen-king-m3th3riq9-w-unsplash.jpg"}},
+  {id:"cand_oc6",roomId:"room6",artistId:null,number:6,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"Apr 6, 2026",reviewedBy:["tm1"],notes:[{from:"tm1",text:"Has commissioned work at three major houses already.",time:"Apr 8"}],motivation:"A 15-minute solo for one of your principal dancers, scored to silence.",videos:[{label:"Previous Commission",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Davide Russo",email:"davide.r@example.com",age:45,height:"6'0\"",nationality:"Italian",gender:"Male",location:"Naples, IT",img:"/demo/banners/shutterstock_1234830199.jpg"}},
+  {id:"cand_oc7",roomId:"room6",artistId:null,number:7,status:"not_selected",labels:[],rejectionReason:"Concept Mismatch",appliedAt:"Apr 9, 2026",reviewedBy:["tm2"],notes:[],motivation:"A pop-influenced 10-minute piece for a quartet.",videos:[],availability:{available:true,conflicts:[]},externalApplicant:{name:"Aaliyah Brooks",email:"aaliyah.b@example.com",age:27,height:"5'7\"",nationality:"American",gender:"Female",location:"New York, US",img:"/demo/banners/hulki-okan-tabak-paog427w_as-unsplash-2.jpg"}},
 
   // ── room7 (Competition — Young Choreographer Award) ──
   {id:"cand_c1",roomId:"room7",artistId:null,number:1,status:"shortlisted",labels:[],rejectionReason:null,appliedAt:"May 4, 2026",reviewedBy:["tm1","tm2","tm3"],notes:[{from:"tm1",text:"Strong technical foundation, exciting voice.",time:"May 8"}],motivation:"My piece 'Threshold' explores liminal spaces in queer identity.",videos:[{label:"Audition Piece",url:"#",thumb:null}],availability:{available:true,conflicts:[]},externalApplicant:{name:"Casey Ward",email:"casey.w@example.com",age:26,height:"5'8\"",nationality:"American",gender:"Non-binary",location:"Berlin, DE",img:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"}},
@@ -562,8 +614,8 @@ const MOCK_CANDIDATES = [
 
 const MOCK_TEMPLATES = [
   {id:"tpl1",roomId:"room1",category:"invitation",name:"Invitation",message:"Dear [first_name],\n\nCongratulations! We're delighted to invite you to the next round of auditions for [room_title].\n\nPlease arrive at [location] on [date] at least 30 minutes before your call time.\n\nWe look forward to seeing you!\n\nBest regards,\nTheater Lanced",active:true},
-  {id:"tpl2",roomId:"room1",category:"shortlist",name:"Shortlist Notification",message:"Dear [first_name],\n\nThank you for your application to [room_title]. We're pleased to inform you that you have been shortlisted.\n\nWe will be in touch soon with next steps.\n\nBest regards,\nTheater Lanced",active:true},
   {id:"tpl3",roomId:"room1",category:"waitlist",name:"Waitlist",message:"Dear [first_name],\n\nThank you for your participation in [room_title]. We would like to place you on our waitlist as we finalize our selections.\n\nWe will notify you of any updates.\n\nBest regards,\nTheater Lanced",active:true},
+  {id:"tpl7",roomId:"room1",category:"early_invite",name:"Early Invite",message:"Dear [first_name],\n\nWe've been impressed by your application to [room_title] and would like to extend an early invitation for you to participate.\n\nPlease confirm your attendance at your earliest convenience.\n\nWe look forward to seeing you!\n\nBest regards,\nTheater Lanced",active:true},
   {id:"tpl4",roomId:"room1",category:"rejection",name:"General Rejection",message:"Dear [first_name],\n\nThank you for applying to [room_title]. After careful consideration, we've decided to move forward with other candidates.\n\nWe encourage you to apply for future opportunities.\n\nBest regards,\nTheater Lanced",active:true},
   {id:"tpl5",roomId:"room1",category:"rejection",name:"Height Requirement",message:"Dear [first_name],\n\nThank you for your interest in [room_title]. Unfortunately, the specific height requirements for this project mean we are unable to move forward with your application.\n\nWe hope to work with you in the future.\n\nBest regards,\nTheater Lanced",active:true},
   {id:"tpl6",roomId:"room1",category:"rejection",name:"Experience Level",message:"Dear [first_name],\n\nWe appreciate your interest in [room_title]. At this time, we are looking for candidates with more professional experience for this particular project.\n\nPlease don't hesitate to apply for future castings.\n\nBest regards,\nTheater Lanced",active:true},
@@ -588,50 +640,50 @@ const MOCK_ROUNDS = [
   },
 ];
 
-const MOCK_SESSIONS = [
-  {id:"s1", roundId:"rd1", date:"May 2, 2026", time:"10:00", endTime:"13:00", location:"Studio 1, Theater Lanced", capacity:24, address:"12 Stage Lane, London, UK"},
-  {id:"s2", roundId:"rd1", date:"May 2, 2026", time:"14:00", endTime:"17:00", location:"Studio 1, Theater Lanced", capacity:24, address:"12 Stage Lane, London, UK"},
-  {id:"s3", roundId:"rd2", date:"May 16, 2026", time:"11:00", endTime:"15:00", location:"Studio 1, Theater Lanced", capacity:18, address:"12 Stage Lane, London, UK"},
-];
-
 const MOCK_GROUPS = [
-  {id:"g1", roundId:"rd1", sessionId:"s1", name:"Group A", capacity:12, createdAtPhase:"setup", color:"#604DFF",
+  {id:"g1", roundId:"rd1", name:"Group A", capacity:12, color:"#604DFF",
+    date:"May 2, 2026", time:"10:00", endTime:"11:30", location:"Studio 1, Theater Lanced", address:"12 Stage Lane, London, UK",
     rules:[{key:"role", criteria:{role:"Ensemble"}, enforcement:"soft"}, {key:"discipline", criteria:{discipline:"Contemporary"}, enforcement:"soft"}]},
-  {id:"g2", roundId:"rd1", sessionId:"s1", name:"Group B", capacity:12, createdAtPhase:"setup", color:"#1A56DB",
+  {id:"g2", roundId:"rd1", name:"Group B", capacity:12, color:"#1A56DB",
+    date:"May 2, 2026", time:"11:30", endTime:"13:00", location:"Studio 1, Theater Lanced", address:"12 Stage Lane, London, UK",
     rules:[{key:"role", criteria:{role:"Soloist"}, enforcement:"soft"}]},
-  {id:"g3", roundId:"rd1", sessionId:"s2", name:"Group C", capacity:12, createdAtPhase:"setup", color:"#1DB954",
+  {id:"g3", roundId:"rd1", name:"Group C", capacity:12, color:"#1DB954",
+    date:"May 2, 2026", time:"14:00", endTime:"15:30", location:"Studio 1, Theater Lanced", address:"12 Stage Lane, London, UK",
     rules:[{key:"discipline", criteria:{discipline:"Classical"}, enforcement:"soft"}]},
-  {id:"g4", roundId:"rd1", sessionId:"s2", name:"Group D", capacity:12, createdAtPhase:"setup", color:"#F5A623",
+  {id:"g4", roundId:"rd1", name:"Group D", capacity:12, color:"#F5A623",
+    date:"May 2, 2026", time:"15:30", endTime:"17:00", location:"Studio 1, Theater Lanced", address:"12 Stage Lane, London, UK",
     rules:[]},
-  {id:"g5", roundId:"rd2", sessionId:"s3", name:"Callback", capacity:18, createdAtPhase:"setup", color:"#7A66FF", rules:[]},
+  {id:"g5", roundId:"rd2", name:"Callback", capacity:18, color:"#7A66FF",
+    date:"May 16, 2026", time:"11:00", endTime:"15:00", location:"Studio 1, Theater Lanced", address:"12 Stage Lane, London, UK",
+    rules:[]},
 ];
 
 /* RoundParticipants for Round 1 — pulls from existing candidates in room1 with status selected/shortlisted */
 const MOCK_PARTICIPANTS = [
-  // Group A — Contemporary Ensemble (s1, 10:00)
-  {id:"rp1", roundId:"rd1", artistId:"a1", sessionId:"s1", groupId:"g1", auditionNumber:1, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp2", roundId:"rd1", artistId:"a2", sessionId:"s1", groupId:"g1", auditionNumber:2, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp3", roundId:"rd1", artistId:"a3", sessionId:"s1", groupId:"g1", auditionNumber:3, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp4", roundId:"rd1", artistId:"a4", sessionId:"s1", groupId:"g1", auditionNumber:4, registrationStatus:"late", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp5", roundId:"rd1", artistId:"a5", sessionId:"s1", groupId:"g1", auditionNumber:5, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp6", roundId:"rd1", artistId:"a6", sessionId:"s1", groupId:"g1", auditionNumber:6, registrationStatus:"no_show", confirmationStatus:"confirmed", outcome:"active"},
-  // Group B — Soloists (s1, 10:00)
-  {id:"rp7", roundId:"rd1", artistId:"a7", sessionId:"s1", groupId:"g2", auditionNumber:7, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp8", roundId:"rd1", artistId:"a11", sessionId:"s1", groupId:"g2", auditionNumber:8, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp9", roundId:"rd1", artistId:"a14", sessionId:"s1", groupId:"g2", auditionNumber:9, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp10", roundId:"rd1", artistId:"a17", sessionId:"s1", groupId:"g2", auditionNumber:10, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp11", roundId:"rd1", artistId:"a19", sessionId:"s1", groupId:"g2", auditionNumber:11, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
-  // Group C — Classical (s2, 14:00)
-  {id:"rp12", roundId:"rd1", artistId:"a22", sessionId:"s2", groupId:"g3", auditionNumber:12, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp13", roundId:"rd1", artistId:"a24", sessionId:"s2", groupId:"g3", auditionNumber:13, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp14", roundId:"rd1", artistId:"a25", sessionId:"s2", groupId:"g3", auditionNumber:14, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp15", roundId:"rd1", artistId:"a26", sessionId:"s2", groupId:"g3", auditionNumber:15, registrationStatus:"pending", confirmationStatus:"pending", outcome:"active"},
-  // Group D — Mixed (s2, 14:00)
-  {id:"rp16", roundId:"rd1", artistId:"a29", sessionId:"s2", groupId:"g4", auditionNumber:16, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp17", roundId:"rd1", artistId:"a30", sessionId:"s2", groupId:"g4", auditionNumber:17, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
-  {id:"rp18", roundId:"rd1", artistId:"a31", sessionId:"s2", groupId:"g4", auditionNumber:18, registrationStatus:"pending", confirmationStatus:"declined", outcome:"active"},
+  // Group A — Contemporary Ensemble (10:00)
+  {id:"rp1", roundId:"rd1", artistId:"a1", groupId:"g1", auditionNumber:1, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp2", roundId:"rd1", artistId:"a2", groupId:"g1", auditionNumber:2, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp3", roundId:"rd1", artistId:"a3", groupId:"g1", auditionNumber:3, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp4", roundId:"rd1", artistId:"a4", groupId:"g1", auditionNumber:4, registrationStatus:"late", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp5", roundId:"rd1", artistId:"a5", groupId:"g1", auditionNumber:5, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp6", roundId:"rd1", artistId:"a6", groupId:"g1", auditionNumber:6, registrationStatus:"no_show", confirmationStatus:"confirmed", outcome:"active"},
+  // Group B — Soloists (11:30)
+  {id:"rp7", roundId:"rd1", artistId:"a7", groupId:"g2", auditionNumber:7, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp8", roundId:"rd1", artistId:"a11", groupId:"g2", auditionNumber:8, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp9", roundId:"rd1", artistId:"a14", groupId:"g2", auditionNumber:9, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp10", roundId:"rd1", artistId:"a17", groupId:"g2", auditionNumber:10, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp11", roundId:"rd1", artistId:"a19", groupId:"g2", auditionNumber:11, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active"},
+  // Group C — Classical (14:00)
+  {id:"rp12", roundId:"rd1", artistId:"a22", groupId:"g3", auditionNumber:12, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp13", roundId:"rd1", artistId:"a24", groupId:"g3", auditionNumber:13, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp14", roundId:"rd1", artistId:"a25", groupId:"g3", auditionNumber:14, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp15", roundId:"rd1", artistId:"a26", groupId:"g3", auditionNumber:15, registrationStatus:"pending", confirmationStatus:"pending", outcome:"active"},
+  // Group D — Mixed (15:30)
+  {id:"rp16", roundId:"rd1", artistId:"a29", groupId:"g4", auditionNumber:16, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp17", roundId:"rd1", artistId:"a30", groupId:"g4", auditionNumber:17, registrationStatus:"pending", confirmationStatus:"confirmed", outcome:"active"},
+  {id:"rp18", roundId:"rd1", artistId:"a31", groupId:"g4", auditionNumber:18, registrationStatus:"pending", confirmationStatus:"declined", outcome:"active"},
   // Walk-in created at registration
-  {id:"rp19", roundId:"rd1", artistId:null, sessionId:"s1", groupId:"g1", auditionNumber:19, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active",
+  {id:"rp19", roundId:"rd1", artistId:null, groupId:"g1", auditionNumber:19, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active",
     walkIn:{name:"Maya Johnson", email:"maya.j@example.com", img:"/demo/artists/boris-de-jong/pexels-cottonbro-6221378.jpg"}},
 ];
 
@@ -665,6 +717,23 @@ const MOCK_ROUND_NOTES = [
 const MOCK_ROUND_MEDIA = [
   {id:"rm1", roundId:"rd1", scope:"group", groupId:"g1", uploaderId:"tm1", type:"video", url:"#", label:"Group A — full class recording", timestamp:"May 2, 11:00", thumb:"/demo/banners/pexels-mart-production-7319706.jpg"},
   {id:"rm2", roundId:"rd1", scope:"artist", artistId:"a11", uploaderId:"tm2", type:"video", url:"#", label:"Solo variation", timestamp:"May 2, 11:14", thumb:"/demo/banners/jens-thekkeveettil-dbwvuqboou8-unsplash.jpg"},
+];
+
+/* ━━━ PRIVATE AUDITION TIME SLOTS ━━━ */
+const MOCK_TIME_SLOTS = [
+  // Berlin Studio (loc_1) — Private format, May 18-19
+  {id:"ts1",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"09:00",endTime:"09:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:["cand_o1"]},
+  {id:"ts2",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"09:40",endTime:"10:10",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:["cand_o2"]},
+  {id:"ts3",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"10:20",endTime:"10:50",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts4",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"11:00",endTime:"11:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts5",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"11:40",endTime:"12:10",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts6",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"14:00",endTime:"14:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts7",roomId:"room4",locationId:"loc_1",date:"May 18, 2026",startTime:"14:40",endTime:"15:10",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts8",roomId:"room4",locationId:"loc_1",date:"May 19, 2026",startTime:"09:00",endTime:"09:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:["cand_o3"]},
+  {id:"ts9",roomId:"room4",locationId:"loc_1",date:"May 19, 2026",startTime:"09:40",endTime:"10:10",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts10",roomId:"room4",locationId:"loc_1",date:"May 19, 2026",startTime:"10:20",endTime:"10:50",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts11",roomId:"room4",locationId:"loc_1",date:"May 19, 2026",startTime:"11:00",endTime:"11:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
+  {id:"ts12",roomId:"room4",locationId:"loc_1",date:"May 19, 2026",startTime:"14:00",endTime:"14:30",slotDuration:30,bufferMinutes:10,maxPerSlot:1,bookedBy:[]},
 ];
 
 /* ━━━ NETWORK DATA ━━━ */
@@ -1033,7 +1102,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .dark .room-card{background:var(--glass-bg);border-color:var(--glass-border)}
 .dark .sc-card{background:var(--glass-bg);border-color:var(--glass-border)}
 .dark .dash-section{background:var(--glass-bg);border-color:var(--glass-border)}
-.dark .dash-room-card{background:rgba(255,255,255,.04);border-color:var(--glass-border)}
+.dark .dash-room-card{background:rgba(255,255,255,.06);border-color:var(--glass-border)}
 .dark .dash-banner{background:rgba(20,18,40,.42);border:1px solid rgba(255,255,255,.08)}
 .dark .dash-banner-blob{opacity:.4}
 .dark .dash-banner-text div:first-child{color:var(--g5)}
@@ -1049,6 +1118,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .dark .cr-status-btn.active.sel{background:rgba(29,185,84,.15)!important;border-color:var(--green)!important;color:var(--green)!important}
 .dark .cr-status-btn.active.shl{background:rgba(122,102,255,.2)!important;border-color:var(--ac)!important;color:var(--ac)!important}
 .dark .cr-status-btn.active.pot{background:rgba(245,166,35,.12)!important;border-color:var(--amber)!important;color:var(--amber)!important}
+.dark .cr-status-btn.active.wl{background:rgba(59,130,246,.15)!important;border-color:#3B82F6!important;color:#3B82F6!important}
 .dark .cr-status-btn.active.rej{background:rgba(255,107,122,.12)!important;border-color:var(--red)!important;color:var(--red)!important}
 .dark .room-stat-card{box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .dark .room-overview-banner{box-shadow:0 4px 16px rgba(0,0,0,.3)}
@@ -1137,7 +1207,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 
 /* Shell + Sidebar */
 .shell{display:flex;min-height:100vh}
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sb-w);background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-right:1px solid var(--glass-border);box-shadow:none;display:flex;flex-direction:column;z-index:100;transition:width .25s cubic-bezier(.4,0,.2,1)}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sb-w);background:rgba(255,255,255,.35);backdrop-filter:saturate(1.3) blur(20px);-webkit-backdrop-filter:saturate(1.3) blur(20px);border-right:1px solid rgba(255,255,255,.3);box-shadow:none;display:flex;flex-direction:column;z-index:100;transition:width .25s cubic-bezier(.4,0,.2,1)}
 @supports not (backdrop-filter:blur(1px)){.sidebar{background:var(--bg)}}
 .sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--g1)}
 .sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:0}
@@ -1749,6 +1819,35 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 @keyframes blobMoveAria3{0%{transform:translate(0,0) scale(1)}50%{transform:translate(50px,-50px) scale(1.08)}100%{transform:translate(0,0) scale(1)}}
 .dark .aria-blob{opacity:.4}
 @media (prefers-reduced-motion:reduce){.aria-blob{animation:none}}
+.dash-bg{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
+.dash-blob{position:absolute;border-radius:50%;filter:blur(90px);will-change:transform,opacity;opacity:0}
+.dash-blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(100,90,255,.40),rgba(90,80,240,.06) 70%);top:-10%;left:-5%;animation:dashSweep1 36s linear infinite}
+.dash-blob-2{width:520px;height:520px;background:radial-gradient(circle,rgba(80,110,240,.36),rgba(100,130,250,.05) 70%);bottom:-8%;right:-6%;animation:dashSweep2 44s linear infinite;animation-delay:-12s}
+.dash-blob-3{width:460px;height:460px;background:radial-gradient(circle,rgba(75,95,235,.34),rgba(85,105,240,.04) 70%);top:30%;left:40%;animation:dashSweep3 32s linear infinite;animation-delay:-20s}
+.dash-blob-4{width:380px;height:380px;background:radial-gradient(circle,rgba(110,100,245,.30),rgba(100,120,240,.04) 70%);top:10%;right:15%;animation:dashSweep4 40s linear infinite;animation-delay:-8s}
+@keyframes dashSweep1{0%{transform:translate(-60px,-40px) scale(1);opacity:.25}25%{opacity:.55}50%{transform:translate(80px,60px) scale(1.15);opacity:.6}75%{opacity:.5}100%{transform:translate(-60px,-40px) scale(1);opacity:.25}}
+@keyframes dashSweep2{0%{transform:translate(70px,30px) scale(1.05);opacity:.2}25%{opacity:.5}50%{transform:translate(-60px,-50px) scale(1.2);opacity:.55}75%{opacity:.45}100%{transform:translate(70px,30px) scale(1.05);opacity:.2}}
+@keyframes dashSweep3{0%{transform:translate(-50px,50px) scale(.95);opacity:.3}25%{opacity:.55}50%{transform:translate(60px,-40px) scale(1.12);opacity:.6}75%{opacity:.48}100%{transform:translate(-50px,50px) scale(.95);opacity:.3}}
+@keyframes dashSweep4{0%{transform:translate(50px,-60px) scale(1);opacity:.22}25%{opacity:.48}50%{transform:translate(-40px,50px) scale(1.18);opacity:.52}75%{opacity:.42}100%{transform:translate(50px,-60px) scale(1);opacity:.22}}
+.dark .dash-blob{filter:blur(100px)}
+@media(prefers-reduced-motion:reduce){.dash-blob{animation:none!important;opacity:.45!important}}
+.brush-field{position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:0;--brush-intensity:.7;-webkit-mask-image:radial-gradient(ellipse at center,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse at center,#000 60%,transparent 100%)}
+.brush{position:absolute;top:50%;left:50%;background-repeat:no-repeat;background-size:100% 100%;background-position:center;opacity:0;will-change:transform,opacity;transform:translate3d(-50%,-50%,0);border-radius:50%;filter:blur(40px) saturate(1.5) contrast(1.15);mix-blend-mode:multiply}
+.brush.a{background-image:radial-gradient(ellipse 60% 45% at 50% 50%,color-mix(in oklab,var(--ac) 95%,transparent) 0%,color-mix(in oklab,var(--ac) 70%,transparent) 35%,color-mix(in oklab,var(--ac) 25%,transparent) 65%,transparent 80%);width:80%;aspect-ratio:16/9;animation:sweep-a 32s linear infinite}
+.brush.b{background-image:radial-gradient(ellipse 70% 40% at 45% 55%,color-mix(in oklab,var(--ac) 90%,transparent) 0%,color-mix(in oklab,var(--ac) 60%,transparent) 40%,color-mix(in oklab,var(--ac) 20%,transparent) 70%,transparent 82%);width:70%;aspect-ratio:5/3;animation:sweep-b 44s linear infinite;animation-delay:-10s}
+.brush.c{background-image:radial-gradient(ellipse 55% 50% at 55% 45%,color-mix(in oklab,var(--ac) 95%,transparent) 0%,color-mix(in oklab,var(--ac) 65%,transparent) 38%,color-mix(in oklab,var(--ac) 25%,transparent) 68%,transparent 80%);width:90%;aspect-ratio:16/9;animation:sweep-c 38s linear infinite;animation-delay:-22s}
+.brush.d{background-image:radial-gradient(ellipse 65% 35% at 50% 50%,color-mix(in oklab,var(--ac) 85%,transparent) 0%,color-mix(in oklab,var(--ac) 55%,transparent) 42%,color-mix(in oklab,var(--ac) 20%,transparent) 72%,transparent 85%);width:65%;aspect-ratio:4/3;animation:sweep-d 50s linear infinite;animation-delay:-16s}
+.brush.e{background-image:radial-gradient(ellipse 60% 60% at 50% 50%,color-mix(in oklab,var(--ac) 80%,transparent) 0%,color-mix(in oklab,var(--ac) 40%,transparent) 45%,transparent 78%);width:55%;aspect-ratio:1/1;animation:sweep-e 56s linear infinite;animation-delay:-28s}
+.brush.f{background-image:radial-gradient(ellipse 65% 55% at 50% 50%,color-mix(in oklab,var(--ac) 75%,transparent) 0%,color-mix(in oklab,var(--ac) 35%,transparent) 50%,transparent 80%);width:60%;aspect-ratio:6/5;animation:sweep-f 48s linear infinite;animation-delay:-8s}
+.brush-grain{position:absolute;inset:-10%;pointer-events:none;opacity:.28;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+.dark .brush{mix-blend-mode:screen;filter:blur(40px) saturate(1.2)}
+@media(prefers-reduced-motion:reduce){.brush{animation:none!important;opacity:.6!important;transform:translate3d(-50%,-50%,0)!important}}
+@keyframes sweep-a{0%{transform:translate3d(-90%,-40%,0) rotate(-8deg) scale(1.05);opacity:0}15%{opacity:calc(.85*var(--brush-intensity))}50%{transform:translate3d(0%,-10%,0) rotate(4deg) scale(1.25);opacity:calc(1*var(--brush-intensity))}85%{opacity:calc(.7*var(--brush-intensity))}100%{transform:translate3d(90%,20%,0) rotate(12deg) scale(1.1);opacity:0}}
+@keyframes sweep-b{0%{transform:translate3d(80%,30%,0) rotate(8deg) scale(1.1);opacity:0}20%{opacity:calc(.8*var(--brush-intensity))}50%{transform:translate3d(-10%,10%,0) rotate(-6deg) scale(1.3);opacity:calc(1*var(--brush-intensity))}80%{opacity:calc(.75*var(--brush-intensity))}100%{transform:translate3d(-100%,40%,0) rotate(-14deg) scale(1.15);opacity:0}}
+@keyframes sweep-c{0%{transform:translate3d(-80%,50%,0) rotate(-4deg) scale(.95);opacity:0}18%{opacity:calc(.85*var(--brush-intensity))}50%{transform:translate3d(20%,30%,0) rotate(6deg) scale(1.2);opacity:calc(.95*var(--brush-intensity))}82%{opacity:calc(.75*var(--brush-intensity))}100%{transform:translate3d(100%,60%,0) rotate(14deg) scale(1.05);opacity:0}}
+@keyframes sweep-d{0%{transform:translate3d(80%,-50%,0) rotate(10deg) scale(1);opacity:0}20%{opacity:calc(.75*var(--brush-intensity))}50%{transform:translate3d(0%,0%,0) rotate(-8deg) scale(1.25);opacity:calc(.9*var(--brush-intensity))}80%{opacity:calc(.7*var(--brush-intensity))}100%{transform:translate3d(-90%,30%,0) rotate(-18deg) scale(1.1);opacity:0}}
+@keyframes sweep-e{0%{transform:translate3d(-70%,-70%,0) rotate(15deg) scale(.9);opacity:0}20%{opacity:calc(.7*var(--brush-intensity))}50%{transform:translate3d(30%,-50%,0) rotate(-10deg) scale(1.15);opacity:calc(.85*var(--brush-intensity))}80%{opacity:calc(.65*var(--brush-intensity))}100%{transform:translate3d(110%,-30%,0) rotate(-22deg) scale(1);opacity:0}}
+@keyframes sweep-f{0%{transform:translate3d(60%,70%,0) rotate(-12deg) scale(1);opacity:0}22%{opacity:calc(.7*var(--brush-intensity))}50%{transform:translate3d(-20%,50%,0) rotate(8deg) scale(1.2);opacity:calc(.9*var(--brush-intensity))}80%{opacity:calc(.6*var(--brush-intensity))}100%{transform:translate3d(-100%,30%,0) rotate(20deg) scale(1.05);opacity:0}}
 .aria-hero{text-align:center;margin-bottom:36px}
 .aria-mark{display:inline-flex;align-items:center;gap:8px;color:var(--ac);font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.18em;margin-bottom:18px}
 .aria-title{font-family:var(--sans);font-size:34px;font-weight:600;line-height:1.1;letter-spacing:-.02em;color:var(--tx);margin-bottom:10px}
@@ -2169,6 +2268,55 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
   .filter-side-panel .afm-range input{font-size:14px}
 }
 
+/* Schedule Setup Panel (Calendly-style) */
+.sched-panel{position:fixed;top:12px;right:12px;bottom:12px;width:460px;z-index:201;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.1) blur(3px);-webkit-backdrop-filter:saturate(1.1) blur(3px);border:1px solid rgba(255,255,255,.5);border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;animation:filterPanelSlideIn .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.dark .sched-panel{background:rgba(28,28,38,.86);border-color:rgba(255,255,255,.06);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.sched-panel .sp-header{padding:20px 24px 16px;border-bottom:1px solid var(--g2)}
+.sched-panel .sp-header h2{font-family:var(--sans);font-size:18px;font-weight:600;letter-spacing:-.01em;margin:0 0 2px;color:var(--tx)}
+.sched-panel .sp-header .sp-sub{font-size:12px;color:var(--g4);line-height:1.5}
+.sched-panel .sp-close{position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:50%;border:none;background:transparent;color:var(--g4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sched-panel .sp-close:hover{background:var(--g1);color:var(--tx)}
+.sched-panel .sp-body{flex:1;overflow-y:auto;padding:20px 24px;scrollbar-gutter:stable}
+.sched-panel .sp-body::-webkit-scrollbar{width:6px}
+.sched-panel .sp-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
+.sched-panel .sp-section{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--g1)}
+.sched-panel .sp-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.sched-panel .sp-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g5);margin-bottom:10px}
+.sched-panel .sp-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sched-panel .sp-row label{font-size:12px;font-weight:500;color:var(--g5);min-width:90px;flex-shrink:0}
+.sched-panel .sp-row select,.sched-panel .sp-row input[type="text"],.sched-panel .sp-row input[type="time"]{height:34px;padding:0 10px;border:1px solid var(--g2);border-radius:8px;background:var(--sf);font-family:var(--sans);font-size:12px;color:var(--tx);outline:none;transition:border .15s}
+.sched-panel .sp-row select:focus,.sched-panel .sp-row input:focus{border-color:var(--ac)}
+.sched-panel .sp-day{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--g0)}
+.sched-panel .sp-day:last-child{border-bottom:none}
+.sched-panel .sp-day-label{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;transition:all .15s}
+.sched-panel .sp-day-label.active{background:var(--tx)}
+.sched-panel .sp-day-label.inactive{background:var(--g3);opacity:.5}
+.sched-panel .sp-day-slots{flex:1;display:flex;flex-direction:column;gap:4px;min-height:36px;justify-content:center}
+.sched-panel .sp-slot-row{display:flex;align-items:center;gap:6px}
+.sched-panel .sp-slot-row input[type="time"]{width:88px;height:30px;padding:0 6px;border:1px solid var(--g2);border-radius:6px;font-family:var(--sans);font-size:12px;background:var(--sf);color:var(--tx);outline:none}
+.sched-panel .sp-slot-row input[type="time"]:focus{border-color:var(--ac)}
+.sched-panel .sp-slot-sep{font-size:12px;color:var(--g3);font-weight:500}
+.sched-panel .sp-slot-btn{width:24px;height:24px;border-radius:50%;border:none;background:transparent;color:var(--g4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.sched-panel .sp-slot-btn:hover{background:var(--g1);color:var(--tx)}
+.sched-panel .sp-slot-btn.add{color:var(--ac)}
+.sched-panel .sp-slot-btn.add:hover{background:rgba(96,77,255,.08)}
+.sched-panel .sp-unavailable{font-size:12px;color:var(--g4);font-style:italic}
+.sched-panel .sp-actions{display:flex;gap:8px;padding:14px 24px;border-top:1px solid var(--g2);background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dark .sched-panel .sp-actions{background:rgba(0,0,0,.15)}
+.sched-panel .sp-actions .btn{flex:1}
+.sched-panel .sp-preview-card{padding:16px;border:1px solid var(--g2);border-radius:14px;background:var(--g0);text-align:center}
+.sched-panel .sp-preview-card h4{margin:0 0 4px;font-size:14px;font-weight:600;color:var(--tx)}
+.sched-panel .sp-preview-card p{margin:0;font-size:11px;color:var(--g4);line-height:1.5}
+.sp-format-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sp-format-card{border:1.5px solid var(--border,var(--g2));border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .15s;background:transparent}
+.sp-format-card:hover{border-color:var(--p,var(--ac));background:rgba(99,91,255,.04)}
+.sp-format-card.active{border-color:var(--p,var(--ac));background:rgba(99,91,255,.07);box-shadow:0 0 0 3px rgba(99,91,255,.10)}
+.sp-format-card h4{margin:8px 0 4px;font-size:13px;font-weight:600}
+.sp-format-card p{font-size:11.5px;color:var(--g4);margin:0}
+@media(max-width:768px){
+  .sched-panel{top:auto!important;right:0!important;bottom:0!important;left:0!important;width:100%!important;max-height:85vh!important;border-radius:24px 24px 0 0!important;animation:slideInUp .25s cubic-bezier(.4,0,.2,1)!important;background:var(--sf)!important;backdrop-filter:none!important;border:none!important}
+}
+
 /* New Showcase flow */
 .new-sc-modal{width:100%;max-width:560px;max-height:90vh;overflow-y:auto;background:var(--sf);border-radius:24px;padding:36px;animation:scaleIn .2s}
 .new-sc-modal::-webkit-scrollbar{width:0}
@@ -2440,7 +2588,7 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .dash-banner-blob-2{width:280px;height:280px;background:radial-gradient(circle,rgba(120,100,220,.5),rgba(150,130,240,.08));bottom:-60%;right:-5%;animation:blobMove2 25s ease-in-out infinite}
 .dash-banner-blob-3{width:240px;height:240px;background:radial-gradient(circle,rgba(96,77,255,.4),rgba(130,110,230,.06));top:30%;left:55%;animation:blobMove3 18s ease-in-out infinite}
 .dash-banner-text{position:relative;color:var(--tx);z-index:1}
-.dash-grid{display:grid;grid-template-columns:1fr 380px;gap:28px}
+.dash-grid{display:grid;grid-template-columns:1fr 340px;gap:28px}
 .dash-section{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:16px;padding:22px;animation:fadeIn .24s ease-out both;box-shadow:var(--glass-shadow)}
 @supports not (backdrop-filter:blur(1px)){.dash-section{background:var(--sf)}}
 .dash-section:nth-child(1){animation-delay:.1s}.dash-section:nth-child(2){animation-delay:.18s}.dash-section:nth-child(3){animation-delay:.26s}.dash-section:nth-child(4){animation-delay:.34s}
@@ -2448,19 +2596,19 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .dash-section-header h3{font-size:16px;font-weight:700}
 .btn-link{background:none;border:none;color:var(--ac);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
 .btn-link:hover{text-decoration:underline}
-.dash-room-card{padding:14px;border:1px solid var(--glass-border);border-radius:12px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);margin-bottom:8px;background:rgba(255,255,255,.28);backdrop-filter:var(--glass-blur-soft);-webkit-backdrop-filter:var(--glass-blur-soft)}
-.dash-room-card:nth-child(1){animation-delay:.05s}.dash-room-card:nth-child(2){animation-delay:.1s}.dash-room-card:nth-child(3){animation-delay:.15s}.dash-room-card:nth-child(4){animation-delay:.2s}
+.dash-cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.dash-room-card{border:1px solid var(--glass-border);border-radius:16px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);background:rgba(255,255,255,.52);backdrop-filter:saturate(1.2) blur(8px);-webkit-backdrop-filter:saturate(1.2) blur(8px);overflow:hidden}
 .dash-room-card:active{transform:scale(.98)}
-.dash-room-card:hover{border-color:var(--ac);box-shadow:0 2px 8px rgba(96,77,255,.06)}
-.drc-applicants{display:flex;align-items:center;gap:0;margin-top:10px}
-.drc-applicants img{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--sf);margin-left:-8px;transition:transform .2s}
-.drc-applicants img:first-child{margin-left:0}
-.drc-applicants img:hover{transform:scale(1.15);z-index:1}
-.drc-applicants .drc-more{width:32px;height:32px;border-radius:50%;background:var(--g1);border:2px solid var(--sf);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--g5)}
-.drc-progress{margin-top:10px}
-.drc-progress-bar{height:6px;background:var(--g1);border-radius:3px;overflow:hidden;position:relative}
+.dash-room-card:hover{border-color:var(--ac);box-shadow:0 4px 16px rgba(96,77,255,.08);transform:translateY(-2px)}
+.drc-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:40px;width:fit-content}
+.drc-title{font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--tx);margin:0;line-height:1.3}
+.drc-stats{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--g5)}
+.drc-stats span{display:inline-flex;align-items:center;gap:5px}
+.drc-status-badge{font-size:10px;font-weight:600;padding:4px 12px;border-radius:40px;width:fit-content}
+.drc-progress{margin-top:auto}
+.drc-progress-bar{height:5px;background:var(--g1);border-radius:3px;overflow:hidden;position:relative}
 .drc-progress-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--ac),color-mix(in srgb,var(--ac) 60%,var(--green)))}
-.drc-progress-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--g4)}
+.drc-progress-labels{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--g4)}
 .dash-showcase-card{padding:12px 14px;border:1px solid transparent;border-radius:10px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);margin-bottom:6px;background:color-mix(in srgb,var(--sf) 60%,transparent)}
 .dash-showcase-card:nth-child(1){animation-delay:.05s}.dash-showcase-card:nth-child(2){animation-delay:.1s}.dash-showcase-card:nth-child(3){animation-delay:.15s}
 .dash-showcase-card:active{transform:scale(.98)}
@@ -2761,6 +2909,7 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .cand-right .cr-status-btn.active.sel{border-color:var(--green);background:#E6FFF0;color:var(--green)}
 .cand-right .cr-status-btn.active.shl{border-color:var(--ac);background:rgba(96,77,255,.15);color:var(--ac)}
 .cand-right .cr-status-btn.active.pot{border-color:var(--amber);background:#FFF8E6;color:var(--amber)}
+.cand-right .cr-status-btn.active.wl{border-color:#3B82F6;background:rgba(59,130,246,.1);color:#3B82F6}
 .cand-right .cr-status-btn.active.rej{border-color:var(--red);background:#FFF0F0;color:var(--red)}
 .cand-right .cr-reject-reason{margin-top:4px}
 .cand-right .cr-reject-reason select{width:100%;padding:8px 10px;border:1px solid var(--g2);border-radius:8px;font-family:var(--sans);font-size:12px;background:var(--g1);outline:none}
@@ -6916,7 +7065,7 @@ export default function AgencyShell() {
   const [broadcastLog, setBroadcastLog] = useState(MOCK_BROADCAST_LOG);
   // Rounds workspace state
   const [auditionRounds, setAuditionRounds] = useState(MOCK_ROUNDS);
-  const [auditionSessions, setAuditionSessions] = useState(MOCK_SESSIONS);
+  const [timeSlots, setTimeSlots] = useState(MOCK_TIME_SLOTS);
   const [auditionGroups, setAuditionGroups] = useState(MOCK_GROUPS);
   const [auditionParticipants, setAuditionParticipants] = useState(MOCK_PARTICIPANTS);
   const [auditionVotes, setAuditionVotes] = useState(MOCK_VOTES);
@@ -6929,7 +7078,7 @@ export default function AgencyShell() {
   const [showNextRoundModal, setShowNextRoundModal] = useState(false);
   const [showRulesEditor, setShowRulesEditor] = useState(null); // {groupId} or null
   const [showWalkInModal, setShowWalkInModal] = useState(false);
-  const [walkInDraft, setWalkInDraft] = useState({ name:"", email:"", img:null, sessionId:null, groupId:null });
+  const [walkInDraft, setWalkInDraft] = useState({ name:"", email:"", img:null, groupId:null });
   const [viewParticipantId, setViewParticipantId] = useState(null);
   const [participantTab, setParticipantTab] = useState("reviews");
   const [bulkSelectedParticipants, setBulkSelectedParticipants] = useState([]);
@@ -6940,6 +7089,14 @@ export default function AgencyShell() {
   const [showRoundNoteEntry, setShowRoundNoteEntry] = useState({});
   const [showRoundSetup, setShowRoundSetup] = useState(false);
   const [activeRoundsTab, setActiveRoundsTab] = useState(null); // "checkin" | <roundId>; null falls back to active round
+  const [participantsFilter, setParticipantsFilter] = useState("all"); // participants tab filter
+  const [hireFilter, setHireFilter] = useState("all"); // hire tab filter
+  const [activeLocationId, setActiveLocationId] = useState(null); // for multi-location rooms
+  const [locationPage, setLocationPage] = useState("participants"); // participants | rounds
+  const [showConfirmationModal, setShowConfirmationModal] = useState(null); // candidateId for RSVP preview
+  const [confirmationResponse, setConfirmationResponse] = useState("confirm"); // confirm | decline | reschedule
+  const [confirmationMessage, setConfirmationMessage] = useState("");
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [viewRoom, setViewRoom] = useState(null);
   const [roomPage, setRoomPage] = useState("overview");
   useEffect(() => { window.scrollTo({top:0,behavior:"instant"}); }, [page, roomPage, viewRoom, viewShowcase]);
@@ -6955,10 +7112,11 @@ export default function AgencyShell() {
     tm1: {from:1,to:4}, tm2: {from:3,to:8}
   }); // { memberId: { from, to } }
   const [showNewRoom, setShowNewRoom] = useState(false);
+  const [showPublishPanel, setShowPublishPanel] = useState(false);
   const [newRoom, setNewRoom] = useState({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
   const [newRoomRole, setNewRoomRole] = useState("");
   const [newRoomStep, setNewRoomStep] = useState(0);
-  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, useInterviews:false, auditionFormat:"one_date", castingType:"open" });
+  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, useInterviews:false, auditionFormat:"regular", castingType:"open", accessType:"closed", capacityMode:"soft", groupCreationMode:"self_book", visibility:"public" });
   const [interviewSlots, setInterviewSlots] = useState([
     {id:"is1", roomId:"room5", date:"Jun 5, 2026", time:"10:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/abc-defg-hij", candidateId:null, status:"open"},
     {id:"is2", roomId:"room5", date:"Jun 5, 2026", time:"10:45", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/jkl-mnop-qrs", candidateId:null, status:"open"},
@@ -6969,6 +7127,7 @@ export default function AgencyShell() {
   ]);
   const [interviewStatuses, setInterviewStatuses] = useState({});
   const [interviewFilter, setInterviewFilter] = useState("all");
+  const [interviewViewMode, setInterviewViewMode] = useState("card");
   const [interviewFeedback, setInterviewFeedback] = useState({});
   const [candidateScores, setCandidateScores] = useState({
     cand_c1: {sc1:9, sc2:8, sc3:9, sc4:8},
@@ -6980,6 +7139,7 @@ export default function AgencyShell() {
   });
   const [connectedCalendars, setConnectedCalendars] = useState({google:false, apple:false, microsoft:false});
   const [bulkSlotForm, setBulkSlotForm] = useState({date:"", startTime:"10:00", endTime:"12:00", duration:30, buffer:0});
+  const [showScheduleSetup, setShowScheduleSetup] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [candidateView, setCandidateView] = useState("grid");
   const [candidateFilter, setCandidateFilter] = useState("all");
@@ -7421,15 +7581,14 @@ export default function AgencyShell() {
   };
   const getActiveRoundsForRoom = (roomId) => auditionRounds.filter(r => r.roomId === roomId).sort((a,b) => a.index - b.index);
   const getRoundParticipants = (roundId) => auditionParticipants.filter(p => p.roundId === roundId);
-  const getRoundSessions = (roundId) => auditionSessions.filter(s => s.roundId === roundId);
-  const getRoundGroups = (roundId, sessionId=null) => auditionGroups.filter(g => g.roundId === roundId && (sessionId === null || g.sessionId === sessionId));
+  const getRoundGroups = (roundId) => auditionGroups.filter(g => g.roundId === roundId);
   const getCurrentRound = () => auditionRounds.find(r => r.id === activeRoundId);
   const setRoundPhase = (roundId, phase) => setAuditionRounds(p => p.map(r => r.id === roundId ? {...r, phase} : r));
   const updateParticipant = (rpId, patch) => setAuditionParticipants(p => p.map(rp => rp.id === rpId ? {...rp, ...patch} : rp));
   const moveParticipantToGroup = (rpId, newGroupId) => {
     const newGroup = auditionGroups.find(g => g.id === newGroupId);
     if (!newGroup) return;
-    setAuditionParticipants(p => p.map(rp => rp.id === rpId ? {...rp, groupId:newGroupId, sessionId:newGroup.sessionId} : rp));
+    setAuditionParticipants(p => p.map(rp => rp.id === rpId ? {...rp, groupId:newGroupId} : rp));
   };
   const decideParticipant = (rpId, outcome) => updateParticipant(rpId, {outcome});
   const bulkDecide = (ids, outcome) => setAuditionParticipants(p => p.map(rp => ids.includes(rp.id) ? {...rp, outcome} : rp));
@@ -7451,7 +7610,7 @@ export default function AgencyShell() {
     const ps = rounds.flatMap(r => getRoundParticipants(r.id));
     const checkedIn = ps.filter(p => p.registrationStatus === "checked_in" || p.registrationStatus === "late").length;
     const total = ps.length;
-    return { rounds, checkedIn, total, sessions: rounds.flatMap(r => getRoundSessions(r.id)) };
+    return { rounds, checkedIn, total, groups: rounds.flatMap(r => getRoundGroups(r.id)) };
   };
   const sendResultsForRound = (roundId) => {
     setAuditionRounds(p => p.map(r => r.id === roundId ? {...r, presetLocked:true, invitationsSentAt:"Just now", phase:"registration", status:"live"} : r));
@@ -7502,10 +7661,14 @@ export default function AgencyShell() {
       enableShortlist: isAudition ? false : newRoomConfig.useShortlist,
       enableWaitlist: newRoomConfig.useWaitlist,
       enableEarlyInvites: isAudition ? newRoomConfig.useEarlyInvites : false,
-      enableInterviews: isInterviewEligible ? newRoomConfig.useInterviews : false,
+      enableInterviews: newRoomConfig.opportunityType === "job_call" ? true : isInterviewEligible ? newRoomConfig.useInterviews : false,
       interviewFormat: isInterviewEligible ? "in_person" : null,
       interviewDuration: isInterviewEligible ? "30" : null,
       auditionFormat: isAudition ? newRoomConfig.auditionFormat : null,
+      accessType: isAudition ? newRoomConfig.accessType : null,
+      capacityMode: isAudition ? newRoomConfig.capacityMode : null,
+      groupCreationMode: isAudition && newRoomConfig.auditionFormat === "groups" ? newRoomConfig.groupCreationMode : null,
+      roundsEnabled: isAudition ? true : false,
       selectionType: newRoomConfig.selectionType,
       ...(isCompetition ? {
         scoringCriteria: [
@@ -7516,6 +7679,7 @@ export default function AgencyShell() {
         ],
         scoringScale: 10,
       } : {}),
+      visibility: newRoomConfig.visibility || "public",
       shareId: roomShareId,
       collaborationShareId: roomShareId + "-collab",
       shareSettings: {requireLogin:true,requirePassword:false,password:"",welcomeMessage:""},
@@ -7526,10 +7690,14 @@ export default function AgencyShell() {
     setShowNewRoom(false);
     setNewRoomStep(0);
     setNewRoom({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
-    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"});
+    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"});
     const oppLabel = getOpportunityType(newRoomConfig.opportunityType || "casting").label;
-    openRoom(id);
-    showToast(`${oppLabel} created!`);
+    setViewRoom(id);
+    setViewShowcase(null);
+    setRoomPage("settings");
+    setPage("rooms");
+    setShowPublishPanel(true);
+    showToast(`${oppLabel} created! Complete the remaining settings to publish.`);
   };
 
   const updateCandidateStatus = (candId, status, rejectionReason) => {
@@ -8379,12 +8547,51 @@ export default function AgencyShell() {
               )}
             </div>
             <nav className="sidebar-nav">
+              {/* ── General ── */}
               <button className={`sidebar-item ${roomPage==="overview"?"active":""}`} onClick={()=>setRoomPage("overview")}><I n="home" s={18}/><span className="sb-label">Overview</span><span className="sb-tip">Overview</span></button>
+              {!isExternalMode && <button className={`sidebar-item ${roomPage==="communication"?"active":""}`} onClick={()=>setRoomPage("communication")}>
+                <I n="mail" s={18}/><span className="sb-label">Communication</span><span className="sb-tip">Comms</span>
+                {(() => {
+                  const u = conversations.filter(c => c.roomId === currentRoom.id).reduce((s,c) => s + c.unread, 0);
+                  return u > 0 ? <span className="sidebar-badge">{u}</span> : null;
+                })()}
+              </button>}
+              {!isExternalMode && <button className={`sidebar-item ${roomPage==="marketing"?"active":""}`} onClick={()=>setRoomPage("marketing")}><I n="globe" s={18}/><span className="sb-label">Marketing</span><span className="sb-tip">Marketing</span></button>}
+              {!isExternalMode && <button className={`sidebar-item ${roomPage==="settings"?"active":""}`} onClick={()=>setRoomPage("settings")}><I n="settings" s={18}/><span className="sb-label">Settings</span><span className="sb-tip">Settings</span></button>}
+
+              {/* ── Separator + Hiring Process ── */}
+              {!isExternalMode && <div className="sidebar-divider"/>}
+              {!isExternalMode && <div style={{fontSize:10,fontWeight:700,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".06em",padding:"4px 14px 6px"}}><span className="sb-label">Hiring Process</span></div>}
+
+              {/* ── Location Switcher (multi-location) ── */}
+              {!isExternalMode && currentRoom.auditionFormat === "multi_location" && currentRoom.locations && (
+                <div style={{padding:"0 10px 6px"}}>
+                  <select value={activeLocationId || ""} onChange={e => setActiveLocationId(e.target.value || null)} style={{width:"100%",padding:"6px 10px",borderRadius:8,border:"1px solid var(--g2)",background:"var(--sf)",fontSize:12,fontWeight:600,color:"var(--g6)",cursor:"pointer"}}>
+                    <option value="">All Locations</option>
+                    {currentRoom.locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name} — {loc.city}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* ── Applicants ── */}
               <button className={`sidebar-item ${roomPage==="candidates"?"active":""}`} onClick={()=>setRoomPage("candidates")}>
-                <I n="users" s={18}/><span className="sb-label">Candidates</span><span className="sb-tip">Candidates</span>
+                <I n="users" s={18}/><span className="sb-label">Applicants</span><span className="sb-tip">Applicants</span>
                 {roomCandidates.filter(c=>c.status==="new").length > 0 && <span className="sidebar-badge">{roomCandidates.filter(c=>c.status==="new").length}</span>}
               </button>
-              {currentRoom.opportunityType === "audition" && !isExternalMode && (
+
+              {/* ── Participants (in-person auditions — not residencies, they go straight to hire) ── */}
+              {currentRoom.format === "in_person" && currentRoom.opportunityType !== "residency" && !isExternalMode && (
+                <button className={`sidebar-item ${roomPage==="participants"?"active":""}`} onClick={()=>setRoomPage("participants")}>
+                  <I n="check" s={18}/><span className="sb-label">Participants</span><span className="sb-tip">Participants</span>
+                  {(() => {
+                    const pending = roomCandidates.filter(c=>c.status==="selected" && (!c.confirmationStatus || c.confirmationStatus==="pending")).length;
+                    return pending > 0 ? <span className="sidebar-badge">{pending}</span> : null;
+                  })()}
+                </button>
+              )}
+
+              {/* ── Rounds (audition + in-person + enabled) ── */}
+              {currentRoom.opportunityType === "audition" && currentRoom.format === "in_person" && currentRoom.roundsEnabled !== false && !isExternalMode && (
                 <button className={`sidebar-item ${roomPage==="rounds"?"active":""}`} onClick={()=>{
                   setRoomPage("rounds");
                   const rs = getActiveRoundsForRoom(currentRoom.id);
@@ -8394,22 +8601,23 @@ export default function AgencyShell() {
                   }
                 }}>
                   <I n="calendar" s={18}/><span className="sb-label">Rounds</span><span className="sb-tip">Rounds</span>
+                  {getActiveRoundsForRoom(currentRoom.id).length === 0 && <span style={{marginLeft:"auto",fontSize:9,fontWeight:700,color:"var(--amber)",background:"rgba(245,166,35,.12)",padding:"2px 6px",borderRadius:40}}>Setup</span>}
                 </button>
               )}
-              {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && !isExternalMode && (
+
+              {/* ── Interviews ── */}
+              {(INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) || currentRoom.opportunityType === "audition") && currentRoom.enableInterviews && !isExternalMode && (
                 <button className={`sidebar-item ${roomPage==="interviews"?"active":""}`} onClick={()=>setRoomPage("interviews")}>
                   <I n="chat" s={18}/><span className="sb-label">Interviews</span><span className="sb-tip">Interviews</span>
                 </button>
               )}
-              {!isExternalMode && <button className={`sidebar-item ${roomPage==="communication"?"active":""}`} onClick={()=>setRoomPage("communication")}>
-                <I n="mail" s={18}/><span className="sb-label">Communication</span><span className="sb-tip">Comms</span>
-                {(() => {
-                  const u = conversations.filter(c => c.roomId === currentRoom.id).reduce((s,c) => s + c.unread, 0);
-                  return u > 0 ? <span className="sidebar-badge">{u}</span> : null;
-                })()}
-              </button>}
-              {!isExternalMode && <button className={`sidebar-item ${roomPage==="settings"?"active":""}`} onClick={()=>setRoomPage("settings")}><I n="settings" s={18}/><span className="sb-label">Settings</span><span className="sb-tip">Settings</span></button>}
-              {!isExternalMode && <button className={`sidebar-item ${roomPage==="marketing"?"active":""}`} onClick={()=>setRoomPage("marketing")}><I n="globe" s={18}/><span className="sb-label">Marketing</span><span className="sb-tip">Marketing</span></button>}
+
+              {/* ── Hire (not for competitions — they don't hire) ── */}
+              {currentRoom.opportunityType !== "competition" && !isExternalMode && (
+                <button className={`sidebar-item ${roomPage==="hire"?"active":""}`} onClick={()=>setRoomPage("hire")}>
+                  <I n="card" s={18}/><span className="sb-label">Hire</span><span className="sb-tip">Hire</span>
+                </button>
+              )}
             </nav>
             <div style={{marginTop:"auto",padding:"4px 10px 12px"}}>
               <button className="dark-toggle" onClick={() => setDarkMode(d => !d)}>
@@ -8820,10 +9028,11 @@ export default function AgencyShell() {
           {/* ═══ WORKSPACE: DASHBOARD ═══ */}
           {!viewShowcase && !viewRoom && page === "dashboard" && (
             <>
-              <div className="aria-bg" aria-hidden="true">
-                <div className="aria-blob aria-blob-1"/>
-                <div className="aria-blob aria-blob-2"/>
-                <div className="aria-blob aria-blob-3"/>
+              <div className="dash-bg" aria-hidden="true">
+                <div className="dash-blob dash-blob-1"/>
+                <div className="dash-blob dash-blob-2"/>
+                <div className="dash-blob dash-blob-3"/>
+                <div className="dash-blob dash-blob-4"/>
               </div>
 
               {/* Banner */}
@@ -8843,81 +9052,52 @@ export default function AgencyShell() {
 
               <div className="dash-grid">
                 {/* Active Rooms */}
-                <div className="dash-section">
+                <div className="dash-section" style={{background:"transparent",border:"none",backdropFilter:"none",WebkitBackdropFilter:"none",boxShadow:"none",padding:0}}>
                   <div className="dash-section-header">
                     <h3>Active Opportunities</h3>
                     <button className="btn-link" onClick={() => setPage("rooms")}>View All →</button>
                   </div>
+                  <div className="dash-cards-grid">
                   {rooms.map(rm => {
                     const rmCands = candidates.filter(c => c.roomId === rm.id);
-                    const sel = rmCands.filter(c => c.status === "selected").length;
-                    const shl = rmCands.filter(c => c.status === "shortlisted").length;
-                    const rej = rmCands.filter(c => c.status === "not_selected").length;
-                    const pending = rmCands.filter(c => c.status === "new" || c.status === "potential").length;
+                    const total = rmCands.length || 1;
+                    const reviewed = rmCands.filter(c => c.status !== "new").length;
+                    const pct = Math.round((reviewed / total) * 100);
+                    const ot = getOpportunityType(rm.opportunityType || "casting");
                     return (
-                      <div className="dash-room-card" key={rm.id} onClick={() => { setViewRoom(rm.id); setRoomPage("overview"); }}>
-                        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                      <div className="dash-room-card" key={rm.id} onClick={() => { setViewRoom(rm.id); setRoomPage("overview"); }} style={{padding:0,overflow:"hidden"}}>
+                        <div style={{position:"relative"}}>
                           {rm.banner ? (
-                            <img src={rm.banner} alt="" style={{width:48,height:48,borderRadius:10,objectFit:"cover",flexShrink:0}}/>
+                            <img src={rm.banner} alt="" style={{width:"100%",height:130,objectFit:"cover",display:"block"}}/>
                           ) : (
-                            <div style={{width:48,height:48,borderRadius:10,background:"linear-gradient(135deg,rgba(26,86,219,.15),rgba(26,86,219,.05))",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"var(--g4)"}}><I n="inbox" s={18}/></div>
+                            <div style={{width:"100%",height:130,background:`linear-gradient(135deg,${ot.color}22,${ot.color}08)`,display:"flex",alignItems:"center",justifyContent:"center",color:ot.color,opacity:.5}}><I n={ot.icon} s={32}/></div>
                           )}
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                              <div>
-                                {(() => { const ot = getOpportunityType(rm.opportunityType || "casting"); return (
-                                  <div style={{fontSize:10,color:ot.color,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em",display:"inline-flex",alignItems:"center",gap:4}}><I n={ot.icon} s={10}/> {ot.label}</div>
-                                ); })()}
-                                <div style={{fontSize:15,fontWeight:600,marginTop:2}}>{rm.title}</div>
-                              </div>
-                              <span style={{fontSize:10,fontWeight:600,padding:"3px 10px",borderRadius:40,background:rm.status==="published"?"#E6FFF0":rm.status==="closed"?"var(--g1)":"rgba(96,77,255,.08)",color:rm.status==="published"?"var(--green)":rm.status==="closed"?"var(--g4)":"var(--ac)",flexShrink:0}}>
-                                {rm.status === "published" ? "● Open" : rm.status === "closed" ? "Closed" : "Draft"}
-                              </span>
+                          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"24px 14px 10px",background:"linear-gradient(to top,rgba(0,0,0,.55),transparent)",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+                            <div style={{fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em",display:"inline-flex",alignItems:"center",gap:5,color:"rgba(255,255,255,.9)"}}><I n={ot.icon} s={10}/> {ot.label}</div>
+                            <div style={{fontSize:10,fontWeight:600,padding:"3px 10px",borderRadius:40,background:rm.status==="published"?"rgba(46,204,113,.2)":rm.status==="closed"?"rgba(255,255,255,.15)":"rgba(255,255,255,.15)",color:rm.status==="published"?"#6fffa0":rm.status==="closed"?"rgba(255,255,255,.7)":"rgba(255,255,255,.7)"}}>
+                              {rm.status === "published" ? "● Open" : rm.status === "closed" ? "Closed" : "Draft"}
                             </div>
                           </div>
                         </div>
-                        {/* Divider */}
-                        <div style={{borderTop:"1px solid var(--g2)",marginTop:10,paddingTop:10}}>
-                          {/* Applicant thumbnails + team */}
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                            <div className="drc-applicants" style={{marginTop:0}}>
-                              {rmCands.slice(0,6).map(c => {
-                                const art = c.artistId ? artists.find(a => a.id === c.artistId) : null;
-                                const img = art?.img || c.externalApplicant?.img;
-                                return img ? <img key={c.id} src={img} alt="" title={art?.name || c.externalApplicant?.name}/> : null;
-                              })}
-                              {rmCands.length > 6 && <div className="drc-more">+{rmCands.length - 6}</div>}
-                            </div>
-                            <div style={{display:"flex",gap:4,flexShrink:0}}>
-                              <div className="team-bar-avatar" style={{width:20,height:20,fontSize:7}}>
-                                {teamMembers[0]?.name.split(" ").map(n=>n[0]).join("")}
-                              </div>
-                              <div className="team-bar-avatar" style={{width:20,height:20,fontSize:7}}>
-                                {teamMembers[1]?.name.split(" ").map(n=>n[0]).join("")}
-                              </div>
-                            </div>
+                        <div style={{padding:"14px 20px 20px",display:"flex",flexDirection:"column",gap:12}}>
+                        <div className="drc-title">{rm.title}</div>
+                        <div className="drc-stats">
+                          <span><I n="users" s={13}/> {rmCands.length} applicant{rmCands.length !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="drc-progress">
+                          <div className="drc-progress-bar">
+                            <div className="drc-progress-fill" style={{width:`${pct}%`}}/>
                           </div>
-                          {/* Review progress bar */}
-                          {(() => {
-                            const total = rmCands.length || 1;
-                            const reviewed = rmCands.filter(c => c.status !== "new").length;
-                            const pct = Math.round((reviewed / total) * 100);
-                            return (
-                              <div className="drc-progress" style={{marginTop:8}}>
-                                <div className="drc-progress-bar">
-                                  <div className="drc-progress-fill" style={{width:`${pct}%`}}/>
-                                </div>
-                                <div className="drc-progress-labels">
-                                  <span>{reviewed} of {total} reviewed</span>
-                                  <span>{pct}%</span>
-                                </div>
-                              </div>
-                            );
-                          })()}
+                          <div className="drc-progress-labels">
+                            <span>{reviewed} of {rmCands.length} reviewed</span>
+                            <span>{pct}%</span>
+                          </div>
+                        </div>
                         </div>
                       </div>
                     );
                   })}
+                  </div>
                 </div>
 
                 <div style={{display:"flex",flexDirection:"column",gap:20}}>
@@ -11033,8 +11213,8 @@ export default function AgencyShell() {
                   <div style={{padding:"14px 18px",background:"linear-gradient(90deg,rgba(96,77,255,.08),rgba(96,77,255,.02))",border:"1px solid rgba(96,77,255,.18)",borderRadius:14,marginBottom:14,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",animation:"fadeIn .3s ease"}}>
                     <div style={{width:40,height:40,borderRadius:10,background:"rgba(96,77,255,.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:"var(--ac)",flexShrink:0}}><I n="qr" s={18}/></div>
                     <div style={{flex:1,minWidth:200}}>
-                      <div style={{fontSize:13,fontWeight:600,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>Day-of audition · {stats.rounds.length} active round{stats.rounds.length>1?"s":""} <InfoTip title="Day-of roll-up" body="Aggregates today's check-in status across all active sessions. Tap to jump into Registration."/></div>
-                      <div style={{fontSize:12,color:"var(--g6)"}}><strong>{stats.checkedIn}</strong> of <strong>{stats.total}</strong> checked in across {stats.sessions.length} session{stats.sessions.length>1?"s":""} · {pct}%</div>
+                      <div style={{fontSize:13,fontWeight:600,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>Day-of audition · {stats.rounds.length} active round{stats.rounds.length>1?"s":""} <InfoTip title="Day-of roll-up" body="Aggregates today's check-in status across all active groups. Tap to jump into Registration."/></div>
+                      <div style={{fontSize:12,color:"var(--g6)"}}><strong>{stats.checkedIn}</strong> of <strong>{stats.total}</strong> checked in across {stats.groups.length} group{stats.groups.length>1?"s":""} · {pct}%</div>
                       <div style={{marginTop:6,height:4,background:"var(--g1)",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"var(--ac)",transition:"width .4s"}}/></div>
                     </div>
                     <button className="btn btn-p btn-sm" onClick={() => { setActiveRoundId(stats.rounds[0].id); setRoomPage("rounds"); }}>
@@ -11063,6 +11243,29 @@ export default function AgencyShell() {
                     <button className="btn btn-p btn-sm" onClick={() => setRoomPage("interviews")}>
                       <I n="arrow" s={12}/> Open Interviews
                     </button>
+                  </div>
+                );
+              })()}
+
+              {/* Multi-location participation summary */}
+              {currentRoom.auditionFormat === "multi_location" && currentRoom.locations && (() => {
+                return (
+                  <div style={{padding:"14px 18px",background:"linear-gradient(90deg,rgba(59,130,246,.08),rgba(59,130,246,.02))",border:"1px solid rgba(59,130,246,.18)",borderRadius:14,marginBottom:14,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:"rgba(59,130,246,.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:"#3B82F6",flexShrink:0}}><I n="map-pin" s={18}/></div>
+                    <div style={{flex:1,minWidth:200}}>
+                      <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Multi-Location Audition · {currentRoom.locations.length} locations</div>
+                      <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                        {currentRoom.locations.map(loc => {
+                          const locCands = roomCandidates.filter(c => c.locationId === loc.id && c.status === "selected");
+                          const confirmed = locCands.filter(c => c.confirmationStatus === "confirmed").length;
+                          return (
+                            <div key={loc.id} style={{fontSize:12,color:"var(--g6)"}}>
+                              <strong>{loc.name}</strong>: {confirmed}/{locCands.length} confirmed
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 );
               })()}
@@ -11117,8 +11320,9 @@ export default function AgencyShell() {
                   {(() => {
                     const statuses = [
                       {key:"selected",label:"Selected",color:"var(--green)",icon:"check"},
-                      {key:"shortlisted",label:"Shortlisted",color:"var(--ac)",icon:"star"},
+                      ...(currentRoom.opportunityType !== "audition" && currentRoom.enableShortlist !== false ? [{key:"shortlisted",label:"Shortlisted",color:"var(--ac)",icon:"star"}] : []),
                       {key:"potential",label:"Potential",color:"var(--amber)",icon:"clock"},
+                      ...(currentRoom.opportunityType === "audition" && currentRoom.enableWaitlist !== false ? [{key:"waitlisted",label:"Waitlisted",color:"#3B82F6",icon:"clock"}] : []),
                       {key:"not_selected",label:"Not Selected",color:"var(--red)",icon:"x"},
                       {key:"new",label:"New",color:"var(--g5)",icon:"inbox"},
                     ];
@@ -11307,8 +11511,8 @@ export default function AgencyShell() {
             <>
               <div className="pg-header" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div>
-                  <h1>Candidates</h1>
-                  <p className="pg-sub">{roomCandidates.length} applicant{roomCandidates.length !== 1 ? "s" : ""} for {currentRoom.title}</p>
+                  <h1>Applicants</h1>
+                  <p className="pg-sub">{activeLocationId && currentRoom.auditionFormat === "multi_location" ? `${roomCandidates.filter(c => c.locationId === activeLocationId).length} applicant${roomCandidates.filter(c => c.locationId === activeLocationId).length !== 1 ? "s" : ""} for ${currentRoom.locations?.find(l => l.id === activeLocationId)?.name || currentRoom.title}` : `${roomCandidates.length} applicant${roomCandidates.length !== 1 ? "s" : ""} for ${currentRoom.title}`}</p>
                 </div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
                   {currentRoom.opportunityType === "competition" && currentRoom.enableScoring && (
@@ -11327,11 +11531,14 @@ export default function AgencyShell() {
                     {key:"all", label:"All", color:"var(--g5)", bg:"var(--sf)"},
                     {key:"new", label:"New", color:"var(--g4)", bg:"var(--g1)"},
                     {key:"selected", label:"Selected", color:"#1DB954", bg:"#E6FFF0"},
-                    ...(currentRoom.enableShortlist !== false ? [{key:"shortlisted", label:"Shortlisted", color:"var(--ac)", bg:"rgba(96,77,255,.08)"}] : []),
-                    ...(currentRoom.enableWaitlist !== false ? [{key:"potential", label:"Potential", color:"var(--amber)", bg:"#FFF8E6"}] : []),
+                    ...(currentRoom.opportunityType !== "audition" && currentRoom.enableShortlist !== false ? [{key:"shortlisted", label:"Shortlisted", color:"var(--ac)", bg:"rgba(96,77,255,.08)"}] : []),
+                    {key:"potential", label:"Potential", color:"var(--amber)", bg:"#FFF8E6"},
+                    ...(currentRoom.opportunityType === "audition" && currentRoom.enableWaitlist !== false ? [{key:"waitlisted", label:"Waitlisted", color:"#3B82F6", bg:"rgba(59,130,246,.08)"}] : []),
+                    ...(currentRoom.enableEarlyInvites ? [{key:"early_invited", label:"Early Invited", color:"#8B5CF6", bg:"rgba(139,92,246,.08)"}] : []),
                     {key:"not_selected", label:"Not Selected", color:"var(--red)", bg:"#FFF0F0"},
                   ].map(f => {
-                    const count = f.key === "all" ? roomCandidates.length : roomCandidates.filter(c => c.status === f.key).length;
+                    const locFiltered = (activeLocationId && currentRoom.auditionFormat === "multi_location") ? roomCandidates.filter(c => c.locationId === activeLocationId) : roomCandidates;
+                    const count = f.key === "all" ? locFiltered.length : f.key === "early_invited" ? locFiltered.filter(c => c.earlyInvited).length : locFiltered.filter(c => c.status === f.key).length;
                     return (
                       <button key={f.key}
                         className={`cand-status-chip ${candidateFilter===f.key?"on":""}`}
@@ -11405,7 +11612,9 @@ export default function AgencyShell() {
 
               {(() => {
                 let filtered = roomCandidates;
-                if (candidateFilter !== "all") filtered = filtered.filter(c => c.status === candidateFilter);
+                if (activeLocationId && currentRoom.auditionFormat === "multi_location") filtered = filtered.filter(c => c.locationId === activeLocationId);
+                if (candidateFilter === "early_invited") filtered = filtered.filter(c => c.earlyInvited);
+                else if (candidateFilter !== "all") filtered = filtered.filter(c => c.status === candidateFilter);
                 if (candidateSearch) {
                   const q = candidateSearch.toLowerCase();
                   filtered = filtered.filter(c => {
@@ -11476,7 +11685,11 @@ export default function AgencyShell() {
                             <div className="cand-img-wrap">
                               {info.img ? <img className="cand-img" src={info.img} alt={info.name}/> : <div className="cand-img" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:20,fontWeight:700}}>{info.name?.[0]}</div>}
                               <div className="cand-number">#{cand.number}</div>
-                              <span className={`cand-badge ${cand.status}`}>{cand.status === "not_selected" ? "Not Selected" : cand.status}</span>
+                              {cand.earlyInvited && currentRoom.enableEarlyInvites ? (
+                                <span className="cand-badge" style={{background:cand.earlyInviteStatus==="confirmed"?"rgba(29,185,84,.9)":cand.earlyInviteStatus==="declined"?"rgba(255,71,87,.9)":"rgba(139,92,246,.9)"}}>{cand.earlyInviteStatus==="confirmed"?"Confirmed":cand.earlyInviteStatus==="declined"?"Declined":"Invited"}</span>
+                              ) : (
+                                <span className={`cand-badge ${cand.status}`}>{cand.status === "not_selected" ? "Not Selected" : cand.status}</span>
+                              )}
                               {finalScore !== null && (
                                 <div style={{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",background:"rgba(245,166,35,.95)",color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:40,display:"inline-flex",alignItems:"center",gap:3,boxShadow:"0 2px 6px rgba(0,0,0,.15)"}}>
                                   <I n="trophy" s={10}/> {finalScore.toFixed(1)}%
@@ -11500,9 +11713,10 @@ export default function AgencyShell() {
                 if (candidateView === "board") {
                   const statusCols = [
                     {key:"new", label:"New", color:"var(--g4)", dot:"#98989F"},
-                    ...(currentRoom.enableShortlist !== false ? [{key:"shortlisted", label:"Shortlisted", color:"var(--ac)", dot:"#7A66FF"}] : []),
+                    ...(currentRoom.opportunityType !== "audition" && currentRoom.enableShortlist !== false ? [{key:"shortlisted", label:"Shortlisted", color:"var(--ac)", dot:"#7A66FF"}] : []),
                     {key:"selected", label:"Selected", color:"#1DB954", dot:"#1DB954"},
-                    ...(currentRoom.enableWaitlist !== false ? [{key:"potential", label:"Potential", color:"var(--amber)", dot:"#F5A623"}] : []),
+                    {key:"potential", label:"Potential", color:"var(--amber)", dot:"#F5A623"},
+                    ...(currentRoom.opportunityType === "audition" && currentRoom.enableWaitlist !== false ? [{key:"waitlisted", label:"Waitlisted", color:"#3B82F6", dot:"#3B82F6"}] : []),
                     {key:"not_selected", label:"Not Selected", color:"var(--red)", dot:"#FF4757"},
                   ];
                   // Group all candidates (unfiltered by status for board view, but apply search/advanced filters)
@@ -11605,20 +11819,128 @@ export default function AgencyShell() {
             </>
           )}
 
+          {/* ═══ ROOM: PARTICIPANTS — selected/invited artists ═══ */}
+          {viewRoom && currentRoom && roomPage === "participants" && (() => {
+            let participants = roomCandidates.filter(c => c.status === "selected");
+            if (activeLocationId && currentRoom.auditionFormat === "multi_location") participants = participants.filter(c => c.locationId === activeLocationId);
+            const confirmed = participants.filter(c => c.confirmationStatus === "confirmed");
+            const pending = participants.filter(c => !c.confirmationStatus || c.confirmationStatus === "pending");
+            const declined = participants.filter(c => c.confirmationStatus === "declined");
+            const rescheduling = participants.filter(c => c.confirmationStatus === "rescheduling");
+            const waitlisted = participants.filter(c => c.confirmationStatus === "waitlisted");
+            const filtered = participantsFilter === "all" ? participants
+              : participantsFilter === "confirmed" ? confirmed
+              : participantsFilter === "pending" ? pending
+              : participantsFilter === "declined" ? declined
+              : participantsFilter === "rescheduling" ? rescheduling
+              : waitlisted;
+
+            return (
+            <>
+              <div className="pg-header" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div>
+                  <h1>Participants</h1>
+                  <p className="pg-sub">{participants.length} selected artist{participants.length !== 1 ? "s" : ""} — {confirmed.length} confirmed, {pending.length} pending</p>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  {pending.length > 0 && <button className="btn btn-s" onClick={() => showToast(`Reminders sent to ${pending.length} pending artist${pending.length !== 1 ? "s" : ""}`)}>Send Reminders</button>}
+                  <button className="btn btn-p" onClick={() => {
+                    const toInvite = participants.filter(c => !c.confirmationStatus || c.confirmationStatus === "pending");
+                    if (toInvite.length === 0) { showToast("All participants have already been invited"); return; }
+                    toInvite.forEach(c => setCandidates(prev => prev.map(x => x.id === c.id ? {...x, confirmationStatus: "pending"} : x)));
+                    showToast(`Invitations sent to ${toInvite.length} artist${toInvite.length !== 1 ? "s" : ""}!`);
+                  }}><I n="send" s={14}/> Send Invitations</button>
+                </div>
+              </div>
+
+              <div className="filter-bar" style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+                {[{key:"all",label:`All (${participants.length})`},{key:"confirmed",label:`Confirmed (${confirmed.length})`},{key:"pending",label:`Pending (${pending.length})`},{key:"declined",label:`Declined (${declined.length})`},{key:"rescheduling",label:`Rescheduling (${rescheduling.length})`},{key:"waitlisted",label:`Waitlisted (${waitlisted.length})`}].map(f => (
+                  <button key={f.key} className={`chip ${participantsFilter === f.key ? "chip-active" : ""}`} onClick={() => setParticipantsFilter(f.key)}>{f.label}</button>
+                ))}
+              </div>
+
+              {currentRoom.auditionFormat === "groups" && currentRoom.groupCreationMode === "company_assigns_after_confirm" && confirmed.length > 0 && (
+                <div className="info-banner" style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:10,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10}}>
+                  <I n="info" s={16} style={{color:"var(--ac)",flexShrink:0}}/>
+                  <span style={{fontSize:13,color:"var(--g5)"}}>{confirmed.length} artist{confirmed.length !== 1 ? "s have" : " has"} confirmed. You can now assign them to groups.</span>
+                  <button className="btn btn-p btn-sm" style={{marginLeft:"auto"}}>Assign Groups</button>
+                </div>
+              )}
+
+              {currentRoom.auditionDates && currentRoom.auditionDates.length > 0 && (
+                <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+                  {currentRoom.auditionDates.map((d,i) => (
+                    <div key={i} style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:8,padding:"8px 12px",fontSize:12}}>
+                      <div style={{fontWeight:600,color:"var(--g6)"}}>{d.date}</div>
+                      <div style={{color:"var(--g4)",marginTop:2}}>{d.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {filtered.length === 0 ? (
+                <div style={{textAlign:"center",padding:"48px 20px",color:"var(--g4)"}}>
+                  <I n="users" s={32} style={{opacity:.4,marginBottom:8}}/>
+                  <p style={{fontSize:14}}>No participants {participantsFilter !== "all" ? `with status "${participantsFilter}"` : "yet"}.</p>
+                  <p style={{fontSize:12,color:"var(--g3)"}}>Select artists from the Applicants tab to invite them.</p>
+                </div>
+              ) : (
+                <div className="cand-grid">
+                  {filtered.map(cand => {
+                    const info = getCandidateInfo(cand);
+                    const confBadge = cand.confirmationStatus === "confirmed" ? {label:"Confirmed",bg:"rgba(29,185,84,.85)"} : cand.confirmationStatus === "declined" ? {label:"Declined",bg:"rgba(255,71,87,.85)"} : cand.confirmationStatus === "rescheduling" ? {label:"Rescheduling",bg:"rgba(245,166,35,.85)"} : {label:"Pending",bg:"rgba(128,128,128,.7)"};
+                    return (
+                      <div className="cand-card" key={cand.id} onClick={() => { setViewCandidate(cand.id); setCandidateVideoTab(0); }}>
+                        <div className="cand-img-wrap">
+                          {info.img ? <img className="cand-img" src={info.img} alt={info.name}/> : <div className="cand-img" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:20,fontWeight:700}}>{info.name?.[0]}</div>}
+                          <div className="cand-number">#{cand.number}</div>
+                          <span className="cand-badge" style={{background:confBadge.bg,color:"#fff"}}>{confBadge.label}</span>
+                          {cand.groupId && (
+                            <div style={{position:"absolute",bottom:8,left:8,background:"rgba(0,0,0,.55)",color:"#fff",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:40}}>Group {cand.groupId}</div>
+                          )}
+                          <div className="cand-overlay">
+                            <div className="cand-name">{info.name}</div>
+                            <div className="cand-tags">
+                              {cand.labels.map(l => <span key={l}>{l}</span>)}
+                              {(info.styles||[]).slice(0,2).map(s => <span key={s}>{s}</span>)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+            </>
+            );
+          })()}
+
           {/* ═══ ROOM: ROUNDS (Audition only) — simplified workspace ═══ */}
           {viewRoom && currentRoom && roomPage === "rounds" && currentRoom.opportunityType === "audition" && (() => {
-            const roomRounds = getActiveRoundsForRoom(currentRoom.id);
+            let roomRounds = getActiveRoundsForRoom(currentRoom.id);
+            if (activeLocationId && currentRoom.auditionFormat === "multi_location") roomRounds = roomRounds.filter(r => r.locationId === activeLocationId);
             const round = roomRounds.find(r => r.id === activeRoundId) || roomRounds[0];
             if (!round) {
               return (
                 <>
                   <div className="pg-header"><h1><em>Rounds</em></h1></div>
-                  <div className="sc-empty"><I n="calendar" s={36}/><p>No rounds yet for this audition.</p></div>
+                  <div className="sc-empty">
+                    <I n="calendar" s={36}/>
+                    <p>No rounds yet for this audition.</p>
+                    <button className="btn btn-p" style={{marginTop:12}} onClick={() => {
+                      const newId = "rnd-" + Date.now();
+                      setAuditionRounds(p => [...p, {id:newId,roomId:currentRoom.id,index:1,title:"Round 1",preset:"general",phase:"setup",status:"draft",date:null,invitationsSentAt:null}]);
+                      setActiveRoundId(newId);
+                      showToast("Round 1 created — configure it below");
+                    }}>
+                      <I n="plus" s={14}/> Setup First Round
+                    </button>
+                  </div>
                 </>
               );
             }
             const preset = getRoundPreset(round.preset);
-            const sessions = getRoundSessions(round.id);
             const groups = getRoundGroups(round.id);
             const participants = getRoundParticipants(round.id);
             const isPreSend = !round.invitationsSentAt;
@@ -11663,8 +11985,8 @@ export default function AgencyShell() {
                       </button>
                     );
                   })}
-                  <button className="rt-add" onClick={() => setShowNextRoundModal(true)}>
-                    <I n="plus" s={12}/> Next Round
+                  <button className="rt-add" onClick={() => setShowNextRoundModal({mode:"new", fromRoundId:round?.id})}>
+                    <I n="plus" s={12}/> New Round
                   </button>
                   <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8,fontSize:11,color:"var(--g4)"}}>
                     <span>{participants.length} participants</span>
@@ -11716,17 +12038,17 @@ export default function AgencyShell() {
                     </div>
 
                     <div className="reg-list" style={{marginTop:14}}>
-                      {sessions.map(sess => {
-                        const sessParticipants = filteredParticipants.filter(rp => rp.sessionId === sess.id);
-                        if (sessParticipants.length === 0 && sessions.length > 1) return null;
+                      {groups.map(grp => {
+                        const grpParticipants = filteredParticipants.filter(rp => rp.groupId === grp.id);
+                        if (grpParticipants.length === 0 && groups.length > 1) return null;
                         return (
-                          <div key={sess.id}>
-                            {sessions.length > 1 && (
+                          <div key={grp.id}>
+                            {groups.length > 1 && (
                               <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",textTransform:"uppercase",letterSpacing:".04em",margin:"14px 0 8px"}}>
-                                {sess.date} · {sess.time} · {sess.location}
+                                <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:grp.color,marginRight:6}}/>{grp.name} · {grp.date} · {grp.time}–{grp.endTime}
                               </div>
                             )}
-                            {sessParticipants.map(rp => {
+                            {grpParticipants.map(rp => {
                               const info = getParticipantInfo(rp);
                               const group = groups.find(g => g.id === rp.groupId);
                               const isCheckedIn = rp.registrationStatus === "checked_in" || rp.registrationStatus === "late";
@@ -11777,10 +12099,10 @@ export default function AgencyShell() {
                         </h1>
                         <div className="round-meta-line" style={{marginTop:4}}>
                           <span className="round-meta-chip" style={{color:preset.color,background:`${preset.color}14`}}><I n={preset.icon} s={11}/> {preset.label}</span>
-                          {sessions.length > 0 && (
-                            <span className="round-meta-chip"><I n="calendar" s={11}/> {sessions[0].date}{sessions.length>1?` + ${sessions.length-1}`:""}</span>
+                          {groups.length > 0 && (
+                            <span className="round-meta-chip"><I n="calendar" s={11}/> {groups[0].date}{groups.length>1?` · ${groups.length} groups`:""}</span>
                           )}
-                          {sessions[0]?.location && <span className="round-meta-chip"><I n="pin2" s={11}/> {sessions[0].location}</span>}
+                          {groups[0]?.location && <span className="round-meta-chip"><I n="pin2" s={11}/> {groups[0].location}</span>}
                           {!isPreSend && participants.length > 0 && (
                             <span className="round-meta-chip" style={{color:"var(--green)",background:"rgba(29,185,84,.08)"}}><I n="check" s={11}/> {checkedInCount}/{participants.length} checked in</span>
                           )}
@@ -11797,15 +12119,12 @@ export default function AgencyShell() {
                     <h3>{round.index === 1 ? "Configure & send invitations" : `Set up Round ${round.index}`}</h3>
                     <p>
                       {round.index === 1
-                        ? "Pick a preset, set up your sessions and groups, then send invitations to your selected candidates. Once sent, the preset locks and participants will appear here."
+                        ? "Pick a preset, set up your groups (with date, time & capacity), then send invitations to your selected candidates. Once sent, the preset locks and participants will appear here."
                         : "Configure this round, then send invitations to advanced artists from the previous round."}
                     </p>
                     <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:18}}>
-                      <button className="btn btn-s" onClick={() => setShowRoundSetup(true)}>
+                      <button className="btn btn-p" onClick={() => setShowNextRoundModal({mode:"edit", roundId:round.id})}>
                         <I n="settings" s={14}/> Configure round
-                      </button>
-                      <button className="btn btn-p" onClick={() => round.index === 1 ? setShowSendResults(true) : sendResultsForRound(round.id)}>
-                        <I n="send" s={14}/> {round.index === 1 ? "Preview & Send" : "Send Invitations"}
                       </button>
                     </div>
                   </div>
@@ -11832,17 +12151,21 @@ export default function AgencyShell() {
                       </div>
                       <div className="round-view-toolbar-right">
                         <div className="rv-toggle">
-                          {ROUND_VIEWS.map(v => (
+                          {ROUND_VIEWS.filter(v => {
+                            if (v.key === "group") return groups.length > 1;
+                            if (v.key === "schedule") return preset.key === "interview" || preset.key === "solo_audition";
+                            return true;
+                          }).map(v => (
                             <button key={v.key} className={activeView===v.key?"on":""} onClick={() => setRoundView(v.key)} title={v.desc}>
                               <I n={v.icon} s={12}/> {v.label}
                             </button>
                           ))}
                         </div>
-                        <button className="btn btn-s btn-sm" onClick={() => setShowRoundSetup(true)} title="Round setup">
+                        <button className="btn btn-s btn-sm" onClick={() => setShowNextRoundModal({mode:"edit", roundId:round.id})} title="Round setup">
                           <I n="settings" s={12}/>
                         </button>
                         {decisionsCount > 0 && (
-                          <button className="btn btn-p btn-sm" onClick={() => setShowNextRoundModal(true)}>
+                          <button className="btn btn-p btn-sm" onClick={() => setShowNextRoundModal({mode:"new", fromRoundId:round.id})}>
                             <I n="arrow" s={12}/> {round.preset === "finals" ? "Send Offers" : "Next Round"}
                           </button>
                         )}
@@ -11856,43 +12179,34 @@ export default function AgencyShell() {
                       </div>
                     ) : (
                       <>
-                        {/* Group view (kanban) */}
+                        {/* Group view (kanban — compact name cards) */}
                         {activeView === "group" && (
-                          <div className="aud-board">
+                          <div className="aud-board" style={{gridTemplateColumns:`repeat(${Math.min(groups.length, 4)}, 1fr)`}}>
                             {groups.map(g => {
                               const colParticipants = visibleParticipants.filter(rp => rp.groupId === g.id);
                               return (
-                                <div key={g.id} className="aud-col" onDragOver={e => e.preventDefault()} onDrop={() => { if (draggingParticipantId) { moveParticipantToGroup(draggingParticipantId, g.id); setDraggingParticipantId(null); }}}>
+                                <div key={g.id} className="aud-col" style={{minWidth:0}} onDragOver={e => e.preventDefault()} onDrop={() => { if (draggingParticipantId) { moveParticipantToGroup(draggingParticipantId, g.id); setDraggingParticipantId(null); }}}>
                                   <div className="aud-col-head">
                                     <h4><span className="ach-dot" style={{background:g.color}}/> {g.name}</h4>
-                                    <div className="aud-col-meta">{colParticipants.length}/{g.capacity}</div>
+                                    <div className="aud-col-meta">{colParticipants.length}/{g.capacity} · {g.time}–{g.endTime}</div>
                                   </div>
                                   {colParticipants.map(rp => {
                                     const info = getParticipantInfo(rp);
                                     const tally = getVoteTally(rp.artistId, round.id);
+                                    const outcome = rp.outcome;
                                     return (
-                                      <div key={rp.id} className={`aud-card ${draggingParticipantId===rp.id?"dragging":""}`} draggable onDragStart={() => setDraggingParticipantId(rp.id)} onDragEnd={() => setDraggingParticipantId(null)} onClick={() => { setViewParticipantId(rp.id); setParticipantTab("reviews"); }}>
-                                        <div className="aud-card-head">
-                                          <span className="aud-card-num">#{rp.auditionNumber}</span>
-                                          {info.img ? <img src={info.img} alt="" className="aud-card-img"/> : <div className="reg-avatar-ph" style={{width:36,height:36,fontSize:13}}>{info.name.split(" ").map(n=>n[0]).slice(0,2).join("")}</div>}
-                                          <div style={{flex:1,minWidth:0}}>
-                                            <div className="aud-card-name">{info.name}</div>
-                                            <div style={{fontSize:10,color:"var(--g4)"}}>{info.role}</div>
-                                          </div>
-                                        </div>
-                                        <div className="aud-vote-row" onClick={e => e.stopPropagation()}>
+                                      <div key={rp.id} className={`grp-name-card ${outcome||""} ${draggingParticipantId===rp.id?"dragging":""}`} draggable onDragStart={() => setDraggingParticipantId(rp.id)} onDragEnd={() => setDraggingParticipantId(null)} onClick={() => { setViewParticipantId(rp.id); setParticipantTab("reviews"); }} style={{cursor:"grab",display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"var(--sf)",border:"1px solid var(--g2)",borderRadius:8,marginBottom:4,fontSize:12,transition:"border-color .15s"}}>
+                                        {info.img ? <img src={info.img} alt="" style={{width:26,height:26,borderRadius:"50%",objectFit:"cover",flexShrink:0}}/> : <div style={{width:26,height:26,borderRadius:"50%",background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"var(--g4)",flexShrink:0}}>{info.name?.[0]}</div>}
+                                        <span style={{fontWeight:500,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><span style={{color:"var(--g4)",marginRight:4}}>#{rp.auditionNumber}</span>{info.name}</span>
+                                        {tally.total > 0 && <span className="vote-tally" style={{fontSize:9,gap:2}}><span className="vt-y">{tally.yes}</span><span className="vt-m">{tally.maybe}</span><span className="vt-n">{tally.no}</span></span>}
+                                        {outcome === "callback" && <span style={{width:7,height:7,borderRadius:"50%",background:"#1DB954",flexShrink:0}}/>}
+                                        {outcome === "not_selected" && <span style={{width:7,height:7,borderRadius:"50%",background:"var(--red)",flexShrink:0}}/>}
+                                        <div className="aud-vote-row" onClick={e => e.stopPropagation()} style={{gap:2}}>
                                           {[{v:"yes",label:"Y",cls:"yes"},{v:"maybe",label:"M",cls:"maybe"},{v:"no",label:"N",cls:"no"}].map(b => {
                                             const myVote = auditionVotes.find(x => x.artistId === rp.artistId && x.roundId === round.id && x.voterId === "tm1");
-                                            return <button key={b.v} className={`vote-btn ${b.cls} ${myVote?.value===b.v?"on":""}`} onClick={() => castVote(rp.artistId, round.id, b.v)}>{b.label}</button>;
+                                            return <button key={b.v} className={`vote-btn ${b.cls} ${myVote?.value===b.v?"on":""}`} style={{width:22,height:22,fontSize:9}} onClick={() => castVote(rp.artistId, round.id, b.v)}>{b.label}</button>;
                                           })}
                                         </div>
-                                        {tally.total > 0 && (
-                                          <div className="vote-tally">
-                                            <span className="vt-y">●{tally.yes}</span>
-                                            <span className="vt-m">●{tally.maybe}</span>
-                                            <span className="vt-n">●{tally.no}</span>
-                                          </div>
-                                        )}
                                       </div>
                                     );
                                   })}
@@ -11905,27 +12219,38 @@ export default function AgencyShell() {
 
                         {/* Grid view */}
                         {activeView === "grid" && (
-                          <div className="aud-grid">
+                          <div className="cand-grid">
                             {visibleParticipants.map(rp => {
                               const info = getParticipantInfo(rp);
                               const tally = getVoteTally(rp.artistId, round.id);
+                              const group = groups.find(g => g.id === rp.groupId);
+                              const outcome = rp.outcome;
+                              const outcomeBadge = outcome === "callback" ? {label:"Callback",bg:"rgba(29,185,84,.85)"} : outcome === "not_selected" ? {label:"Not Selected",bg:"rgba(255,71,87,.85)"} : null;
                               return (
-                                <div key={rp.id} className="aud-grid-card" onClick={() => { setViewParticipantId(rp.id); setParticipantTab("reviews"); }}>
-                                  <div style={{position:"relative"}}>
-                                    {info.img ? <img src={info.img} alt="" className="aud-grid-img"/> : <div className="aud-grid-img-ph"><I n="users" s={28}/></div>}
-                                    <div className="aud-grid-num-badge">#{rp.auditionNumber}</div>
+                                <div key={rp.id} className="cand-card" onClick={() => { setViewParticipantId(rp.id); setParticipantTab("reviews"); }}>
+                                  <div className="cand-img-wrap">
+                                    {info.img ? <img className="cand-img" src={info.img} alt={info.name}/> : <div className="cand-img" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g4)",fontSize:20,fontWeight:700}}>{info.name?.[0]}</div>}
+                                    <div className="cand-number">#{rp.auditionNumber}</div>
+                                    {outcomeBadge && <span className="cand-badge" style={{background:outcomeBadge.bg,color:"#fff"}}>{outcomeBadge.label}</span>}
+                                    {group && (
+                                      <div style={{position:"absolute",bottom:8,left:8,background:"rgba(0,0,0,.55)",color:"#fff",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:40}}>{group.name}</div>
+                                    )}
+                                    <div className="cand-overlay">
+                                      <div className="cand-name">{info.name}</div>
+                                      <div className="cand-tags">
+                                        <span>{info.role || "Artist"}</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="aud-grid-body">
-                                    <div className="aud-grid-name">{info.name}</div>
-                                    <div style={{fontSize:11,color:"var(--g4)",margin:"3px 0 8px"}}>{info.role}</div>
-                                    <div className="aud-vote-row" onClick={e => e.stopPropagation()}>
+                                  <div style={{padding:"8px 10px 10px",display:"flex",alignItems:"center",gap:6}}>
+                                    <div className="aud-vote-row" style={{flex:1}} onClick={e => e.stopPropagation()}>
                                       {[{v:"yes",label:"Y",cls:"yes"},{v:"maybe",label:"M",cls:"maybe"},{v:"no",label:"N",cls:"no"}].map(b => {
                                         const myVote = auditionVotes.find(x => x.artistId === rp.artistId && x.roundId === round.id && x.voterId === "tm1");
                                         return <button key={b.v} className={`vote-btn ${b.cls} ${myVote?.value===b.v?"on":""}`} onClick={() => castVote(rp.artistId, round.id, b.v)}>{b.label}</button>;
                                       })}
                                     </div>
                                     {tally.total > 0 && (
-                                      <div className="vote-tally" style={{marginTop:6}}>
+                                      <div className="vote-tally">
                                         <span className="vt-y">●{tally.yes}</span>
                                         <span className="vt-m">●{tally.maybe}</span>
                                         <span className="vt-n">●{tally.no}</span>
@@ -11977,19 +12302,19 @@ export default function AgencyShell() {
                         {/* Schedule view */}
                         {activeView === "schedule" && (
                           <div className="aud-schedule">
-                            {sessions.map(sess => {
-                              const sessP = visibleParticipants.filter(rp => rp.sessionId === sess.id).sort((a,b) => parseInt(a.auditionNumber) - parseInt(b.auditionNumber));
+                            {groups.map(grp => {
+                              const grpP = visibleParticipants.filter(rp => rp.groupId === grp.id).sort((a,b) => parseInt(a.auditionNumber) - parseInt(b.auditionNumber));
                               return (
-                                <div key={sess.id} className="sch-block">
+                                <div key={grp.id} className="sch-block">
                                   <div className="sch-block-head">
-                                    <h4><I n="calendar" s={14}/> {sess.date} · {sess.time}–{sess.endTime}</h4>
-                                    <span style={{fontSize:11,color:"var(--g4)"}}>{sess.location}</span>
+                                    <h4><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:grp.color,marginRight:6}}/><I n="calendar" s={14}/> {grp.name} · {grp.date} · {grp.time}–{grp.endTime}</h4>
+                                    <span style={{fontSize:11,color:"var(--g4)"}}>{grp.location}</span>
                                   </div>
-                                  {sessP.length === 0 ? (
-                                    <div style={{fontSize:12,color:"var(--g4)",padding:14}}>No participants in this session.</div>
-                                  ) : sessP.map((rp, i) => {
+                                  {grpP.length === 0 ? (
+                                    <div style={{fontSize:12,color:"var(--g4)",padding:14}}>No participants in this group.</div>
+                                  ) : grpP.map((rp, i) => {
                                     const info = getParticipantInfo(rp);
-                                    const startMin = sess.time ? parseInt(sess.time.split(":")[0])*60 + parseInt(sess.time.split(":")[1]||"0") : 0;
+                                    const startMin = grp.time ? parseInt(grp.time.split(":")[0])*60 + parseInt(grp.time.split(":")[1]||"0") : 0;
                                     const slotLen = preset.key === "solo_audition" ? 15 : preset.key === "interview" ? 20 : 10;
                                     const t = startMin + i * slotLen;
                                     const tStr = `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
@@ -12013,6 +12338,17 @@ export default function AgencyShell() {
 
                         {/* Decision view — bulk-select with checkboxes + tally + Callback / Not selected */}
                         {activeView === "decision" && (
+                          <div>
+                            <div style={{padding:"12px 16px",marginBottom:12,background:"linear-gradient(90deg,rgba(245,166,35,.08),rgba(245,166,35,.02))",border:"1px solid rgba(245,166,35,.25)",borderRadius:12,display:"flex",alignItems:"center",gap:12}}>
+                              <div style={{width:32,height:32,borderRadius:8,background:"rgba(245,166,35,.15)",display:"inline-flex",alignItems:"center",justifyContent:"center"}}><I n="check" s={15} style={{color:"#F5A623"}}/></div>
+                              <div style={{flex:1}}>
+                                <div style={{fontSize:13,fontWeight:600}}>Decision Phase</div>
+                                <div style={{fontSize:11,color:"var(--g5)"}}>{participants.filter(p=>p.outcome==="callback").length} callback · {participants.filter(p=>p.outcome==="not_selected").length} not selected · {participants.filter(p=>!p.outcome||p.outcome==="active").length} undecided</div>
+                              </div>
+                              {participants.filter(p=>p.outcome==="callback").length > 0 && (
+                                <button className="btn btn-p btn-sm" onClick={() => setShowNextRoundModal({mode:"new", fromRoundId:round.id})}><I n="arrow" s={12}/> Next Round</button>
+                              )}
+                            </div>
                           <div className="aud-decision">
                             {visibleParticipants.map(rp => {
                               const info = getParticipantInfo(rp);
@@ -12042,6 +12378,7 @@ export default function AgencyShell() {
                               );
                             })}
                           </div>
+                          </div>
                         )}
 
                         {bulkSelectedParticipants.length > 0 && (
@@ -12060,161 +12397,14 @@ export default function AgencyShell() {
             );
           })()}
 
-          {/* ═══ ROUNDS DRAWER: SETUP ═══ */}
-          {showRoundSetup && viewRoom && currentRoom && roomPage === "rounds" && (() => {
-            const round = auditionRounds.find(r => r.id === activeRoundId) || getActiveRoundsForRoom(currentRoom.id)[0];
-            if (!round) return null;
-            const sessions = getRoundSessions(round.id);
-            const groups = getRoundGroups(round.id);
-            const participants = getRoundParticipants(round.id);
-            const isPreSend = !round.invitationsSentAt;
-            return (
-              <>
-                <div className="round-drawer-overlay" onClick={() => setShowRoundSetup(false)}/>
-                <div className="round-drawer">
-                  <div className="round-drawer-head">
-                    <h2><I n="settings" s={16} style={{marginRight:8}}/> {round.name} Setup {round.presetLocked && <span style={{fontSize:10,padding:"2px 8px",background:"var(--g1)",color:"var(--g5)",borderRadius:40,marginLeft:8,fontWeight:600,letterSpacing:".04em"}}>LOCKED</span>}</h2>
-                    <button onClick={() => setShowRoundSetup(false)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--g5)",padding:6}}><I n="x" s={16}/></button>
-                  </div>
-                  <div className="round-drawer-body">
-                    {/* Preset */}
-                    <div>
-                      <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",letterSpacing:".04em",textTransform:"uppercase",marginBottom:8,display:"flex",alignItems:"center"}}>Preset <InfoTip topic="round_preset"/></div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                        {ROUND_PRESETS.map(p => {
-                          const locked = round.presetLocked;
-                          return (
-                            <div key={p.key} className={`preset-card ${round.preset===p.key?"selected":""} ${locked && round.preset!==p.key?"locked":""}`} style={{padding:"10px 12px"}} onClick={() => {
-                              if (locked) return;
-                              setAuditionRounds(rs => rs.map(r => r.id===round.id ? {...r, preset:p.key, viewDefault:p.defaultView} : r));
-                            }}>
-                              <div className="preset-card-head" style={{margin:0,color:p.color}}><I n={p.icon} s={14}/><h4 style={{color:"var(--tx)",fontSize:12}}>{p.label}</h4></div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Group creation mode */}
-                    <div>
-                      <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",letterSpacing:".04em",textTransform:"uppercase",marginBottom:8,display:"flex",alignItems:"center"}}>Group creation <InfoTip topic="group_rules"/></div>
-                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                        {GROUP_CREATION_MODES.map(m => (
-                          <div key={m.key} className={`preset-card ${round.groupCreationMode===m.key?"selected":""} ${round.presetLocked && round.groupCreationMode!==m.key?"locked":""}`} style={{padding:"10px 12px",display:"flex",alignItems:"center",gap:10}} onClick={() => {
-                            if (round.presetLocked) return;
-                            setAuditionRounds(rs => rs.map(r => r.id===round.id ? {...r, groupCreationMode:m.key} : r));
-                          }}>
-                            <I n={m.icon} s={14}/>
-                            <div style={{flex:1}}>
-                              <div style={{fontSize:12,fontWeight:600,display:"flex",alignItems:"center"}}>{m.label}<InfoTip topic={`group_mode_${m.key}`}/></div>
-                              <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>{m.desc}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sessions */}
-                    <div>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                        <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",letterSpacing:".04em",textTransform:"uppercase",display:"flex",alignItems:"center"}}>Sessions <InfoTip topic="multi_session"/></div>
-                        {!round.presetLocked && (
-                          <button className="btn btn-s btn-sm" onClick={() => {
-                            const newSession = { id:"s"+Date.now(), roundId:round.id, date:"TBD", time:"10:00", endTime:"13:00", location:"", capacity:24, address:"" };
-                            setAuditionSessions(p => [...p, newSession]);
-                          }}><I n="plus" s={11}/> Add</button>
-                        )}
-                      </div>
-                      {sessions.length === 0 ? (
-                        <div style={{fontSize:12,color:"var(--g4)",padding:"8px 0",fontStyle:"italic"}}>No sessions yet.</div>
-                      ) : sessions.map(s => (
-                        <div key={s.id} className="session-row" style={{gridTemplateColumns:"1fr 1fr 1fr 60px auto"}}>
-                          <div><label>Date</label><input value={s.date} disabled={round.presetLocked} onChange={e => setAuditionSessions(p => p.map(x => x.id===s.id ? {...x, date:e.target.value} : x))}/></div>
-                          <div><label>Time</label><input value={`${s.time} – ${s.endTime}`} disabled={round.presetLocked} onChange={e => { const [t1,t2] = e.target.value.split(/[—–-]/).map(x=>x.trim()); setAuditionSessions(p => p.map(x => x.id===s.id ? {...x, time:t1||"", endTime:t2||""} : x)); }}/></div>
-                          <div><label>Location</label><input value={s.location} disabled={round.presetLocked} onChange={e => setAuditionSessions(p => p.map(x => x.id===s.id ? {...x, location:e.target.value} : x))}/></div>
-                          <div><label>Cap</label><input type="number" value={s.capacity} disabled={round.presetLocked} onChange={e => setAuditionSessions(p => p.map(x => x.id===s.id ? {...x, capacity:parseInt(e.target.value)||0} : x))}/></div>
-                          <div>
-                            {!round.presetLocked && sessions.length > 1 && (
-                              <button className="btn btn-g btn-sm" onClick={() => { setAuditionSessions(p => p.filter(x => x.id !== s.id)); setAuditionGroups(p => p.filter(g => g.sessionId !== s.id)); }}><I n="trash" s={12}/></button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Groups */}
-                    {round.groupCreationMode !== "divide_on_day" && (
-                      <div>
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                          <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",letterSpacing:".04em",textTransform:"uppercase",display:"flex",alignItems:"center"}}>Groups <InfoTip topic="group_rules"/></div>
-                          {!round.presetLocked && (
-                            <div style={{display:"flex",gap:6}}>
-                              <button className="btn btn-s btn-sm" onClick={() => setShowAutoGenerate(true)}><I n="aria" s={11}/> Auto</button>
-                              <button className="btn btn-s btn-sm" onClick={() => {
-                                const sessionId = sessions[0]?.id;
-                                if (!sessionId) { showToast("Add a session first."); return; }
-                                const colors = ["#604DFF","#1A56DB","#1DB954","#F5A623","#FF6B81","#0EA5A8"];
-                                const existing = groups.length;
-                                setAuditionGroups(p => [...p, { id:"g"+Date.now(), roundId:round.id, sessionId, name:`Group ${String.fromCharCode(65+existing)}`, capacity:12, createdAtPhase:"setup", color:colors[existing%colors.length], rules:[] }]);
-                              }}><I n="plus" s={11}/> Add</button>
-                            </div>
-                          )}
-                        </div>
-                        {sessions.map(sess => (
-                          <div key={sess.id} style={{marginBottom:10}}>
-                            {sessions.length > 1 && (
-                              <div style={{fontSize:10,fontWeight:600,color:"var(--g4)",margin:"4px 0 6px"}}>{sess.date} · {sess.time}</div>
-                            )}
-                            {getRoundGroups(round.id, sess.id).length === 0 ? (
-                              <div style={{fontSize:11,color:"var(--g4)",fontStyle:"italic",padding:"4px 0"}}>No groups yet.</div>
-                            ) : getRoundGroups(round.id, sess.id).map(g => (
-                              <div key={g.id} className="group-config-card">
-                                <div className="gc-head">
-                                  <span className="gc-color" style={{background:g.color}}/>
-                                  <input className="gc-name-input" value={g.name} disabled={round.presetLocked} onChange={e => setAuditionGroups(p => p.map(x => x.id===g.id ? {...x, name:e.target.value} : x))}/>
-                                  <span style={{fontSize:11,color:"var(--g4)"}}>{participants.filter(rp => rp.groupId === g.id).length}/{g.capacity}</span>
-                                  {!round.presetLocked && (
-                                    <>
-                                      <button className="btn btn-g btn-sm" onClick={() => setShowRulesEditor({groupId:g.id})}><I n="filter" s={11}/></button>
-                                      <button className="btn btn-g btn-sm" onClick={() => { setAuditionGroups(p => p.filter(x => x.id !== g.id)); setAuditionParticipants(p => p.filter(rp => rp.groupId !== g.id)); }}><I n="trash" s={11}/></button>
-                                    </>
-                                  )}
-                                </div>
-                                {g.rules.length > 0 && (
-                                  <div className="gc-rules">
-                                    {g.rules.map((r, i) => (
-                                      <span key={i} className={`gc-rule-chip ${r.enforcement==="hard"?"hard":""}`}>
-                                        {Object.entries(r.criteria).map(([k,v]) => `${k}: ${v}`).join(", ")}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="round-drawer-foot">
-                    <button className="btn btn-g" onClick={() => setShowRoundSetup(false)}>Close</button>
-                    {isPreSend && (
-                      <button className="btn btn-p" onClick={() => { setShowRoundSetup(false); if (round.index === 1) setShowSendResults(true); else sendResultsForRound(round.id); }}>
-                        <I n="send" s={14}/> {round.index === 1 ? "Preview & Send" : "Send Invitations"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </>
-            );
-          })()}
+          {/* Round Setup drawer removed — unified into Round Modal */}
 
           {/* ═══ ROOM: INTERVIEWS PAGE ═══ */}
           {viewRoom && currentRoom && roomPage === "interviews" && INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && (() => {
             const eligible = roomCandidates.filter(c => c.status === "shortlisted" || c.status === "selected");
-            const slots = interviewSlots.filter(s => s.roomId === currentRoom.id);
             const getStatus = (cId) => interviewStatuses[cId] || "pending";
             const counts = {
+              all: eligible.length,
               pending: eligible.filter(c => getStatus(c.id) === "pending").length,
               invited: eligible.filter(c => getStatus(c.id) === "invited").length,
               scheduled: eligible.filter(c => getStatus(c.id) === "scheduled").length,
@@ -12223,265 +12413,155 @@ export default function AgencyShell() {
             const filtered = interviewFilter === "all" ? eligible : eligible.filter(c => getStatus(c.id) === interviewFilter);
             const setStatus = (cId, st) => setInterviewStatuses(p => ({...p, [cId]:st}));
             const fmtLabel = currentRoom.interviewFormat === "video" ? "Video Call" : currentRoom.interviewFormat === "phone" ? "Phone" : "In Person";
+            const viewMode = interviewViewMode;
             return (
               <>
-                <div className="pg-header">
-                  <h1>Interview <em>Stage</em></h1>
-                  <p className="pg-sub">Invite shortlisted candidates for a final interview before making your selection. Default format: {fmtLabel} · {currentRoom.interviewDuration || "30"} min.</p>
-                </div>
-
-                <div className="room-stats room-stats-3" style={{marginBottom:18}}>
-                  {[
-                    {key:"pending", label:"Pending Invite", count:counts.pending, color:"var(--g5)", icon:"clock"},
-                    {key:"invited", label:"Invited", count:counts.invited, color:"var(--amber)", icon:"send"},
-                    {key:"scheduled", label:"Scheduled", count:counts.scheduled, color:"var(--ac)", icon:"calendar"},
-                    {key:"completed", label:"Completed", count:counts.completed, color:"var(--green)", icon:"check"},
-                  ].map(s => (
-                    <div key={s.key} className="room-stat-card" style={{cursor:"pointer",borderColor: interviewFilter===s.key ? "var(--ac)" : undefined}} onClick={() => setInterviewFilter(interviewFilter === s.key ? "all" : s.key)}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                        <div style={{width:28,height:28,borderRadius:8,background:"var(--g1)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:s.color}}><I n={s.icon} s={14}/></div>
-                        <div style={{fontSize:11,fontWeight:600,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>{s.label}</div>
-                      </div>
-                      <div style={{fontSize:28,fontWeight:700,fontFamily:"var(--mono)",color:s.color}}>{s.count}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="room-stat-card" style={{marginBottom:18}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
-                    <h3 style={{margin:0}}>Candidates {interviewFilter !== "all" && <span style={{fontSize:11,fontWeight:500,color:"var(--g4)",marginLeft:6}}>· {interviewFilter}</span>}</h3>
-                    <div style={{display:"flex",gap:6}}>
-                      {["all","pending","invited","scheduled","completed"].map(f => (
-                        <button key={f} className={`chip ${interviewFilter===f?"on":""}`} onClick={() => setInterviewFilter(f)}>{f === "all" ? "All" : f.charAt(0).toUpperCase()+f.slice(1)}</button>
-                      ))}
-                    </div>
+                <div className="pg-header" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div>
+                    <h1>Interviews</h1>
+                    <p className="pg-sub">{eligible.length} candidate{eligible.length !== 1 ? "s" : ""} for {currentRoom.title}{currentRoom.interviewSchedule ? ` · ${fmtLabel} · ${currentRoom.interviewDuration || "30"} min` : ""}</p>
                   </div>
-                  {filtered.length === 0 ? (
-                    <div style={{padding:"24px 0",textAlign:"center",color:"var(--g4)",fontSize:13}}>
-                      {eligible.length === 0 ? "No shortlisted candidates yet. Shortlist candidates from the Candidates tab to invite them to interviews." : "No candidates match this filter."}
+                  <button className="btn btn-p mobile-hide" onClick={() => setShowScheduleSetup({type:"interview"})}>
+                    <I n="calendar" s={14}/> {currentRoom.interviewSchedule ? "Edit Schedule" : "Setup Schedule"}
+                  </button>
+                </div>
+
+                <div className="cand-toolbar">
+                  <div className="cand-filters">
+                    {[
+                      {key:"all", label:"All", color:"var(--g5)", bg:"var(--sf)"},
+                      {key:"pending", label:"Pending", color:"var(--g4)", bg:"var(--g1)"},
+                      {key:"invited", label:"Invited", color:"var(--amber)", bg:"#FFF8E6"},
+                      {key:"scheduled", label:"Scheduled", color:"var(--ac)", bg:"rgba(96,77,255,.08)"},
+                      {key:"completed", label:"Completed", color:"var(--green)", bg:"#E6FFF0"},
+                    ].map(f => (
+                      <button key={f.key}
+                        className={`cand-status-chip ${interviewFilter===f.key?"on":""}`}
+                        style={interviewFilter===f.key ? {background:f.key==="all"?"var(--tx)":f.color, color:f.key==="all"?"var(--bg)":"#fff"} : {}}
+                        onClick={() => setInterviewFilter(f.key)}
+                      >{f.label} <span className="csc-count">{counts[f.key]}</span></button>
+                    ))}
+                  </div>
+                  <div className="cand-tools">
+                    <div className="cand-view-toggle">
+                      <button className={viewMode==="card"?"active":""} onClick={()=>setInterviewViewMode("card")}><I n="grid" s={14}/></button>
+                      <button className={viewMode==="list"?"active":""} onClick={()=>setInterviewViewMode("list")}><I n="list" s={14}/></button>
+                      <button className={viewMode==="calendar"?"active":""} onClick={()=>setInterviewViewMode("calendar")}><I n="calendar" s={14}/></button>
                     </div>
-                  ) : (
-                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                      {filtered.map(cand => {
-                        const info = getCandidateInfo(cand);
-                        const st = getStatus(cand.id);
-                        const stColor = st === "completed" ? "var(--green)" : st === "scheduled" ? "var(--ac)" : st === "invited" ? "var(--amber)" : "var(--g4)";
-                        const fb = interviewFeedback[cand.id];
-                        return (
-                          <div key={cand.id} style={{display:"flex",flexDirection:"column",gap:8,padding:"10px 12px",border:"1px solid var(--g1)",borderRadius:10}}>
-                            <div style={{display:"flex",alignItems:"center",gap:12}}>
-                              <div className="team-avatar" style={{width:36,height:36,fontSize:12}}>{info.name?.split(" ").map(n=>n[0]).join("").slice(0,2) || "?"}</div>
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontSize:13,fontWeight:600,color:"var(--tx)"}}>{info.name}</div>
-                                <div style={{fontSize:11,color:"var(--g4)",display:"flex",alignItems:"center",gap:6}}>
-                                  <span style={{padding:"2px 6px",borderRadius:6,background:"var(--g1)",fontSize:10,fontWeight:600,color:stColor,textTransform:"uppercase",letterSpacing:".04em"}}>{st}</span>
-                                  <span>·</span>
-                                  <span>{cand.status}</span>
-                                  {fb?.rating && <><span>·</span><span style={{color:"#F5A623"}}>{"★".repeat(fb.rating)}{"☆".repeat(5-fb.rating)}</span></>}
-                                </div>
-                              </div>
-                              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                                {st === "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "invited")}><I n="send" s={12}/> Invite</button>}
-                                {st === "invited" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "scheduled")}><I n="calendar" s={12}/> Mark Scheduled</button>}
-                                {st === "scheduled" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "completed")}><I n="check" s={12}/> Mark Completed</button>}
-                                {st !== "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "pending")} title="Reset"><I n="back" s={12}/></button>}
+                    <select className="cand-sort mobile-hide" value="newest" onChange={() => {}}>
+                      <option value="newest">Newest</option>
+                      <option value="az">A → Z</option>
+                    </select>
+                  </div>
+                </div>
+
+                {eligible.length === 0 ? (
+                  <div className="sc-empty" style={{marginTop:40}}>
+                    <I n="calendar" s={32}/>
+                    <p>No candidates in the interview stage yet. Shortlist candidates from the Applicants tab to invite them.</p>
+                  </div>
+                ) : viewMode === "calendar" ? (
+                  <div className="room-stat-card">
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                      <h3 style={{margin:0}}>Schedule Calendar</h3>
+                      {currentRoom.interviewSchedule && <span style={{fontSize:11,color:"var(--g4)"}}>{currentRoom.interviewSchedule.timezone || "Europe/London"} · {currentRoom.interviewSchedule.duration || 30} min slots</span>}
+                    </div>
+                    {(() => {
+                      const today = new Date();
+                      const days = Array.from({length:14}, (_, i) => {
+                        const d = new Date(today);
+                        d.setDate(d.getDate() + i);
+                        return d;
+                      });
+                      const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+                      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                      const scheduledCands = eligible.filter(c => getStatus(c.id) === "scheduled" || getStatus(c.id) === "completed");
+                      return (
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(7, 1fr)",gap:6}}>
+                          {days.slice(0,7).map((d, i) => (
+                            <div key={i} style={{textAlign:"center"}}>
+                              <div style={{fontSize:10,fontWeight:600,color:"var(--g4)",textTransform:"uppercase",marginBottom:6}}>{dayNames[d.getDay()]}</div>
+                              <div style={{padding:"10px 4px",borderRadius:10,border:"1px solid var(--g1)",background: d.getDay()===0||d.getDay()===6 ? "var(--g0)" : "var(--sf)",minHeight:80,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                                <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{d.getDate()}</div>
+                                <div style={{fontSize:9,color:"var(--g4)"}}>{monthNames[d.getMonth()]}</div>
+                                {scheduledCands.slice(0, i % 3 === 0 ? 2 : i % 2 === 0 ? 1 : 0).map((c, ci) => {
+                                  const cInfo = getCandidateInfo(c);
+                                  return <div key={ci} style={{width:"100%",padding:"3px 4px",borderRadius:4,background:"rgba(96,77,255,.1)",fontSize:9,fontWeight:600,color:"var(--ac)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cInfo.name?.split(" ")[0]}</div>;
+                                })}
                               </div>
                             </div>
-                            {st === "completed" && (
-                              <div style={{padding:"10px 12px",background:"var(--g0)",borderRadius:8,marginLeft:48}}>
-                                <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",textTransform:"uppercase",letterSpacing:".04em",marginBottom:8}}>Interview Feedback</div>
-                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                                  <span style={{fontSize:11,color:"var(--g4)",width:60}}>Rating:</span>
-                                  <div style={{display:"flex",gap:2}}>
-                                    {[1,2,3,4,5].map(n => (
-                                      <button key={n} onClick={() => setInterviewFeedback(p => ({...p, [cand.id]: {...(p[cand.id]||{}), rating:n}}))} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:0,color: (fb?.rating||0) >= n ? "#F5A623" : "var(--g2)"}}>★</button>
-                                    ))}
-                                  </div>
-                                  {fb?.rating && <span style={{fontSize:11,color:"var(--g4)"}}>{fb.rating}/5</span>}
-                                </div>
-                                <textarea placeholder="Interview notes — strengths, concerns, follow-ups…" value={fb?.notes || ""} onChange={e => setInterviewFeedback(p => ({...p, [cand.id]: {...(p[cand.id]||{}), notes:e.target.value, completedAt: p[cand.id]?.completedAt || "Just now"}}))} style={{width:"100%",fontSize:12,minHeight:60,padding:"8px 10px",borderRadius:8,border:"1px solid var(--g1)",background:"var(--sf)",resize:"vertical"}}/>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {(() => {
-                  const isVideo = currentRoom.interviewFormat === "video";
-                  const provider = currentRoom.meetingProvider || "google_meet";
-                  const providerLabel = provider === "google_meet" ? "Google Meet" : provider === "zoom" ? "Zoom" : provider === "teams" ? "Microsoft Teams" : "Custom";
-                  const generateMeetingUrl = () => {
-                    const code = Math.random().toString(36).slice(2, 5) + "-" + Math.random().toString(36).slice(2, 6) + "-" + Math.random().toString(36).slice(2, 5);
-                    if (provider === "zoom") return `https://us06web.zoom.us/j/${Math.floor(Math.random()*1e10)}`;
-                    if (provider === "teams") return `https://teams.microsoft.com/l/meetup-join/${code}`;
-                    if (provider === "google_meet") return `https://meet.google.com/${code}`;
-                    return "";
-                  };
-                  const groupedSlots = slots.reduce((acc, s) => { (acc[s.date || "Unscheduled"] = acc[s.date || "Unscheduled"] || []).push(s); return acc; }, {});
-                  const dateKeys = Object.keys(groupedSlots).sort();
-                  const candidateSlotConflicts = (() => {
-                    const seen = {};
-                    slots.forEach(s => { if (s.candidateId) { seen[s.candidateId] = (seen[s.candidateId]||0) + 1; } });
-                    return Object.fromEntries(Object.entries(seen).filter(([_, n]) => n > 1));
-                  })();
-                  const timeOverlap = (slotsOnDate) => {
-                    const conflicts = new Set();
-                    for (let i = 0; i < slotsOnDate.length; i++) {
-                      for (let j = i+1; j < slotsOnDate.length; j++) {
-                        const a = slotsOnDate[i], b = slotsOnDate[j];
-                        if (!a.time || !b.time) continue;
-                        const [ah,am] = a.time.split(":").map(Number);
-                        const [bh,bm] = b.time.split(":").map(Number);
-                        const aStart = ah*60+am, aEnd = aStart + (a.duration||30);
-                        const bStart = bh*60+bm, bEnd = bStart + (b.duration||30);
-                        if (aStart < bEnd && bStart < aEnd) { conflicts.add(a.id); conflicts.add(b.id); }
-                      }
-                    }
-                    return conflicts;
-                  };
-                  return (
-                    <div className="room-stat-card">
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,gap:8,flexWrap:"wrap"}}>
-                        <div>
-                          <h3 style={{margin:0}}>Interview Slots</h3>
-                          <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>
-                            {currentRoom.interviewTimezone || "Europe/London"} · {currentRoom.interviewBuffer ? `${currentRoom.interviewBuffer} min buffer` : "no buffer"} · {isVideo ? `Video via ${providerLabel}` : currentRoom.interviewFormat === "phone" ? "Phone" : "In Person"}
-                          </div>
+                          ))}
                         </div>
-                        {currentRoom.allowCandidateSelfBook && (
-                          <div style={{padding:"4px 10px",background:"rgba(14,165,168,.1)",border:"1px solid rgba(14,165,168,.3)",borderRadius:20,fontSize:11,fontWeight:600,color:"#0EA5A8",display:"inline-flex",alignItems:"center",gap:4}}>
-                            <I n="link" s={11}/> Self-booking enabled
-                          </div>
-                        )}
+                      );
+                    })()}
+                    {!currentRoom.interviewSchedule && (
+                      <div style={{marginTop:14,padding:"12px 16px",background:"var(--g0)",borderRadius:10,display:"flex",alignItems:"center",gap:10,fontSize:12,color:"var(--g4)"}}>
+                        <I n="alert" s={14}/> Setup your availability schedule to enable calendar booking.
+                        <button className="btn btn-s btn-sm" onClick={() => setShowScheduleSetup({type:"interview"})} style={{marginLeft:"auto"}}><I n="calendar" s={11}/> Setup</button>
                       </div>
-
-                      {/* Bulk slot creator */}
-                      <div style={{padding:"14px 16px",border:"1px dashed var(--g2)",borderRadius:12,marginBottom:14,background:"var(--g0)"}}>
-                        <div style={{fontSize:12,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:6}}><I n="plus" s={12}/> Bulk Create Slots</div>
-                        <div style={{display:"grid",gridTemplateColumns:"1.4fr 0.9fr 0.9fr 0.9fr auto",gap:8,alignItems:"end"}}>
-                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Date</div><input type="text" placeholder="e.g. Jun 5, 2026" value={bulkSlotForm.date} onChange={e => setBulkSlotForm(p => ({...p, date:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
-                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Start</div><input type="time" value={bulkSlotForm.startTime} onChange={e => setBulkSlotForm(p => ({...p, startTime:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
-                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>End</div><input type="time" value={bulkSlotForm.endTime} onChange={e => setBulkSlotForm(p => ({...p, endTime:e.target.value}))} style={{fontSize:12,width:"100%"}}/></div>
-                          <div><div style={{fontSize:10,fontWeight:600,color:"var(--g4)",marginBottom:4,textTransform:"uppercase",letterSpacing:".04em"}}>Slot length</div>
-                            <select value={bulkSlotForm.duration} onChange={e => setBulkSlotForm(p => ({...p, duration:parseInt(e.target.value)}))} style={{fontSize:12,width:"100%"}}>
-                              <option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option>
-                            </select>
+                    )}
+                  </div>
+                ) : viewMode === "list" ? (
+                  <div className="app-list">
+                    {filtered.length === 0 ? (
+                      <div className="sc-empty"><I n="search" s={32}/><p>No candidates match this filter.</p></div>
+                    ) : filtered.map(cand => {
+                      const info = getCandidateInfo(cand);
+                      const st = getStatus(cand.id);
+                      const stColor = st === "completed" ? "var(--green)" : st === "scheduled" ? "var(--ac)" : st === "invited" ? "var(--amber)" : "var(--g4)";
+                      const fb = interviewFeedback[cand.id];
+                      return (
+                        <div key={cand.id} className="app-card">
+                          {info.img ? <img className="ac-logo" src={info.img} alt=""/> : <div className="ac-logo" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"var(--g4)"}}>{info.name?.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>}
+                          <div className="ac-info" style={{flex:1}}>
+                            <div className="ac-title">{info.name}</div>
+                            <div className="ac-company">{info.role} {fb?.rating ? <span style={{color:"#F5A623",marginLeft:6}}>{"★".repeat(fb.rating)}</span> : null}</div>
                           </div>
-                          <button className="btn btn-p btn-sm" disabled={!bulkSlotForm.date || !bulkSlotForm.startTime || !bulkSlotForm.endTime} onClick={() => {
-                            const [sh,sm] = bulkSlotForm.startTime.split(":").map(Number);
-                            const [eh,em] = bulkSlotForm.endTime.split(":").map(Number);
-                            const startMin = sh*60+sm, endMin = eh*60+em;
-                            const buf = currentRoom.interviewBuffer || 0;
-                            const step = bulkSlotForm.duration + buf;
-                            const newSlots = [];
-                            for (let m = startMin; m + bulkSlotForm.duration <= endMin; m += step) {
-                              const hh = String(Math.floor(m/60)).padStart(2,"0");
-                              const mm = String(m%60).padStart(2,"0");
-                              newSlots.push({
-                                id: "is"+Date.now()+"_"+m,
-                                roomId: currentRoom.id,
-                                date: bulkSlotForm.date,
-                                time: `${hh}:${mm}`,
-                                duration: bulkSlotForm.duration,
-                                location: isVideo ? providerLabel : (fmtLabel),
-                                timezone: currentRoom.interviewTimezone || "Europe/London",
-                                meetingUrl: isVideo && provider !== "custom" ? generateMeetingUrl() : "",
-                                candidateId: null,
-                                status: "open",
-                              });
-                            }
-                            if (newSlots.length === 0) { showToast("End time must be after start time"); return; }
-                            setInterviewSlots(p => [...p, ...newSlots]);
-                            showToast(`${newSlots.length} slot${newSlots.length>1?"s":""} created`);
-                          }}>
-                            <I n="plus" s={12}/> Generate
-                          </button>
+                          <span style={{padding:"3px 8px",borderRadius:6,background:"var(--g1)",fontSize:10,fontWeight:700,color:stColor,textTransform:"uppercase",letterSpacing:".04em"}}>{st}</span>
+                          <div style={{display:"flex",gap:6,marginLeft:8}}>
+                            {st === "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "invited")}><I n="send" s={12}/> Invite</button>}
+                            {st === "invited" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "scheduled")}><I n="calendar" s={12}/> Scheduled</button>}
+                            {st === "scheduled" && <button className="btn btn-p btn-sm" onClick={() => setStatus(cand.id, "completed")}><I n="check" s={12}/> Complete</button>}
+                            {st === "completed" && <button className="btn btn-s btn-sm" onClick={() => { setCandidates(p => p.map(c => c.id===cand.id?{...c,status:"hired"}:c)); showToast(`${info.name} moved to Hire`); }}><I n="check" s={11}/> Hire</button>}
+                            {st !== "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "pending")} title="Reset"><I n="back" s={12}/></button>}
+                          </div>
                         </div>
-                      </div>
-
-                      {Object.keys(candidateSlotConflicts).length > 0 && (
-                        <div style={{padding:"10px 14px",background:"rgba(245,166,35,.1)",border:"1px solid rgba(245,166,35,.3)",borderRadius:10,marginBottom:12,display:"flex",alignItems:"center",gap:10,fontSize:12}}>
-                          <I n="alert" s={14}/> <span style={{color:"#B07300"}}><strong>Conflict:</strong> {Object.keys(candidateSlotConflicts).length} candidate{Object.keys(candidateSlotConflicts).length>1?"s are":" is"} assigned to multiple slots.</span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="db-grid">
+                    {filtered.length === 0 ? (
+                      <div className="sc-empty" style={{gridColumn:"1 / -1"}}><I n="search" s={32}/><p>No candidates match this filter.</p></div>
+                    ) : filtered.map(cand => {
+                      const info = getCandidateInfo(cand);
+                      const st = getStatus(cand.id);
+                      const stColor = st === "completed" ? "#1DB954" : st === "scheduled" ? "var(--ac)" : st === "invited" ? "var(--amber)" : "var(--g4)";
+                      const stBg = st === "completed" ? "#E6FFF0" : st === "scheduled" ? "rgba(96,77,255,.08)" : st === "invited" ? "#FFF8E6" : "var(--g1)";
+                      const fb = interviewFeedback[cand.id];
+                      return (
+                        <div className="db-card" key={cand.id}>
+                          <div className="db-img-wrap">
+                            {info.img ? <img className="db-img" src={info.img} alt={info.name}/> : <div className="db-img" style={{background:"var(--g1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:700,color:"var(--g3)"}}>{info.name?.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>}
+                            <div style={{position:"absolute",top:8,right:8,padding:"3px 8px",borderRadius:6,background:stBg,fontSize:10,fontWeight:700,color:stColor,textTransform:"uppercase",letterSpacing:".04em"}}>{st}</div>
+                          </div>
+                          <div className="db-body">
+                            <div className="db-name">{info.name}</div>
+                            <div className="db-role">{info.role || cand.status}</div>
+                            {fb?.rating && <div style={{margin:"4px 0",fontSize:13,color:"#F5A623"}}>{"★".repeat(fb.rating)}{"☆".repeat(5-fb.rating)}</div>}
+                            <div style={{display:"flex",gap:6,marginTop:8}}>
+                              {st === "pending" && <button className="btn btn-s btn-sm" style={{flex:1}} onClick={() => setStatus(cand.id, "invited")}><I n="send" s={11}/> Invite</button>}
+                              {st === "invited" && <button className="btn btn-s btn-sm" style={{flex:1}} onClick={() => setStatus(cand.id, "scheduled")}><I n="calendar" s={11}/> Scheduled</button>}
+                              {st === "scheduled" && <button className="btn btn-p btn-sm" style={{flex:1}} onClick={() => setStatus(cand.id, "completed")}><I n="check" s={11}/> Complete</button>}
+                              {st === "completed" && <button className="btn btn-s btn-sm" style={{flex:1}} onClick={() => { setCandidates(p => p.map(c => c.id===cand.id?{...c,status:"hired"}:c)); showToast(`${info.name} moved to Hire`); }}><I n="check" s={11}/> Hire</button>}
+                              {st !== "pending" && <button className="btn btn-s btn-sm" onClick={() => setStatus(cand.id, "pending")} title="Reset"><I n="back" s={11}/></button>}
+                            </div>
+                          </div>
                         </div>
-                      )}
-
-                      {slots.length === 0 ? (
-                        <div style={{padding:"24px 0",textAlign:"center",color:"var(--g4)",fontSize:13}}>No slots yet. Use Bulk Create above to generate slots in seconds.</div>
-                      ) : (
-                        <div style={{display:"flex",flexDirection:"column",gap:14}}>
-                          {dateKeys.map(date => {
-                            const dateSlots = groupedSlots[date].sort((a,b) => (a.time||"").localeCompare(b.time||""));
-                            const overlapping = timeOverlap(dateSlots);
-                            return (
-                              <div key={date}>
-                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,paddingBottom:6,borderBottom:"1px solid var(--g1)"}}>
-                                  <I n="calendar" s={14}/> <span style={{fontSize:13,fontWeight:700}}>{date}</span>
-                                  <span style={{fontSize:11,color:"var(--g4)"}}>{dateSlots.length} slot{dateSlots.length>1?"s":""}</span>
-                                </div>
-                                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:8}}>
-                                  {dateSlots.map(slot => {
-                                    const isOverlap = overlapping.has(slot.id);
-                                    const isDoubleBooked = slot.candidateId && candidateSlotConflicts[slot.candidateId];
-                                    const cand = slot.candidateId ? eligible.find(c => c.id === slot.candidateId) : null;
-                                    const candName = cand ? getCandidateInfo(cand).name : null;
-                                    return (
-                                      <div key={slot.id} style={{padding:"12px 14px",border:`1px solid ${isOverlap||isDoubleBooked?"#F5A623":(slot.candidateId?"var(--ac)":"var(--g2)")}`,background:slot.candidateId?"rgba(96,77,255,.04)":"transparent",borderRadius:10,position:"relative"}}>
-                                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:8}}>
-                                          <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                            <I n="clock" s={14}/>
-                                            <input type="time" value={slot.time} onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, time:e.target.value} : s))} style={{fontSize:13,fontWeight:600,padding:"2px 6px",width:90}}/>
-                                            <span style={{fontSize:11,color:"var(--g4)"}}>· {slot.duration} min</span>
-                                          </div>
-                                          <button className="rm-del" onClick={() => setInterviewSlots(p => p.filter(s => s.id !== slot.id))}><I n="trash" s={11}/></button>
-                                        </div>
-                                        <div style={{marginBottom:8}}>
-                                          <select value={slot.candidateId || ""} onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, candidateId:e.target.value || null, status: e.target.value ? "booked" : "open"} : s))} style={{fontSize:12,width:"100%"}}>
-                                            <option value="">— Unassigned —</option>
-                                            {eligible.map(c => (
-                                              <option key={c.id} value={c.id}>{getCandidateInfo(c).name}</option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                        {isVideo ? (
-                                          slot.meetingUrl ? (
-                                            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
-                                              <I n="video" s={12}/>
-                                              <a href={slot.meetingUrl} target="_blank" rel="noreferrer" style={{color:"var(--ac)",fontWeight:500,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{slot.meetingUrl}</a>
-                                              <button className="btn btn-s btn-sm" style={{padding:"2px 6px",fontSize:10}} onClick={() => { navigator.clipboard?.writeText(slot.meetingUrl); showToast("Meeting link copied"); }}><I n="copy" s={10}/></button>
-                                            </div>
-                                          ) : (
-                                            <button className="btn btn-s btn-sm" style={{width:"100%",fontSize:11}} onClick={() => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, meetingUrl: generateMeetingUrl(), location: providerLabel} : s))}>
-                                              <I n="video" s={12}/> Generate {providerLabel} link
-                                            </button>
-                                          )
-                                        ) : (
-                                          <input value={slot.location} placeholder="Location" onChange={e => setInterviewSlots(p => p.map(s => s.id === slot.id ? {...s, location:e.target.value} : s))} style={{fontSize:11,width:"100%"}}/>
-                                        )}
-                                        {(isOverlap || isDoubleBooked) && (
-                                          <div style={{marginTop:8,padding:"4px 8px",background:"rgba(245,166,35,.1)",borderRadius:6,fontSize:10,color:"#B07300",display:"flex",alignItems:"center",gap:4}}>
-                                            <I n="alert" s={10}/> {isOverlap ? "Time overlap with another slot" : `${candName} also booked elsewhere`}
-                                          </div>
-                                        )}
-                                        {(connectedCalendars.google || connectedCalendars.apple || connectedCalendars.microsoft) && slot.candidateId && (
-                                          <div style={{marginTop:6,fontSize:10,color:"var(--green)",display:"flex",alignItems:"center",gap:4}}>
-                                            <I n="check" s={10}/> Synced to calendar
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                      );
+                    })}
+                  </div>
+                )}
               </>
             );
           })()}
@@ -12499,7 +12579,7 @@ export default function AgencyShell() {
             return (
               <div className="cand-detail-wrap">
                 <div className="cand-review-nav">
-                  <button className="crn-back" onClick={() => { setViewCandidate(null); setCandidateMenuOpen(false); setQuickMessageOpen(false); }}><I n="back" s={16}/> Back to Candidates</button>
+                  <button className="crn-back" onClick={() => { setViewCandidate(null); setCandidateMenuOpen(false); setQuickMessageOpen(false); }}><I n="back" s={16}/> Back to Applicants</button>
                   <div style={{flex:1,textAlign:"center"}}>
                     <span style={{fontSize:17,fontWeight:550,fontFamily:"var(--sans)",letterSpacing:"-0.015em"}}>{info.name}</span>
                     <span style={{fontSize:11,color:"var(--g4)",marginLeft:10}}>#{cand.number}</span>
@@ -12516,7 +12596,9 @@ export default function AgencyShell() {
                         <div className="cand-menu">
                           <button onClick={() => { setCandidateMenuOpen(false); setQuickMessageOpen(true); setQuickMessageText(""); }}><I n="send" s={14}/> Send Quick Message</button>
                           <button onClick={() => { setCandidateMenuOpen(false); showToast(`Material request sent to ${info.name}`); }}><I n="upload" s={14}/> Request Missing Materials</button>
-                          <button onClick={() => { setCandidateMenuOpen(false); setAddToShowcaseOpen(cand.id); }}><I n="layers" s={14}/> Add to Showcase</button>
+                          {currentRoom.enableEarlyInvites && !cand.earlyInvited && (
+                            <button onClick={() => { setCandidateMenuOpen(false); setCandidates(p => p.map(c => c.id===cand.id?{...c,earlyInvited:true,earlyInviteStatus:"pending"}:c)); showToast(`Early invite sent to ${info.name}`); }}><I n="send" s={14}/> Send Early Invite</button>
+                          )}
                           {!cand.artistId && (
                             <button onClick={() => {
                               const ext = cand.externalApplicant;
@@ -12735,27 +12817,47 @@ export default function AgencyShell() {
                         <button className={`cr-status-btn ${cand.status==="selected"?"active sel":""}`} onClick={() => updateCandidateStatus(cand.id, "selected")}>
                           <div style={{width:10,height:10,borderRadius:"50%",background:"#1DB954",flexShrink:0}}/> Selected
                         </button>
-                        {currentRoom.enableShortlist !== false && (
+                        {currentRoom.opportunityType !== "audition" && currentRoom.enableShortlist !== false && (
                           <button className={`cr-status-btn ${cand.status==="shortlisted"?"active shl":""}`} onClick={() => updateCandidateStatus(cand.id, "shortlisted")}>
                             <div style={{width:10,height:10,borderRadius:"50%",background:"var(--ac)",flexShrink:0}}/> Shortlisted
                           </button>
                         )}
-                        {currentRoom.enableWaitlist !== false && (
-                          <button className={`cr-status-btn ${cand.status==="potential"?"active pot":""}`} onClick={() => updateCandidateStatus(cand.id, "potential")}>
-                            <div style={{width:10,height:10,borderRadius:"50%",background:"var(--amber)",flexShrink:0}}/> Potential / Waitlist
+                        <button className={`cr-status-btn ${cand.status==="potential"?"active pot":""}`} onClick={() => updateCandidateStatus(cand.id, "potential")}>
+                          <div style={{width:10,height:10,borderRadius:"50%",background:"var(--amber)",flexShrink:0}}/> Potential
+                        </button>
+                        {currentRoom.opportunityType === "audition" && currentRoom.enableWaitlist !== false && (
+                          <button className={`cr-status-btn ${cand.status==="waitlisted"?"active wl":""}`} onClick={() => updateCandidateStatus(cand.id, "waitlisted")}>
+                            <div style={{width:10,height:10,borderRadius:"50%",background:"#3B82F6",flexShrink:0}}/> Waitlisted
                           </button>
                         )}
                         <button className={`cr-status-btn ${cand.status==="not_selected"?"active rej":""}`} onClick={() => updateCandidateStatus(cand.id, "not_selected")}>
                           <div style={{width:10,height:10,borderRadius:"50%",background:"var(--red)",flexShrink:0}}/> Not Selected
                         </button>
                       </div>
-                      {cand.status === "not_selected" && (
+                      {cand.status === "not_selected" && roomTpls.length > 1 && (
                         <div className="cr-reject-reason">
                           <select value={cand.rejectionReason || ""} onChange={e => updateCandidateStatus(cand.id, "not_selected", e.target.value)}>
                             <option value="">Select rejection reason...</option>
                             {roomTpls.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                             <option value="Other">Other</option>
                           </select>
+                        </div>
+                      )}
+
+                      {currentRoom.enableEarlyInvites && cand.earlyInvited && (
+                        <div style={{marginTop:12,padding:"10px 0",borderTop:"1px solid var(--g2)"}}>
+                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                            <div style={{fontSize:10,fontWeight:600,color:"var(--g4)",textTransform:"uppercase",letterSpacing:".05em"}}>Early Invite</div>
+                            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
+                              <div style={{width:8,height:8,borderRadius:"50%",background:cand.earlyInviteStatus==="confirmed"?"#1DB954":cand.earlyInviteStatus==="declined"?"var(--red)":"#8B5CF6"}}/>
+                              <span style={{fontWeight:600,color:cand.earlyInviteStatus==="confirmed"?"#1DB954":cand.earlyInviteStatus==="declined"?"var(--red)":"#8B5CF6"}}>
+                                {cand.earlyInviteStatus==="confirmed"?"Confirmed":cand.earlyInviteStatus==="declined"?"Declined":"Pending"}
+                              </span>
+                              <button className="btn btn-s" style={{fontSize:10,padding:"3px 8px",marginLeft:4}} onClick={() => setCandidates(p => p.map(c => c.id===cand.id?{...c,earlyInvited:false,earlyInviteStatus:null}:c))}>
+                                <I n="x" s={9}/> Revoke
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -12891,6 +12993,22 @@ export default function AgencyShell() {
               </div>
             );
           })()}
+
+
+          {/* ═══ ROOM: HIRE ═══ */}
+          {viewRoom && currentRoom && roomPage === "hire" && (
+            <>
+              <div className="pg-header">
+                <h1>Hire</h1>
+                <p className="pg-sub">Send offers, sign contracts and start your onboarding process.</p>
+              </div>
+              <div style={{textAlign:"center",padding:"80px 20px",color:"var(--g4)"}}>
+                <I n="card" s={44} style={{opacity:.25,marginBottom:16}}/>
+                <h3 style={{margin:"0 0 8px",fontSize:18,fontWeight:600,color:"var(--g5)"}}>Coming Soon</h3>
+                <p style={{fontSize:13,maxWidth:380,margin:"0 auto",lineHeight:1.6,color:"var(--g4)"}}>We're building the full hiring pipeline — contract management, e-signatures, and onboarding checklists. Stay tuned.</p>
+              </div>
+            </>
+          )}
 
           {/* ═══ ROOM: COMMUNICATION PAGE ═══ */}
           {viewRoom && currentRoom && roomPage === "communication" && (
@@ -13355,7 +13473,7 @@ export default function AgencyShell() {
 
                   <div className="room-settings-section">
                     <h3>About This Opportunity</h3>
-                    <p className="rss-sub">Key details about the casting opportunity.</p>
+                    <p className="rss-sub">Key details about this opportunity.</p>
                     <div className="field">
                       <label>Looking For (Roles)</label>
                       <div className="styles-input">
@@ -13372,41 +13490,71 @@ export default function AgencyShell() {
                       </div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                      {currentRoom.format !== "online" ? (
-                        <div className="field">
-                          <label>Casting Date</label>
-                          <input value={currentRoom.castingDate || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, castingDate:e.target.value} : r))} placeholder="e.g. May 1 — May 10, 2026"/>
-                        </div>
+                      {(currentRoom.opportunityType === "residency" || currentRoom.opportunityType === "job_call") ? (
+                        <>
+                          <div className="field">
+                            <label>Deadline</label>
+                            <input value={currentRoom.deadline || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, deadline:e.target.value} : r))} placeholder="e.g. Apr 15, 2026"/>
+                          </div>
+                          <div className="field">
+                            <label>Results Date</label>
+                            <input value={currentRoom.resultsDate || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, resultsDate:e.target.value} : r))} placeholder="e.g. May 10, 2026"/>
+                          </div>
+                        </>
+                      ) : currentRoom.format !== "online" ? (
+                        <>
+                          <div className="field">
+                            <label>{currentRoom.opportunityType === "audition" ? "Audition Date" : currentRoom.opportunityType === "casting" ? "Casting Date" : currentRoom.opportunityType === "open_call" ? "Open Call Date" : currentRoom.opportunityType === "competition" ? "Competition Date" : currentRoom.opportunityType === "education" ? "Programme Date" : "Event Date"}</label>
+                            <input value={currentRoom.castingDate || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, castingDate:e.target.value} : r))} placeholder="e.g. May 1 — May 10, 2026"/>
+                          </div>
+                          <div className="field">
+                            <label>Where / Location</label>
+                            <input value={currentRoom.location || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, location:e.target.value} : r))} placeholder="e.g. London Studio"/>
+                          </div>
+                        </>
                       ) : (
-                        <div className="field">
-                          <label>Casting Date</label>
-                          <div style={{padding:"10px 12px",borderRadius:10,background:"var(--g1)",fontSize:12,color:"var(--g4)",border:"1px dashed var(--g2)"}}>No casting date — online format</div>
-                        </div>
+                        <>
+                          <div className="field">
+                            <label>{currentRoom.opportunityType === "audition" ? "Audition Date" : currentRoom.opportunityType === "casting" ? "Casting Date" : currentRoom.opportunityType === "open_call" ? "Open Call Date" : currentRoom.opportunityType === "competition" ? "Competition Date" : currentRoom.opportunityType === "education" ? "Programme Date" : "Event Date"}</label>
+                            <div style={{padding:"10px 12px",borderRadius:10,background:"var(--g1)",fontSize:12,color:"var(--g4)",border:"1px dashed var(--g2)"}}>No {currentRoom.opportunityType === "audition" ? "audition" : currentRoom.opportunityType === "casting" ? "casting" : currentRoom.opportunityType === "open_call" ? "open call" : currentRoom.opportunityType === "competition" ? "competition" : currentRoom.opportunityType === "education" ? "programme" : "event"} date — online format</div>
+                          </div>
+                          <div className="field">
+                            <label>Where / Location</label>
+                            <input value={currentRoom.location || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, location:e.target.value} : r))} placeholder="e.g. London Studio"/>
+                          </div>
+                        </>
                       )}
-                      <div className="field">
-                        <label>Where / Location</label>
-                        <input value={currentRoom.location || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, location:e.target.value} : r))} placeholder="e.g. London Studio"/>
-                      </div>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-                      <div className="field">
-                        <label>Rehearsal Dates</label>
-                        <input value={currentRoom.rehearsalDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, rehearsalDates:e.target.value} : r))} placeholder="e.g. May 13 — May 22, 2026"/>
+                    {currentRoom.opportunityType !== "residency" && currentRoom.opportunityType !== "job_call" && (
+                      <div style={{display:"grid",gridTemplateColumns:currentRoom.opportunityType === "casting" ? "1fr 1fr 1fr" : "1fr",gap:12}}>
+                        {currentRoom.opportunityType === "casting" ? (
+                          <>
+                            <div className="field">
+                              <label>Rehearsal Dates</label>
+                              <input value={currentRoom.rehearsalDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, rehearsalDates:e.target.value} : r))} placeholder="e.g. May 13 — May 22, 2026"/>
+                            </div>
+                            <div className="field">
+                              <label>Fitting Dates</label>
+                              <input value={currentRoom.fittingDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, fittingDates:e.target.value} : r))} placeholder="e.g. May 25 — May 28, 2026"/>
+                            </div>
+                            <div className="field">
+                              <label>Shooting Dates</label>
+                              <input value={currentRoom.shootingDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, shootingDates:e.target.value} : r))} placeholder="e.g. Jun 2 — Jun 6, 2026"/>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="field">
+                            <label>{currentRoom.opportunityType === "competition" ? "Competition Dates" : currentRoom.opportunityType === "open_call" ? "Project Dates" : currentRoom.opportunityType === "education" ? "Programme Dates" : "Opportunity Dates"}</label>
+                            <input value={currentRoom.shootingDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, shootingDates:e.target.value} : r))} placeholder={currentRoom.opportunityType === "competition" ? "e.g. Jun 15, 2027" : currentRoom.opportunityType === "education" ? "e.g. Sep 2027 — Jun 2028" : "e.g. Sep 2027 — Jun 2028"}/>
+                          </div>
+                        )}
                       </div>
-                      <div className="field">
-                        <label>Fitting Dates</label>
-                        <input value={currentRoom.fittingDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, fittingDates:e.target.value} : r))} placeholder="e.g. May 25 — May 28, 2026"/>
-                      </div>
-                      <div className="field">
-                        <label>Shooting Dates</label>
-                        <input value={currentRoom.shootingDates || ""} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, shootingDates:e.target.value} : r))} placeholder="e.g. Jun 2 — Jun 6, 2026"/>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="room-settings-section">
                     <h3>Opportunity Info</h3>
-                    <p className="rss-sub">Full casting description for candidates.</p>
+                    <p className="rss-sub">Full description for candidates.</p>
                     <div className="field">
                       <textarea value={currentRoom.description} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, description:e.target.value} : r))} style={{height:120}}/>
                     </div>
@@ -13509,19 +13657,30 @@ export default function AgencyShell() {
                   <div className="room-settings-section">
                     <h3>Selection Workflow</h3>
                     <p className="rss-sub">Configure which selection stages are available in this room.</p>
+                    {currentRoom.opportunityType !== "audition" && (
+                      <div className="settings-row">
+                        <div>
+                          <div className="sr-label">Enable Shortlist Stage</div>
+                          <div className="sr-sub">Add a shortlist step between selection and final invitation. Useful for multi-round castings.</div>
+                        </div>
+                        <button className={`toggle ${currentRoom.enableShortlist !== false?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableShortlist: r.enableShortlist === false ? true : false} : r))} />
+                      </div>
+                    )}
+                    {currentRoom.opportunityType === "audition" && (
+                      <div className="settings-row">
+                        <div>
+                          <div className="sr-label">Enable Waitlist</div>
+                          <div className="sr-sub">Add a waitlist option for artists when all spots are filled. Potential is always available.</div>
+                        </div>
+                        <button className={`toggle ${currentRoom.enableWaitlist !== false?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableWaitlist: r.enableWaitlist === false ? true : false} : r))} />
+                      </div>
+                    )}
                     <div className="settings-row">
                       <div>
-                        <div className="sr-label">Enable Shortlist Stage</div>
-                        <div className="sr-sub">Add a shortlist step between selection and final invitation. Useful for multi-round castings.</div>
+                        <div className="sr-label">Enable Early Invites</div>
+                        <div className="sr-sub">Invite artists before the deadline closes. Track who has been early-invited and whether they confirmed.</div>
                       </div>
-                      <button className={`toggle ${currentRoom.enableShortlist !== false?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableShortlist: r.enableShortlist === false ? true : false} : r))} />
-                    </div>
-                    <div className="settings-row">
-                      <div>
-                        <div className="sr-label">Enable Waitlist / Potential</div>
-                        <div className="sr-sub">Allow marking candidates as potential or waitlisted for future consideration.</div>
-                      </div>
-                      <button className={`toggle ${currentRoom.enableWaitlist !== false?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableWaitlist: r.enableWaitlist === false ? true : false} : r))} />
+                      <button className={`toggle ${currentRoom.enableEarlyInvites === true?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableEarlyInvites: !r.enableEarlyInvites} : r))} />
                     </div>
                   </div>
 
@@ -13532,131 +13691,44 @@ export default function AgencyShell() {
                       <div className="settings-row">
                         <div>
                           <div className="sr-label">Enable Interviews</div>
-                          <div className="sr-sub">When enabled, an Interviews tab appears in the room sidebar.</div>
+                          <div className="sr-sub">{currentRoom.opportunityType === "job_call" ? "Interviews are always enabled for job calls — selected candidates are invited to schedule an interview." : "When enabled, an Interviews tab appears in the room sidebar."}</div>
                         </div>
-                        <button className={`toggle ${currentRoom.enableInterviews?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableInterviews: !r.enableInterviews} : r))} />
+                        <button className={`toggle ${currentRoom.enableInterviews?"on":""}`} disabled={currentRoom.opportunityType === "job_call"} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, enableInterviews: !r.enableInterviews} : r))} />
                       </div>
                       {currentRoom.enableInterviews && (
-                        <>
-                          <div className="settings-row">
-                            <div>
-                              <div className="sr-label">Interview Format</div>
-                              <div className="sr-sub">Default format for new interview slots.</div>
-                            </div>
-                            <div style={{display:"flex",gap:6}}>
-                              {[{v:"in_person",l:"In Person"},{v:"video",l:"Video Call"},{v:"phone",l:"Phone"}].map(f => (
-                                <button key={f.v} className={`chip ${(currentRoom.interviewFormat || "in_person") === f.v ? "on" : ""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewFormat: f.v} : r))}>{f.l}</button>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="settings-row">
-                            <div>
-                              <div className="sr-label">Default Duration</div>
-                              <div className="sr-sub">Default length for each interview slot.</div>
-                            </div>
-                            <select value={currentRoom.interviewDuration || "30"} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewDuration: e.target.value} : r))} style={{width:110,fontSize:12,padding:"6px 10px"}}>
-                              <option value="15">15 minutes</option>
-                              <option value="30">30 minutes</option>
-                              <option value="45">45 minutes</option>
-                              <option value="60">60 minutes</option>
-                            </select>
-                          </div>
-                          <div className="settings-row">
-                            <div>
-                              <div className="sr-label">Buffer Between Interviews</div>
-                              <div className="sr-sub">Idle time between back-to-back interviews so you can take notes and reset.</div>
-                            </div>
-                            <select value={currentRoom.interviewBuffer ?? 0} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewBuffer: parseInt(e.target.value)} : r))} style={{width:110,fontSize:12,padding:"6px 10px"}}>
-                              <option value="0">No buffer</option>
-                              <option value="5">5 min</option>
-                              <option value="10">10 min</option>
-                              <option value="15">15 min</option>
-                              <option value="30">30 min</option>
-                            </select>
-                          </div>
-                          <div className="settings-row">
-                            <div>
-                              <div className="sr-label">Time Zone</div>
-                              <div className="sr-sub">Slot times shown in this zone. Candidates see times converted to their local zone.</div>
-                            </div>
-                            <select value={currentRoom.interviewTimezone || "Europe/London"} onChange={e => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewTimezone: e.target.value} : r))} style={{width:200,fontSize:12,padding:"6px 10px"}}>
-                              <option value="Europe/London">Europe/London (GMT)</option>
-                              <option value="Europe/Berlin">Europe/Berlin (CET)</option>
-                              <option value="Europe/Paris">Europe/Paris (CET)</option>
-                              <option value="America/New_York">America/New_York (ET)</option>
-                              <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
-                              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                              <option value="Australia/Sydney">Australia/Sydney (AEDT)</option>
-                            </select>
-                          </div>
-                          <div className="settings-row">
-                            <div>
-                              <div className="sr-label">Allow Candidate Self-Booking</div>
-                              <div className="sr-sub">Let invited candidates pick their own slot from your available times — Calendly-style.</div>
-                            </div>
-                            <button className={`toggle ${currentRoom.allowCandidateSelfBook?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, allowCandidateSelfBook: !r.allowCandidateSelfBook} : r))} />
-                          </div>
-
-                          {/* Video meeting provider */}
-                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
-                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Video Meeting Provider</div>
-                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>For video interviews — meeting links are auto-generated per slot.</div>
-                            <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:8}}>
-                              {[
-                                {v:"google_meet",l:"Google Meet",icon:"video"},
-                                {v:"zoom",l:"Zoom",icon:"video"},
-                                {v:"teams",l:"Microsoft Teams",icon:"video"},
-                                {v:"custom",l:"Custom / Manual URL",icon:"link"},
-                              ].map(p => (
-                                <button key={p.v} className="wizard-option" style={{padding:"10px 12px",textAlign:"left",border:(currentRoom.meetingProvider||"google_meet")===p.v?"2px solid var(--ac)":"1px solid var(--g2)",background:(currentRoom.meetingProvider||"google_meet")===p.v?"rgba(96,77,255,.05)":"transparent",cursor:"pointer",borderRadius:10,display:"flex",alignItems:"center",gap:10}} onClick={() => setRooms(prev => prev.map(r => r.id === currentRoom.id ? {...r, meetingProvider: p.v} : r))}>
-                                  <I n={p.icon} s={16}/>
-                                  <span style={{fontSize:12,fontWeight:600}}>{p.l}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Calendar sync */}
-                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
-                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Calendar Sync</div>
-                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>Two-way sync interview slots with your team's calendar. Conflicts will show up across systems.</div>
-                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                              {[
-                                {key:"google", label:"Google Calendar", color:"#4285F4"},
-                                {key:"apple", label:"Apple Calendar", color:"#000000"},
-                                {key:"microsoft", label:"Microsoft Outlook", color:"#0078D4"},
-                              ].map(c => (
-                                <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",border:"1px solid var(--g2)",borderRadius:10}}>
-                                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                    <div style={{width:32,height:32,borderRadius:8,background:c.color+"15",color:c.color,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:11}}>{c.label.charAt(0)}</div>
-                                    <div>
-                                      <div style={{fontSize:13,fontWeight:600}}>{c.label}</div>
-                                      <div style={{fontSize:11,color:connectedCalendars[c.key]?"var(--green)":"var(--g4)"}}>{connectedCalendars[c.key] ? "Connected · last synced 2 min ago" : "Not connected"}</div>
-                                    </div>
-                                  </div>
-                                  <button className={connectedCalendars[c.key] ? "btn btn-s btn-sm" : "btn btn-p btn-sm"} onClick={() => { setConnectedCalendars(p => ({...p, [c.key]:!p[c.key]})); showToast(connectedCalendars[c.key] ? `${c.label} disconnected` : `${c.label} connected!`); }}>
-                                    {connectedCalendars[c.key] ? <><I n="check" s={12}/> Disconnect</> : <>Connect</>}
-                                  </button>
+                        <div style={{marginTop:10,padding:"14px 16px",border:"1px solid var(--g2)",borderRadius:12,background:"var(--g0)"}}>
+                          {currentRoom.interviewSchedule ? (
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                              <div>
+                                <div style={{fontSize:12,fontWeight:600,color:"var(--tx)",marginBottom:2}}>Schedule configured</div>
+                                <div style={{fontSize:11,color:"var(--g4)"}}>
+                                  {currentRoom.interviewSchedule.duration} min · {currentRoom.interviewSchedule.location === "video" ? "Video Call" : currentRoom.interviewSchedule.location === "phone" ? "Phone" : "In Person"} · {currentRoom.interviewSchedule.timezone}
                                 </div>
-                              ))}
+                              </div>
+                              <button className="btn btn-s btn-sm" onClick={() => setShowScheduleSetup({type:"interview"})}><I n="settings" s={12}/> Edit</button>
                             </div>
-                          </div>
-
-                          {/* Reminders */}
-                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid var(--g1)"}}>
-                            <div style={{fontSize:12,fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:".05em",color:"var(--g5)"}}>Automatic Reminders</div>
-                            <div style={{fontSize:11,color:"var(--g4)",marginBottom:10}}>Email candidates ahead of their interview so they don't miss it.</div>
-                            <div className="settings-row">
-                              <div><div className="sr-label">24 hours before</div></div>
-                              <button className={`toggle ${currentRoom.interviewReminders?.h24?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewReminders: {...(r.interviewReminders||{}), h24: !(r.interviewReminders?.h24)}} : r))} />
+                          ) : (
+                            <div style={{textAlign:"center",padding:"8px 0"}}>
+                              <div style={{fontSize:12,color:"var(--g4)",marginBottom:8}}>Set up your availability so candidates can book interview slots.</div>
+                              <button className="btn btn-p btn-sm" onClick={() => setShowScheduleSetup({type:"interview"})}><I n="calendar" s={12}/> Setup Schedule</button>
                             </div>
-                            <div className="settings-row">
-                              <div><div className="sr-label">1 hour before</div></div>
-                              <button className={`toggle ${currentRoom.interviewReminders?.h1?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, interviewReminders: {...(r.interviewReminders||{}), h1: !(r.interviewReminders?.h1)}} : r))} />
-                            </div>
-                          </div>
-                        </>
+                          )}
+                        </div>
                       )}
+                    </div>
+                  )}
+
+                  {currentRoom.opportunityType === "audition" && currentRoom.format === "in_person" && (
+                    <div className="room-settings-section">
+                      <h3>Audition Rounds</h3>
+                      <p className="rss-sub">Manage multi-round audition progression with check-in, voting, and decisions per round.</p>
+                      <div className="settings-row">
+                        <div>
+                          <div className="sr-label">Enable Rounds</div>
+                          <div className="sr-sub">When disabled, participants are managed directly without round-based progression. Useful for simpler auditions.</div>
+                        </div>
+                        <button className={`toggle ${currentRoom.roundsEnabled !== false?"on":""}`} onClick={() => setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, roundsEnabled: r.roundsEnabled === false ? true : false} : r))} />
+                      </div>
                     </div>
                   )}
 
@@ -17260,7 +17332,6 @@ export default function AgencyShell() {
                     const defaultGroup = auditionGroups.find(g => g.roundId === round.id) || null;
                     const newPs = selectedCands.map((c, i) => ({
                       id:"rp"+Date.now()+i, roundId:round.id, artistId:c.artistId,
-                      sessionId:defaultGroup?.sessionId || null,
                       groupId:defaultGroup?.id || null,
                       auditionNumber:String(i+1),
                       registrationStatus:"pending", confirmationStatus:"pending", outcome:"active",
@@ -17282,7 +17353,6 @@ export default function AgencyShell() {
       {showWalkInModal && (() => {
         const round = auditionRounds.find(r => r.id === activeRoundId);
         if (!round) return null;
-        const sessions = getRoundSessions(round.id);
         const groups = getRoundGroups(round.id);
         return (
           <div className="overlay" onClick={() => setShowWalkInModal(false)}>
@@ -17291,32 +17361,24 @@ export default function AgencyShell() {
               <p className="nrm-sub">Create a lightweight artist record on the spot. They can be promoted to a full profile later.</p>
               <div className="field"><label>Full name *</label><input value={walkInDraft.name} onChange={e => setWalkInDraft(p => ({...p, name:e.target.value}))} placeholder="e.g. Jordan Lee"/></div>
               <div className="field"><label>Email</label><input value={walkInDraft.email} onChange={e => setWalkInDraft(p => ({...p, email:e.target.value}))} placeholder="optional@example.com"/></div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div className="field"><label>Session</label>
-                  <select value={walkInDraft.sessionId || ""} onChange={e => setWalkInDraft(p => ({...p, sessionId:e.target.value, groupId:null}))}>
-                    <option value="">— pick session —</option>
-                    {sessions.map(s => <option key={s.id} value={s.id}>{s.date} · {s.time}</option>)}
-                  </select>
-                </div>
-                <div className="field"><label>Group</label>
-                  <select value={walkInDraft.groupId || ""} onChange={e => setWalkInDraft(p => ({...p, groupId:e.target.value}))}>
-                    <option value="">— pick group —</option>
-                    {groups.filter(g => !walkInDraft.sessionId || g.sessionId === walkInDraft.sessionId).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
-                </div>
+              <div className="field"><label>Group</label>
+                <select value={walkInDraft.groupId || ""} onChange={e => setWalkInDraft(p => ({...p, groupId:e.target.value}))}>
+                  <option value="">— pick group —</option>
+                  {groups.map(g => <option key={g.id} value={g.id}>{g.name} · {g.date} · {g.time}</option>)}
+                </select>
               </div>
               <div className="ns-actions">
                 <button className="btn btn-g" onClick={() => setShowWalkInModal(false)}>Cancel</button>
-                <button className="btn btn-p" disabled={!walkInDraft.name.trim() || !walkInDraft.sessionId || !walkInDraft.groupId} onClick={() => {
+                <button className="btn btn-p" disabled={!walkInDraft.name.trim() || !walkInDraft.groupId} onClick={() => {
                   const allP = getRoundParticipants(round.id);
                   const nextNum = String((Math.max(0, ...allP.map(p => parseInt(p.auditionNumber) || 0))) + 1);
                   setAuditionParticipants(p => [...p, {
-                    id:"rp"+Date.now(), roundId:round.id, artistId:null, sessionId:walkInDraft.sessionId, groupId:walkInDraft.groupId,
+                    id:"rp"+Date.now(), roundId:round.id, artistId:null, groupId:walkInDraft.groupId,
                     auditionNumber:nextNum, registrationStatus:"checked_in", confirmationStatus:"confirmed", outcome:"active",
                     walkIn:{ name:walkInDraft.name, email:walkInDraft.email, img:null }
                   }]);
                   setShowWalkInModal(false);
-                  setWalkInDraft({ name:"", email:"", img:null, sessionId:null, groupId:null });
+                  setWalkInDraft({ name:"", email:"", img:null, groupId:null });
                   showToast("Walk-in checked in!");
                 }}><I n="check" s={14}/> Add & check in</button>
               </div>
@@ -17346,7 +17408,7 @@ export default function AgencyShell() {
               <div style={{padding:10,border:"1px dashed var(--g2)",borderRadius:10,marginTop:12}}>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--g5)",textTransform:"uppercase",letterSpacing:".04em",marginBottom:8}}>Add a rule</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:8}}>
-                  {RULE_CRITERIA.filter(c => c.type === "select").map(c => (
+                  {RULE_CRITERIA.filter(c => c.type === "select" || c.type === "multi").map(c => (
                     <select key={c.key} className="sort-filter" defaultValue="" onChange={e => {
                       if (!e.target.value) return;
                       const newRule = { key:c.key, criteria:{[c.key]: e.target.value}, enforcement:"soft" };
@@ -17371,7 +17433,7 @@ export default function AgencyShell() {
       {showAutoGenerate && (() => {
         const round = auditionRounds.find(r => r.id === activeRoundId);
         if (!round) return null;
-        const sessions = getRoundSessions(round.id);
+        const groups = getRoundGroups(round.id);
         return (
           <div className="overlay" onClick={() => setShowAutoGenerate(false)}>
             <div className="new-room-modal" style={{maxWidth:560}} onClick={e => e.stopPropagation()}>
@@ -17398,20 +17460,20 @@ export default function AgencyShell() {
                   </div>
                 </div>
               ))}
-              <button className="btn btn-s btn-sm" onClick={() => setAutoGenerateRules(p => [...p, {name:`Group ${String.fromCharCode(65+p.length)}`, criteria:{}}])}><I n="plus" s={12}/> Add rule</button>
+              <button className="btn btn-s btn-sm" onClick={() => setAutoGenerateRules(p => [...p, {name:`Session ${String.fromCharCode(65+p.length)}`, criteria:{}}])}><I n="plus" s={12}/> Add rule</button>
               <div className="ns-actions" style={{marginTop:14}}>
                 <button className="btn btn-g" onClick={() => { setShowAutoGenerate(false); setAutoGenerateRules([]); }}>Cancel</button>
-                <button className="btn btn-p" disabled={autoGenerateRules.length === 0 || !sessions[0]} onClick={() => {
+                <button className="btn btn-p" disabled={autoGenerateRules.length === 0} onClick={() => {
                   const colors = ["#604DFF","#1A56DB","#1DB954","#F5A623","#FF6B81","#0EA5A8"];
                   const newGroups = autoGenerateRules.map((r, i) => ({
-                    id:"g"+Date.now()+i, roundId:round.id, sessionId:sessions[0].id,
+                    id:"g"+Date.now()+i, roundId:round.id,
                     name:r.name, capacity:12, createdAtPhase:"setup", color:colors[i%colors.length],
                     rules: Object.keys(r.criteria).length > 0 ? [{criteria:r.criteria, enforcement:"soft"}] : [],
                   }));
                   setAuditionGroups(p => [...p, ...newGroups]);
                   setShowAutoGenerate(false);
                   setAutoGenerateRules([]);
-                  showToast(`Created ${newGroups.length} group${newGroups.length>1?"s":""}!`);
+                  showToast(`Created ${newGroups.length} session${newGroups.length>1?"s":""}!`);
                 }}><I n="check" s={14}/> Generate</button>
               </div>
             </div>
@@ -17420,98 +17482,417 @@ export default function AgencyShell() {
       })()}
 
       {/* ═══ ROUNDS: NEXT ROUND TRANSITION MODAL ═══ */}
+      {/* ═══ UNIFIED ROUND MODAL (Configure / Edit / New Round) ═══ */}
       {showNextRoundModal && (() => {
-        const round = auditionRounds.find(r => r.id === activeRoundId);
-        if (!round) return null;
-        const advanced = getRoundParticipants(round.id).filter(rp => rp.outcome === "callback");
-        const groups = getRoundGroups(round.id);
-        const sessions = getRoundSessions(round.id);
-        const isMultiSession = sessions.length > 1 || groups.length > 1;
-        const isFinalsNext = round.preset === "finals";
+        const nrState = typeof showNextRoundModal === "object" ? showNextRoundModal : {};
+        const isEditMode = nrState.mode === "edit";
+        const editRound = isEditMode ? auditionRounds.find(r => r.id === nrState.roundId) : null;
+        const fromRound = !isEditMode ? auditionRounds.find(r => r.id === (nrState.fromRoundId || activeRoundId)) : null;
+        const advanced = fromRound ? getRoundParticipants(fromRound.id).filter(rp => rp.outcome === "callback") : [];
+        const prevGroups = fromRound ? getRoundGroups(fromRound.id) : [];
+        const isMultiGroup = prevGroups.length > 1;
+
+        const colors = ["#604DFF","#1A56DB","#1DB954","#F5A623","#FF6B81","#0EA5A8"];
+
+        const existingGroups = isEditMode && editRound ? getRoundGroups(editRound.id) : [];
+        const existingParticipants = isEditMode && editRound ? getRoundParticipants(editRound.id) : [];
+        const defaultEditSessions = existingGroups.length > 0
+          ? existingGroups.map(g => ({id:g.id, name:g.name, date:g.date||"", time:g.time||"", endTime:g.endTime||"", capacity:g.capacity, location:g.location||"", color:g.color, rules:g.rules||[], connectTo:null, participantCount:existingParticipants.filter(rp => rp.groupId === g.id).length}))
+          : [{id:"ng1", name:"Session A", date:"", time:"", endTime:"", capacity:12, location:"", color:colors[0], rules:[], connectTo:null}];
+        const defaultNewSessions = [{id:"ng1", name:"Session A", date:"", time:"", endTime:"", capacity:12, location:"", color:colors[0], rules:[], connectTo:null}];
+
+        const nrName = nrState.name || (isEditMode && editRound ? editRound.name : (fromRound ? `Round ${fromRound.index + 1}` : "Round 1"));
+        const nrSessions = nrState.sessions || (isEditMode ? defaultEditSessions : defaultNewSessions);
+        const nrIsFinal = nrState.isFinal ?? (isEditMode && editRound ? editRound.preset === "finals" : false);
+        const nrFinalDest = nrState.finalDest || "hire";
+        const nrShareResults = nrState.shareResults ?? (isEditMode && editRound ? editRound.shareResultsOnTransition !== false : true);
+        const nrRulesOpen = nrState.rulesOpen ?? null;
+        const nrEditingName = nrState.editingName || false;
+
+        const updateNr = (patch) => setShowNextRoundModal(s => ({...(typeof s==="object"?s:{}), ...patch}));
+        const updateSession = (i, patch) => {
+          const ss = [...nrSessions]; ss[i] = {...ss[i], ...patch};
+          updateNr({sessions: ss});
+        };
+        const addSession = () => updateNr({sessions:[...nrSessions, {id:"ng"+Date.now(), name:`Session ${String.fromCharCode(65+nrSessions.length)}`, date:"", time:"", endTime:"", capacity:12, location:"", color:colors[nrSessions.length%colors.length], rules:[], connectTo:null}]});
+        const removeSession = (i) => updateNr({sessions:nrSessions.filter((_,j)=>j!==i)});
+
+        const addRuleCriteria = (i, key, val) => {
+          const ss = [...nrSessions];
+          const rules = [...(ss[i].rules||[])];
+          const existingRule = rules.length > 0 ? rules[rules.length - 1] : null;
+          if (existingRule && Object.keys(existingRule.criteria).length < 3) {
+            rules[rules.length - 1] = {...existingRule, criteria:{...existingRule.criteria, [key]:val}};
+          } else {
+            rules.push({criteria:{[key]:val}, enforcement:"soft"});
+          }
+          ss[i] = {...ss[i], rules};
+          updateNr({sessions: ss});
+        };
+        const removeRuleKey = (i, ri, key) => {
+          const ss = [...nrSessions];
+          const rules = [...ss[i].rules];
+          const newCriteria = {...rules[ri].criteria};
+          delete newCriteria[key];
+          if (Object.keys(newCriteria).length === 0) {
+            rules.splice(ri, 1);
+          } else {
+            rules[ri] = {...rules[ri], criteria:newCriteria};
+          }
+          ss[i] = {...ss[i], rules};
+          updateNr({sessions: ss});
+        };
+        const toggleEnforcement = (i, ri) => {
+          const ss = [...nrSessions];
+          const rules = [...ss[i].rules];
+          rules[ri] = {...rules[ri], enforcement: rules[ri].enforcement === "hard" ? "soft" : "hard"};
+          ss[i] = {...ss[i], rules};
+          updateNr({sessions: ss});
+        };
+
+        const hasInterviews = currentRoom?.enableInterviews || INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom?.opportunityType);
+        const hasHire = currentRoom?.opportunityType !== "competition";
+
+        const handleSave = () => {
+          if (isEditMode && editRound) {
+            setAuditionRounds(rs => rs.map(r => r.id === editRound.id ? {...r, name:nrName, format:nrFormat, schedule:nrFormat==="individual"?nrSchedule:null, preset: nrIsFinal ? "finals" : nrFormat==="individual" ? "individual" : nrSessions.length > 1 ? "multi_group" : "single_group", shareResultsOnTransition:nrShareResults} : r));
+            nrFormat === "groups" && nrSessions.forEach(ns => {
+              const existing = existingGroups.find(g => g.id === ns.id);
+              if (existing) {
+                setAuditionGroups(p => p.map(g => g.id === ns.id ? {...g, name:ns.name, date:ns.date, time:ns.time, endTime:ns.endTime, capacity:ns.capacity, location:ns.location, color:ns.color, rules:ns.rules||[]} : g));
+              } else {
+                setAuditionGroups(p => [...p, {id:ns.id, roundId:editRound.id, name:ns.name, capacity:ns.capacity, color:ns.color, date:ns.date, time:ns.time, endTime:ns.endTime, location:ns.location, address:"", rules:ns.rules||[]}]);
+              }
+            });
+            if (nrFormat === "groups") {
+              const sessionIds = nrSessions.map(s => s.id);
+              const removed = existingGroups.filter(g => !sessionIds.includes(g.id));
+              if (removed.length > 0) {
+                setAuditionGroups(p => p.filter(g => !removed.some(r => r.id === g.id)));
+                setAuditionParticipants(p => p.filter(rp => !removed.some(r => r.id === rp.groupId)));
+              }
+            }
+            showToast(`${nrName} updated`);
+          } else {
+            const preset = nrIsFinal ? "finals" : nrFormat==="individual" ? "individual" : nrSessions.length > 1 ? "multi_group" : "single_group";
+            if (fromRound) {
+              transitionToNextRound(fromRound.id, {
+                preset,
+                format: nrFormat,
+                schedule: nrFormat === "individual" ? nrSchedule : null,
+                shareResults: nrShareResults,
+                requireConfirmation: nrShareResults,
+                name: nrName,
+                groups: nrFormat === "groups" ? nrSessions : [],
+                finalDest: nrIsFinal ? nrFinalDest : null,
+              });
+            }
+          }
+          setShowNextRoundModal(false);
+        };
+
+        const nrFormat = nrState.format || "groups";
+        const nrSchedule = nrState.schedule || {duration:30, buffer:10, mode:"dates", specificDates:[], weeklyHours:{mon:{enabled:true,start:"09:00",end:"17:00"},tue:{enabled:true,start:"09:00",end:"17:00"},wed:{enabled:true,start:"09:00",end:"17:00"},thu:{enabled:true,start:"09:00",end:"17:00"},fri:{enabled:true,start:"09:00",end:"17:00"},sat:{enabled:false,start:"10:00",end:"14:00"},sun:{enabled:false,start:"10:00",end:"14:00"}}, location:"", address:"", timezone:"Europe/Amsterdam"};
+        const dayLabels = {mon:"Monday",tue:"Tuesday",wed:"Wednesday",thu:"Thursday",fri:"Friday",sat:"Saturday",sun:"Sunday"};
+
         return (
-          <div className="overlay" onClick={() => setShowNextRoundModal(false)}>
-            <div className="new-room-modal" style={{maxWidth:560}} onClick={e => e.stopPropagation()}>
-              {isFinalsNext ? (
-                <>
-                  <h2>Send Offers <InfoTip title="Finals" body="Selected artists get offers via the contract flow. Not-selected artists receive a respectful close-out message."/></h2>
-                  <p className="nrm-sub">{advanced.length} selected artists will receive contract offers. The room will be archived once all are signed.</p>
-                  <div className="ns-actions">
-                    <button className="btn btn-g" onClick={() => setShowNextRoundModal(false)}>Cancel</button>
-                    <button className="btn btn-p" onClick={() => { showToast(`Sent ${advanced.length} offers — handing off to Stage Record (coming soon)`); setShowNextRoundModal(false); }}>
-                      <I n="send" s={14}/> Send Offers
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2>Set up Round {round.index + 1}</h2>
-                  <p className="nrm-sub">{advanced.length} artists are advancing to the next round.</p>
-                  <div className="round-setup-card" style={{padding:14,marginTop:12,marginBottom:10}}>
-                    <h3 style={{margin:0,fontSize:13}}>Next round preset <InfoTip topic="round_preset"/></h3>
-                    <div className="preset-grid" style={{gridTemplateColumns:"1fr 1fr",marginTop:10,gap:6}}>
-                      {ROUND_PRESETS.map(p => (
-                        <div key={p.key} className={`preset-card ${(showNextRoundModal.preset || "single_group") === p.key ? "selected":""}`} style={{padding:"10px 12px"}} onClick={() => setShowNextRoundModal({preset:p.key, shareResults: showNextRoundModal.shareResults !== undefined ? showNextRoundModal.shareResults : true, requireConfirmation: showNextRoundModal.requireConfirmation !== undefined ? showNextRoundModal.requireConfirmation : true})}>
-                          <div className="preset-card-head" style={{margin:0,color:p.color}}><I n={p.icon} s={13}/><h4 style={{color:"var(--tx)",fontSize:12}}>{p.label}</h4></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="round-setup-card" style={{padding:14,marginBottom:10}}>
-                    <div className="settings-row">
-                      <div>
-                        <div className="sr-label">Share results with artists <InfoTip topic="share_results"/></div>
-                        <div className="sr-sub">Send templated invitations / rejections via the Communication Centre.</div>
-                      </div>
-                      <button className={`toggle ${(showNextRoundModal.shareResults !== false)?"on":""}`} onClick={() => setShowNextRoundModal(s => ({...s, shareResults: !(s.shareResults !== false)}))}/>
-                    </div>
-                    <div className="settings-row" style={{marginTop:10}}>
-                      <div>
-                        <div className="sr-label">Confirm participation for next round <InfoTip topic="require_confirmation"/></div>
-                        <div className="sr-sub">Advanced artists must confirm before appearing in the next round.</div>
-                      </div>
-                      <button className={`toggle ${(showNextRoundModal.requireConfirmation !== false)?"on":""}`} onClick={() => setShowNextRoundModal(s => ({...s, requireConfirmation: !(s.requireConfirmation !== false)}))}/>
-                    </div>
-                  </div>
-                  {isMultiSession && (
-                    <div className="round-setup-card" style={{padding:14,marginBottom:10,borderColor:"rgba(96,77,255,.3)",background:"rgba(96,77,255,.04)"}}>
-                      <div className="sr-label" style={{color:"var(--ac)"}}>Merge step <InfoTip topic="merge_step"/></div>
-                      <div className="sr-sub" style={{margin:"4px 0 8px"}}>This round had multiple groups/sessions. By default we merge advanced artists into one group at one location for the next round.</div>
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                        {groups.map(g => {
-                          const ct = advanced.filter(a => a.groupId === g.id).length;
-                          return ct > 0 ? <span key={g.id} className="round-meta-chip" style={{color:g.color,background:`${g.color}14`}}>{g.name} → {ct}</span> : null;
-                        })}
-                        <span style={{fontSize:11,color:"var(--g4)"}}>= {advanced.length} merged into one group</span>
-                      </div>
+          <>
+          <div className="filter-side-backdrop" onClick={() => setShowNextRoundModal(false)}/>
+          <div className="sched-panel" onClick={e => e.stopPropagation()}>
+
+            {/* sp-header */}
+            <div className="sp-header">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  {nrEditingName ? (
+                    <input autoFocus style={{width:"100%",border:"none",borderBottom:"2px solid var(--ac)",background:"none",fontSize:17,fontWeight:700,fontFamily:"var(--sans)",color:"var(--tx)",padding:"0 0 2px",letterSpacing:"-0.02em",outline:"none"}} value={nrName} onChange={e => updateNr({name:e.target.value})} onBlur={() => updateNr({editingName:false})} onKeyDown={e => { if(e.key==="Enter") updateNr({editingName:false}); }} placeholder="Round name"/>
+                  ) : (
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <h3 style={{margin:0,fontSize:17,fontWeight:700,letterSpacing:"-0.02em"}}>{nrName}</h3>
+                      <button onClick={() => updateNr({editingName:true})} style={{background:"none",border:"none",cursor:"pointer",padding:2,color:"var(--g4)",display:"inline-flex"}}><I n="edit" s={12}/></button>
                     </div>
                   )}
-                  <div className="ns-actions">
-                    <button className="btn btn-g" onClick={() => setShowNextRoundModal(false)}>Cancel</button>
-                    <button className="btn btn-p" onClick={() => {
-                      transitionToNextRound(round.id, {
-                        preset: showNextRoundModal.preset || "single_group",
-                        shareResults: showNextRoundModal.shareResults !== false,
-                        requireConfirmation: showNextRoundModal.requireConfirmation !== false,
-                      });
-                      setShowNextRoundModal(false);
-                    }}><I n="arrow" s={14}/> Create Round {round.index + 1}</button>
+                  {!isEditMode && fromRound && (
+                    <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>{advanced.length} artist{advanced.length!==1?"s":""} advancing from {fromRound.name}</div>
+                  )}
+                  {isEditMode && editRound && (
+                    <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>{existingParticipants.length} participant{existingParticipants.length!==1?"s":""} · {existingGroups.length} session{existingGroups.length!==1?"s":""}</div>
+                  )}
+                </div>
+                <button className="sp-close" onClick={() => setShowNextRoundModal(false)}><I n="x" s={16}/></button>
+              </div>
+            </div>
+
+            {/* sp-body */}
+            <div className="sp-body">
+
+              {/* Format selector */}
+              <div className="sp-section">
+                <div className="sp-label">Format</div>
+                <div className="sp-format-selector">
+                  <div className={`sp-format-card ${nrFormat==="groups"?"active":""}`} onClick={() => updateNr({format:"groups"})}>
+                    <I n="users" s={20} style={{color:"var(--ac)"}}/>
+                    <h4>Groups</h4>
+                    <p>Divide into sessions with capacity & scheduling</p>
                   </div>
-                </>
+                  <div className={`sp-format-card ${nrFormat==="individual"?"active":""}`} onClick={() => updateNr({format:"individual"})}>
+                    <I n="calendar" s={20} style={{color:"var(--ac)"}}/>
+                    <h4>Individual</h4>
+                    <p>Private time slots per artist (Calendly-style)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Groups UI */}
+              {nrFormat === "groups" && (
+                <div className="sp-section">
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                    <div className="sp-label" style={{margin:0}}>Sessions</div>
+                    <button className="btn btn-s btn-sm" onClick={addSession}>
+                      <I n="plus" s={11}/> Add session
+                    </button>
+                  </div>
+                  {nrSessions.map((ns, i) => (
+                    <div key={ns.id} className="group-config-card">
+                      <div className="gc-head">
+                        <span className="gc-color" style={{background:ns.color||colors[i%colors.length]}}/>
+                        <input className="gc-name-input" placeholder="Session name" value={ns.name} onChange={e => updateSession(i, {name:e.target.value})}/>
+                        {isEditMode && ns.participantCount != null && (
+                          <span style={{fontSize:11,color:"var(--g4)"}}>{ns.participantCount}/{ns.capacity}</span>
+                        )}
+                        <button className={`btn btn-g btn-sm ${nrRulesOpen===i?"on":""}`} onClick={() => updateNr({rulesOpen: nrRulesOpen===i ? null : i})} title="Rules"><I n="filter" s={11}/></button>
+                        {nrSessions.length > 1 && (
+                          <button className="btn btn-g btn-sm" onClick={() => removeSession(i)}>
+                            <I n="trash" s={11}/>
+                          </button>
+                        )}
+                      </div>
+                      <div className="session-row" style={{gridTemplateColumns:"1fr 80px 80px 60px",marginTop:6}}>
+                        <div><label>Date</label><input type="date" value={ns.date} onChange={e => updateSession(i, {date:e.target.value})}/></div>
+                        <div><label>Start</label><input type="time" value={ns.time} onChange={e => updateSession(i, {time:e.target.value})}/></div>
+                        <div><label>End</label><input type="time" value={ns.endTime} onChange={e => updateSession(i, {endTime:e.target.value})}/></div>
+                        <div><label>Cap</label><input type="number" value={ns.capacity} onChange={e => updateSession(i, {capacity:parseInt(e.target.value)||0})}/></div>
+                      </div>
+                      <div className="session-row" style={{gridTemplateColumns:"1fr",marginTop:0,border:"none",padding:"0 14px 8px",marginBottom:0}}>
+                        <div><label>Location</label><input placeholder="e.g. Studio 1, Theater Lanced" value={ns.location} onChange={e => updateSession(i, {location:e.target.value})}/></div>
+                      </div>
+                      {!isEditMode && isMultiGroup && (
+                        <div style={{padding:"0 14px 10px",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                          <select className="sort-filter" style={{height:28,fontSize:11,flex:1,minWidth:120}} value={ns.connectTo||""} onChange={e => updateSession(i, {connectTo:e.target.value||null})}>
+                            <option value="">No connection to previous round</option>
+                            <option value="__merge__">Merge all groups →</option>
+                            {prevGroups.map(pg => <option key={pg.id} value={pg.id}>← Continue from {pg.name}</option>)}
+                          </select>
+                          {ns.connectTo === "__merge__" && (
+                            <span style={{fontSize:10,color:"var(--ac)"}}>{advanced.length} artists merged</span>
+                          )}
+                        </div>
+                      )}
+                      {!isEditMode && !isMultiGroup && i === 0 && fromRound && (
+                        <div style={{padding:"0 14px 10px",fontSize:10,color:"var(--g4)"}}>All {advanced.length} callbacks from {fromRound.name} will be placed here.</div>
+                      )}
+                      {ns.rules && ns.rules.length > 0 && (
+                        <div className="gc-rules" style={{padding:"0 14px 10px"}}>
+                          {ns.rules.map((r, ri) => (
+                            <span key={ri} className={`gc-rule-chip ${r.enforcement==="hard"?"hard":""}`} onClick={() => toggleEnforcement(i, ri)} title={r.enforcement==="hard"?"Hard rule — click to make soft":"Soft rule — click to make hard"}>
+                              {Object.entries(r.criteria).map(([k,v]) => {
+                                const crit = RULE_CRITERIA.find(c => c.key === k);
+                                return <span key={k} style={{display:"inline-flex",alignItems:"center",gap:3}}>{crit?.label||k}: {v} <button onClick={e => {e.stopPropagation(); removeRuleKey(i, ri, k);}} style={{background:"none",border:"none",padding:0,cursor:"pointer",color:"inherit",display:"inline-flex",opacity:.7}}><I n="x" s={7}/></button></span>;
+                              })}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {nrRulesOpen === i && (
+                        <div style={{padding:"0 14px 12px"}}>
+                          <div style={{padding:"10px 12px",background:"var(--g05)",borderRadius:10,border:"1px solid var(--g15)"}}>
+                            <div style={{fontSize:10,fontWeight:700,color:"var(--g5)",textTransform:"uppercase",letterSpacing:".04em",marginBottom:8}}>Add rule criteria</div>
+                            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                              {RULE_CRITERIA.filter(c => c.type === "select" || c.type === "multi").map(c => {
+                                const alreadyUsed = (ns.rules||[]).some(r => r.criteria[c.key]);
+                                return (
+                                  <select key={c.key} className="sort-filter" style={{height:26,fontSize:10,minWidth:90,opacity:alreadyUsed?c.type==="multi"?.7:.5:1}} value="" onChange={e => { if(e.target.value) addRuleCriteria(i, c.key, e.target.value); e.target.value=""; }}>
+                                    <option value="">{alreadyUsed?"✓ ":""}{c.label}</option>
+                                    {c.options.filter(o=>o!=="Any").map(o => <option key={o} value={o}>{o}</option>)}
+                                  </select>
+                                );
+                              })}
+                            </div>
+                            <div style={{fontSize:10,color:"var(--g4)",marginTop:6}}>Click a rule chip to toggle soft/hard enforcement.</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
+
+              {/* Individual (Calendly-style) UI */}
+              {nrFormat === "individual" && (() => {
+                const schedMode = nrSchedule.mode || "dates";
+                const specificDates = nrSchedule.specificDates || [];
+                return (
+                <div className="sp-section">
+                  <div className="sp-label">Booking Settings</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                    <div className="field" style={{margin:0}}>
+                      <label>Duration</label>
+                      <select value={nrSchedule.duration} onChange={e => updateNr({schedule:{...nrSchedule, duration:parseInt(e.target.value)}})}>
+                        <option value={15}>15 minutes</option>
+                        <option value={30}>30 minutes</option>
+                        <option value={45}>45 minutes</option>
+                        <option value={60}>60 minutes</option>
+                        <option value={90}>90 minutes</option>
+                      </select>
+                    </div>
+                    <div className="field" style={{margin:0}}>
+                      <label>Buffer</label>
+                      <select value={nrSchedule.buffer} onChange={e => updateNr({schedule:{...nrSchedule, buffer:parseInt(e.target.value)}})}>
+                        <option value={0}>No buffer</option>
+                        <option value={5}>5 minutes</option>
+                        <option value={10}>10 minutes</option>
+                        <option value={15}>15 minutes</option>
+                        <option value={30}>30 minutes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="field" style={{marginBottom:14}}>
+                    <label>Location</label>
+                    <input placeholder="e.g. Studio 1, Theater Hall" value={nrSchedule.location} onChange={e => updateNr({schedule:{...nrSchedule, location:e.target.value}})}/>
+                  </div>
+                  <div className="field" style={{marginBottom:14}}>
+                    <label>Address</label>
+                    <input placeholder="Full address" value={nrSchedule.address} onChange={e => updateNr({schedule:{...nrSchedule, address:e.target.value}})}/>
+                  </div>
+
+                  {/* Availability mode toggle */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                    <div className="sp-label" style={{margin:0}}>Availability</div>
+                    <div className="cand-view-toggle" style={{height:28}}>
+                      <button className={schedMode==="dates"?"active":""} style={{fontSize:10,padding:"0 10px"}} onClick={() => updateNr({schedule:{...nrSchedule, mode:"dates"}})}>Specific Dates</button>
+                      <button className={schedMode==="weekly"?"active":""} style={{fontSize:10,padding:"0 10px"}} onClick={() => updateNr({schedule:{...nrSchedule, mode:"weekly"}})}>Weekly</button>
+                    </div>
+                  </div>
+
+                  {schedMode === "dates" && (
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {specificDates.map((sd, di) => (
+                        <div key={di} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:"var(--g05)",borderRadius:10,border:"1px solid var(--g15)"}}>
+                          <input type="date" style={{flex:1,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.date} onChange={e => {
+                            const ds = [...specificDates]; ds[di] = {...ds[di], date:e.target.value};
+                            updateNr({schedule:{...nrSchedule, specificDates:ds}});
+                          }}/>
+                          <input type="time" style={{width:80,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.start} onChange={e => {
+                            const ds = [...specificDates]; ds[di] = {...ds[di], start:e.target.value};
+                            updateNr({schedule:{...nrSchedule, specificDates:ds}});
+                          }}/>
+                          <span style={{fontSize:11,color:"var(--g4)"}}>–</span>
+                          <input type="time" style={{width:80,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.end} onChange={e => {
+                            const ds = [...specificDates]; ds[di] = {...ds[di], end:e.target.value};
+                            updateNr({schedule:{...nrSchedule, specificDates:ds}});
+                          }}/>
+                          <button className="btn btn-g btn-sm" style={{padding:4}} onClick={() => {
+                            updateNr({schedule:{...nrSchedule, specificDates:specificDates.filter((_,j) => j !== di)}});
+                          }}><I n="trash" s={11}/></button>
+                        </div>
+                      ))}
+                      <button className="btn btn-s btn-sm" style={{alignSelf:"flex-start"}} onClick={() => {
+                        updateNr({schedule:{...nrSchedule, specificDates:[...specificDates, {date:"", start:"09:00", end:"17:00"}]}});
+                      }}><I n="plus" s={11}/> Add date</button>
+                      {specificDates.length === 0 && (
+                        <div style={{fontSize:11,color:"var(--g4)",fontStyle:"italic",padding:"8px 0"}}>No dates added yet. Add specific audition dates above.</div>
+                      )}
+                    </div>
+                  )}
+
+                  {schedMode === "weekly" && (
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {Object.entries(dayLabels).map(([key, label]) => {
+                        const day = nrSchedule.weeklyHours[key] || {enabled:false, start:"09:00", end:"17:00"};
+                        return (
+                          <div key={key} style={{display:"flex",alignItems:"center",gap:10}}>
+                            <button className={`toggle ${day.enabled?"on":""}`} onClick={() => updateNr({schedule:{...nrSchedule, weeklyHours:{...nrSchedule.weeklyHours, [key]:{...day, enabled:!day.enabled}}}})}/>
+                            <span style={{fontSize:12,fontWeight:500,width:75,color:day.enabled?"var(--tx)":"var(--g4)"}}>{label}</span>
+                            {day.enabled ? (
+                              <div style={{display:"flex",alignItems:"center",gap:4,flex:1}}>
+                                <input type="time" style={{flex:1,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={day.start} onChange={e => updateNr({schedule:{...nrSchedule, weeklyHours:{...nrSchedule.weeklyHours, [key]:{...day, start:e.target.value}}}})}/>
+                                <span style={{fontSize:11,color:"var(--g4)"}}>–</span>
+                                <input type="time" style={{flex:1,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={day.end} onChange={e => updateNr({schedule:{...nrSchedule, weeklyHours:{...nrSchedule.weeklyHours, [key]:{...day, end:e.target.value}}}})}/>
+                              </div>
+                            ) : (
+                              <span style={{fontSize:11,color:"var(--g4)",fontStyle:"italic"}}>Unavailable</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                );
+              })()}
+
+              {/* Options */}
+              <div className="sp-section">
+                <div className="sp-label">Options</div>
+                <div className="round-setup-card" style={{padding:14,marginBottom:10}}>
+                  <div className="settings-row">
+                    <div>
+                      <div className="sr-label">Share results with candidates</div>
+                      <div className="sr-sub">Notify candidates of their status and share round outcomes.</div>
+                    </div>
+                    <button className={`toggle ${nrShareResults?"on":""}`} onClick={() => updateNr({shareResults:!nrShareResults})}/>
+                  </div>
+                  {!nrShareResults && <div style={{fontSize:10,color:"var(--amber)",marginTop:6,padding:"5px 10px",background:"rgba(245,166,35,.06)",borderRadius:8}}>Internal use only — candidates won't be notified about this round.</div>}
+                </div>
+                <div className="round-setup-card" style={{padding:14}}>
+                  <div className="settings-row">
+                    <div>
+                      <div className="sr-label">This is the final round</div>
+                      <div className="sr-sub">After decisions, move selected artists forward.</div>
+                    </div>
+                    <button className={`toggle ${nrIsFinal?"on":""}`} onClick={() => updateNr({isFinal:!nrIsFinal})}/>
+                  </div>
+                  {nrIsFinal && (
+                    <div style={{marginTop:10,display:"flex",gap:6}}>
+                      {hasInterviews && (
+                        <button className={`preset-card ${nrFinalDest==="interviews"?"selected":""}`} style={{flex:1,padding:"8px 10px",cursor:"pointer",textAlign:"center"}} onClick={() => updateNr({finalDest:"interviews"})}>
+                          <I n="chat" s={13} style={{color:"#0EA5A8"}}/><div style={{fontSize:10,fontWeight:600,marginTop:2}}>Move to Interviews</div>
+                        </button>
+                      )}
+                      {hasHire && (
+                        <button className={`preset-card ${nrFinalDest==="hire"?"selected":""}`} style={{flex:1,padding:"8px 10px",cursor:"pointer",textAlign:"center"}} onClick={() => updateNr({finalDest:"hire"})}>
+                          <I n="card" s={13} style={{color:"#F5A623"}}/><div style={{fontSize:10,fontWeight:600,marginTop:2}}>Move to Hire</div>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* sp-actions */}
+            <div className="sp-actions">
+              <button className="btn btn-g" onClick={() => setShowNextRoundModal(false)}>Cancel</button>
+              <button className="btn btn-p" onClick={handleSave}><I n={isEditMode?"check":"arrow"} s={14}/> {isEditMode ? "Save changes" : "Create Round"}</button>
             </div>
           </div>
+          </>
         );
       })()}
 
       {/* ═══ NEW OPPORTUNITY MODAL (TYPE PICKER + 5-STEP CASTING WIZARD) ═══ */}
       {showNewRoom && (
-        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"}); }}>
+        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"}); }}>
           <div className="new-room-modal" style={{maxWidth: 640}} onClick={e => e.stopPropagation()}>
 
-            {/* Step indicator — shown for casting + audition flows (steps 1-5) */}
+            {/* Step indicator — shown for casting + audition flows (steps 1+) */}
             {newRoomStep >= 1 && (
               <div className="step-bar">
-                {["Application Mode","Selection","Format","Workflow","Details"].map((label, i) => {
+                {(newRoomConfig.opportunityType === "audition"
+                  ? ["Format","Access & Type","Details","Visibility"]
+                  : ["Application Mode","Selection","Format","Workflow","Details","Visibility"]
+                ).map((label, i) => {
                   const step = i + 1;
                   return [
                     i > 0 && <div className="step-line" key={`l${i}`}/>,
@@ -17544,7 +17925,7 @@ export default function AgencyShell() {
                   ))}
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"one_date",castingType:"open"}); }}>Cancel</button>
+                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"}); }}>Cancel</button>
                   <button className="btn btn-p" onClick={() => {
                     const opt = getOpportunityType(newRoomConfig.opportunityType);
                     if (!opt.enabled) { showToast(`${opt.label} setup coming soon — we're building this flow next.`); return; }
@@ -17556,8 +17937,8 @@ export default function AgencyShell() {
               </>
             )}
 
-            {/* ── Step 1: Application Mode ── */}
-            {newRoomStep === 1 && (
+            {/* ── Step 1: Application Mode (non-audition) ── */}
+            {newRoomStep === 1 && newRoomConfig.opportunityType !== "audition" && (
               <>
                 <h2>Application Mode</h2>
                 <p className="nrm-sub">How will candidates access this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()}?</p>
@@ -17600,8 +17981,8 @@ export default function AgencyShell() {
               </>
             )}
 
-            {/* ── Step 2: Selection Type ── */}
-            {newRoomStep === 2 && (
+            {/* ── Step 2: Selection Type (non-audition) ── */}
+            {newRoomStep === 2 && newRoomConfig.opportunityType !== "audition" && (
               <>
                 <h2>Selection Type</h2>
                 <p className="nrm-sub">How will you organize your candidate selection?</p>
@@ -17653,23 +18034,69 @@ export default function AgencyShell() {
               </>
             )}
 
-            {/* ── Step 3: Format (Audition) ── */}
-            {newRoomStep === 3 && newRoomConfig.opportunityType === "audition" && (
+            {/* ── Step 1: Format (Audition) — Online or In-Person ── */}
+            {newRoomStep === 1 && newRoomConfig.opportunityType === "audition" && (
               <>
                 <h2>Format</h2>
-                <p className="nrm-sub">How will this audition be organized?</p>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"16px 0 24px"}}>
-                  {AUDITION_FORMATS.map(opt => (
-                    <div key={opt.val} className={`wizard-option ${newRoomConfig.auditionFormat===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:opt.val}))}>
-                      <div className="wo-icon"><I n={opt.icon} s={22}/></div>
-                      <h4>{opt.title}</h4>
-                      <p>{opt.desc}</p>
-                    </div>
-                  ))}
+                <p className="nrm-sub">How will this audition take place?</p>
+                <div className="wizard-grid">
+                  <div className={`wizard-option ${newRoom.format==="online"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"online"}))}>
+                    <div className="wo-icon"><I n="globe" s={22}/></div>
+                    <h4>Online Submission</h4>
+                    <p>Artists submit self-tapes or materials — no physical attendance required.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoom.format==="in_person"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"in_person"}))}>
+                    <div className="wo-icon"><I n="users" s={22}/></div>
+                    <h4>In-Person Audition</h4>
+                    <p>Artists attend a physical audition at your location(s).</p>
+                  </div>
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(2)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(4)}>Next <I n="arrow" s={14}/></button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(0)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(newRoom.format === "online" ? 3 : 2)}>Next <I n="arrow" s={14}/></button>
+                </div>
+              </>
+            )}
+
+            {/* ── Step 2: Access Type & Audition Format (Audition, In-Person only) ── */}
+            {newRoomStep === 2 && newRoomConfig.opportunityType === "audition" && (
+              <>
+                <h2>Access & Audition Type</h2>
+                <p className="nrm-sub">Who can attend, and how is the audition structured?</p>
+
+                <div style={{marginBottom:20}}>
+                  <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>Access</div>
+                  <div className="wizard-grid">
+                    {ACCESS_TYPES.map(opt => (
+                      <div key={opt.val} className={`wizard-option ${newRoomConfig.accessType===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,accessType:opt.val}))}>
+                        <div className="wo-icon"><I n={opt.icon} s={22}/></div>
+                        <h4>{opt.title}</h4>
+                        <p>{opt.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{marginBottom:20}}>
+                  <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>Audition Format</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    {AUDITION_FORMATS.map(opt => (
+                      <div key={opt.val} className={`wizard-option ${newRoomConfig.auditionFormat===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:opt.val}))}>
+                        <div className="wo-icon"><I n={opt.icon} s={22}/></div>
+                        <h4>{opt.title}</h4>
+                        <p>{opt.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(96,77,255,.06)",border:"1px solid rgba(96,77,255,.15)",fontSize:12,color:"var(--g6)",marginBottom:16}}>
+                  <I n="info" s={12} style={{verticalAlign:"-2px",marginRight:4,opacity:.6}}/> You can configure groups, time slots, capacity, and other details after creating the room.
+                </div>
+
+                <div className="ns-actions">
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(1)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(3)}>Next: Details <I n="arrow" s={14}/></button>
                 </div>
               </>
             )}
@@ -17711,36 +18138,11 @@ export default function AgencyShell() {
               </>
             )}
 
-            {/* ── Step 4: Workflow Options (Audition) ── */}
-            {newRoomStep === 4 && newRoomConfig.opportunityType === "audition" && (
-              <>
-                <h2>Workflow</h2>
-                <p className="nrm-sub">Configure how the audition runs. These can be changed later in settings.</p>
-                <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:14}}>
-                  <div className="settings-row">
-                    <div>
-                      <div className="sr-label">Enable Waitlist?</div>
-                      <div className="sr-sub">Place candidates on a waitlist if all spots are filled, in case someone drops out.</div>
-                    </div>
-                    <button className={`toggle ${newRoomConfig.useWaitlist?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useWaitlist:!p.useWaitlist}))} />
-                  </div>
-                  <div className="settings-row">
-                    <div>
-                      <div className="sr-label">Enable Early Invites?</div>
-                      <div className="sr-sub">Send invites and request confirmation from selected candidates before the application deadline closes.</div>
-                    </div>
-                    <button className={`toggle ${newRoomConfig.useEarlyInvites?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useEarlyInvites:!p.useEarlyInvites}))} />
-                  </div>
-                </div>
-                <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(3)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(5)}>Next: Details <I n="arrow" s={14}/></button>
-                </div>
-              </>
-            )}
+            {/* ── Step 4: Workflow Options (non-audition only) ── */}
+            {/* Audition workflow options are now integrated into Step 2 (Access & Type) */}
 
-            {/* ── Step 5: Details ── */}
-            {newRoomStep === 5 && (
+            {/* ── Step 5: Details (step 3 for auditions, step 5 for non-auditions) ── */}
+            {((newRoomStep === 5 && newRoomConfig.opportunityType !== "audition") || (newRoomStep === 3 && newRoomConfig.opportunityType === "audition")) && (
               <>
                 <h2>{getOpportunityType(newRoomConfig.opportunityType).label} Details</h2>
                 <p className="nrm-sub">Fill in the basics. You can always edit these later.</p>
@@ -17790,7 +18192,34 @@ export default function AgencyShell() {
                   <input placeholder="e.g. Apr 15, 2026" value={newRoom.deadline} onChange={e => setNewRoom(p => ({...p, deadline:e.target.value}))}/>
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(4)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? (newRoom.format === "online" ? 1 : 2) : 4)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? 4 : 6)} disabled={!newRoom.title.trim()}>
+                    Next <I n="forward" s={14}/>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ═══ VISIBILITY STEP (Final for both auditions & castings) ═══ */}
+            {((newRoomStep === 6 && newRoomConfig.opportunityType !== "audition") || (newRoomStep === 4 && newRoomConfig.opportunityType === "audition")) && (
+              <>
+                <h2>Visibility</h2>
+                <p className="nrm-sub">Choose who can see and apply to this opportunity.</p>
+                <div className="format-grid" style={{marginTop:16}}>
+                  {[
+                    {key:"public", icon:"globe", label:"Public", desc:"Visible to everyone. Artists can find and apply directly."},
+                    {key:"database", icon:"users", label:"Database Only", desc:"Only visible to artists in your database. Not listed publicly."},
+                    {key:"link", icon:"link", label:"Per Link", desc:"Only accessible via a private link you share. Hidden from search and listings."},
+                  ].map(v => (
+                    <button key={v.key} className={`format-card ${newRoomConfig.visibility===v.key?"active":""}`} onClick={() => setNewRoomConfig(p => ({...p, visibility:v.key}))}>
+                      <I n={v.icon} s={22}/>
+                      <div className="fc-label">{v.label}</div>
+                      <div className="fc-desc">{v.desc}</div>
+                    </button>
+                  ))}
+                </div>
+                <div className="ns-actions" style={{marginTop:24}}>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? 3 : 5)}><I n="back" s={14}/> Back</button>
                   <button className="btn btn-p" onClick={handleCreateRoom} disabled={!newRoom.title.trim()}>
                     <I n="plus" s={14}/> Create {getOpportunityType(newRoomConfig.opportunityType).label}
                   </button>
@@ -17801,6 +18230,195 @@ export default function AgencyShell() {
           </div>
         </div>
       )}
+
+      {/* ═══ PUBLISH READINESS PANEL ═══ */}
+      {showPublishPanel && currentRoom && currentRoom.status === "draft" && (
+        <div style={{position:"fixed",bottom:0,left:"var(--sb-w)",right:0,zIndex:800,background:"var(--glass-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderTop:"1px solid var(--glass-border)",padding:"14px 24px",boxShadow:"0 -4px 24px rgba(0,0,0,.08)",animation:"slideUp .3s ease"}}>
+          <div style={{display:"flex",alignItems:"center",gap:16,maxWidth:900,margin:"0 auto"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--g6)",marginBottom:6}}>Complete before publishing</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {(() => {
+                  const steps = [];
+                  if (!currentRoom.description) steps.push({key:"desc",label:"Add description",done:false});
+                  else steps.push({key:"desc",label:"Description",done:true});
+                  if (!currentRoom.deadline) steps.push({key:"deadline",label:"Set deadline",done:false});
+                  else steps.push({key:"deadline",label:"Deadline",done:true});
+                  if (currentRoom.roles?.length === 0) steps.push({key:"roles",label:"Add roles",done:false});
+                  else steps.push({key:"roles",label:"Roles",done:true});
+                  if (currentRoom.opportunityType === "audition" && currentRoom.roundsEnabled !== false) {
+                    const hasRounds = getActiveRoundsForRoom(currentRoom.id).length > 0;
+                    steps.push({key:"rounds",label:hasRounds?"Rounds configured":"Setup rounds",done:hasRounds});
+                  }
+                  if (!currentRoom.teamMemberIds || currentRoom.teamMemberIds.length === 0) steps.push({key:"team",label:"Add team",done:false});
+                  else steps.push({key:"team",label:"Team",done:true});
+                  return steps.map(s => (
+                    <span key={s.key} style={{fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:40,display:"inline-flex",alignItems:"center",gap:4,background:s.done?"rgba(29,185,84,.1)":"rgba(245,166,35,.1)",color:s.done?"#1DB954":"var(--amber)",border:`1px solid ${s.done?"rgba(29,185,84,.2)":"rgba(245,166,35,.2)"}`}}>
+                      <I n={s.done?"check":"circle"} s={10}/> {s.label}
+                    </span>
+                  ));
+                })()}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <button className="btn btn-s" onClick={() => setShowPublishPanel(false)} style={{fontSize:11}}>Dismiss</button>
+              <button className="btn btn-p" style={{fontSize:12}} onClick={() => {
+                setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, status:"active"} : r));
+                setShowPublishPanel(false);
+                showToast("Room published!");
+              }} disabled={!currentRoom.description || !currentRoom.deadline}>
+                <I n="send" s={13}/> Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ARTIST CONFIRMATION / RSVP MODAL ═══ */}
+      {showConfirmationModal && (() => {
+        const cand = candidates.find(c => c.id === showConfirmationModal);
+        if (!cand) return null;
+        const info = getCandidateInfo(cand);
+        const room = rooms.find(r => r.id === cand.roomId);
+        const roomGroups = auditionGroups.filter(g => g.roundId && auditionRounds.find(rd => rd.id === g.roundId && rd.roomId === cand.roomId));
+        const showGroupBooking = room?.auditionFormat === "groups" && room?.groupCreationMode === "self_book" && confirmationResponse === "confirm";
+        const isPrivate = room?.auditionFormat === "private" || (room?.auditionFormat === "multi_location" && cand.locationId && room.locations?.find(l => l.id === cand.locationId)?.subFormat === "private");
+        const showSlotBooking = isPrivate && confirmationResponse === "confirm";
+        const candLocation = cand.locationId && room?.locations?.find(l => l.id === cand.locationId);
+        const availableSlots = showSlotBooking ? timeSlots.filter(s => s.roomId === cand.roomId && (!cand.locationId || s.locationId === cand.locationId)) : [];
+        const slotDates = [...new Set(availableSlots.map(s => s.date))];
+
+        return (
+        <div className="overlay" onClick={() => setShowConfirmationModal(null)}>
+          <div className="new-room-modal" style={{maxWidth:520}} onClick={e => e.stopPropagation()}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{width:48,height:48,borderRadius:"50%",background:"var(--bg2)",overflow:"hidden",margin:"0 auto 10px"}}>
+                {info.img && <img src={info.img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+              </div>
+              <div style={{fontSize:11,fontWeight:600,color:"var(--ac)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Artist Confirmation</div>
+              <h2 style={{margin:0,fontSize:18}}>{info.name}</h2>
+            </div>
+
+            <div style={{background:"var(--bg2)",borderRadius:10,padding:"14px 16px",marginBottom:20,fontSize:13,color:"var(--g5)",lineHeight:1.6}}>
+              <strong style={{color:"var(--g7)"}}>{room?.title || "Audition"}</strong> has invited you to audition
+              {room?.auditionDates?.[0] && <> on <strong>{room.auditionDates[0].date}</strong></>}
+              {room?.location && <> at <strong>{room.location}</strong></>}.
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+              <label className={`wizard-option ${confirmationResponse === "confirm" ? "selected" : ""}`} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",cursor:"pointer"}} onClick={() => setConfirmationResponse("confirm")}>
+                <span style={{width:18,height:18,borderRadius:"50%",border:confirmationResponse === "confirm" ? "5px solid var(--ac)" : "2px solid var(--g3)",flexShrink:0}}></span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--g7)"}}>I confirm my attendance</div>
+                  <div style={{fontSize:11,color:"var(--g4)"}}>You'll be added as a confirmed participant</div>
+                </div>
+              </label>
+              <label className={`wizard-option ${confirmationResponse === "decline" ? "selected" : ""}`} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",cursor:"pointer"}} onClick={() => setConfirmationResponse("decline")}>
+                <span style={{width:18,height:18,borderRadius:"50%",border:confirmationResponse === "decline" ? "5px solid var(--red)" : "2px solid var(--g3)",flexShrink:0}}></span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--g7)"}}>Unfortunately I can't make it</div>
+                  <div style={{fontSize:11,color:"var(--g4)"}}>Your spot will be released</div>
+                </div>
+              </label>
+              <label className={`wizard-option ${confirmationResponse === "reschedule" ? "selected" : ""}`} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",cursor:"pointer"}} onClick={() => setConfirmationResponse("reschedule")}>
+                <span style={{width:18,height:18,borderRadius:"50%",border:confirmationResponse === "reschedule" ? "5px solid var(--orange)" : "2px solid var(--g3)",flexShrink:0}}></span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--g7)"}}>Ask to reschedule</div>
+                  <div style={{fontSize:11,color:"var(--g4)"}}>Request a different date or time</div>
+                </div>
+              </label>
+            </div>
+
+            {showGroupBooking && roomGroups.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>Select your group</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {roomGroups.map(g => (
+                    <div key={g.id} className="wizard-option" style={{padding:"10px 12px",cursor:"pointer"}} onClick={() => showToast(`Group "${g.name}" selected`)}>
+                      <div style={{fontSize:13,fontWeight:600,color:"var(--g7)"}}>{g.name}</div>
+                      <div style={{fontSize:11,color:"var(--g4)",marginTop:2}}>{g.capacity ? `${g.capacity} spots` : "Open"}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showSlotBooking && availableSlots.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>
+                  Book your time slot{candLocation ? ` at ${candLocation.name}` : ""}
+                </div>
+                {slotDates.map(date => {
+                  const daySlots = availableSlots.filter(s => s.date === date);
+                  return (
+                    <div key={date} style={{marginBottom:10}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+                        <I n="calendar" s={12} style={{color:"var(--ac)"}}/> {date}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:6}}>
+                        {daySlots.map(slot => {
+                          const isBooked = slot.bookedBy.length >= slot.maxPerSlot;
+                          const isSelected = selectedSlotId === slot.id;
+                          return (
+                            <button
+                              key={slot.id}
+                              className={`wizard-option ${isSelected ? "selected" : ""}`}
+                              style={{
+                                padding:"8px 6px",textAlign:"center",cursor: isBooked ? "not-allowed" : "pointer",
+                                opacity: isBooked ? 0.45 : 1,
+                                border: isSelected ? "2px solid var(--ac)" : undefined,
+                              }}
+                              disabled={isBooked}
+                              onClick={() => !isBooked && setSelectedSlotId(isSelected ? null : slot.id)}
+                            >
+                              <div style={{fontSize:13,fontWeight:600,color: isBooked ? "var(--g3)" : "var(--g7)"}}>{slot.startTime}</div>
+                              <div style={{fontSize:10,color: isBooked ? "var(--g3)" : "var(--g4)"}}>{isBooked ? "Fully booked" : `${slot.slotDuration} min`}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="field" style={{marginBottom:16}}>
+              <label style={{fontSize:12,fontWeight:600,color:"var(--g5)"}}>
+                {confirmationResponse === "reschedule" ? "Explain your scheduling conflict" : "Write a brief message (optional)"}
+              </label>
+              <textarea
+                style={{width:"100%",minHeight:70,borderRadius:8,border:"1px solid var(--border)",padding:"8px 12px",fontSize:13,resize:"vertical",fontFamily:"inherit",background:"var(--bg)"}}
+                placeholder={confirmationResponse === "reschedule" ? "e.g. I have a conflict on the 5th — could we find another date?" : "e.g. Thank you for the invitation, I look forward to it!"}
+                value={confirmationMessage}
+                onChange={e => setConfirmationMessage(e.target.value)}
+              />
+            </div>
+
+            <div className="ns-actions">
+              <button className="btn btn-g" onClick={() => { setShowConfirmationModal(null); setSelectedSlotId(null); }}>Cancel</button>
+              <button className="btn btn-p" onClick={() => {
+                const status = confirmationResponse === "confirm" ? "confirmed" : confirmationResponse === "decline" ? "declined" : "rescheduling";
+                setCandidates(prev => prev.map(c => c.id === showConfirmationModal ? {...c, confirmationStatus: status} : c));
+                if (selectedSlotId && status === "confirmed") {
+                  setTimeSlots(prev => prev.map(s => s.id === selectedSlotId ? {...s, bookedBy: [...s.bookedBy, showConfirmationModal]} : s));
+                }
+                const slotInfo = selectedSlotId ? availableSlots.find(s => s.id === selectedSlotId) : null;
+                const statusMsg = status === "confirmed" ? "confirmed attendance" : status === "declined" ? "declined the invitation" : "requested to reschedule";
+                const slotMsg = slotInfo ? ` — booked ${slotInfo.date} at ${slotInfo.startTime}` : "";
+                showToast(`${info.name} ${statusMsg}${slotMsg}${confirmationMessage.trim() ? " — message sent to thread" : ""}`);
+                setShowConfirmationModal(null);
+                setConfirmationMessage("");
+                setConfirmationResponse("confirm");
+                setSelectedSlotId(null);
+              }}>
+                {confirmationResponse === "confirm" ? "Confirm Attendance" : confirmationResponse === "decline" ? "Send Response" : "Send Reschedule Request"}
+              </button>
+            </div>
+          </div>
+        </div>
+        );
+      })()}
 
       {/* ═══ TEAM MEMBER MODAL ═══ */}
       {showTeamModal && (
@@ -18073,7 +18691,7 @@ export default function AgencyShell() {
           <>
             <button onClick={handleBackToWorkspace}><I n="back" s={18}/><span>Back</span></button>
             <button className={roomPage==="overview"?"active":""} onClick={()=>setRoomPage("overview")}><I n="home" s={18}/><span>Overview</span></button>
-            <button className={roomPage==="candidates"?"active":""} onClick={()=>setRoomPage("candidates")}><I n="users" s={18}/><span>Candidates</span></button>
+            <button className={roomPage==="candidates"?"active":""} onClick={()=>setRoomPage("candidates")}><I n="users" s={18}/><span>Applicants</span></button>
             {INTERVIEW_ELIGIBLE_TYPES.includes(currentRoom.opportunityType) && currentRoom.enableInterviews && !isExternalMode && (
               <button className={roomPage==="interviews"?"active":""} onClick={()=>setRoomPage("interviews")}><I n="chat" s={18}/><span>Interviews</span></button>
             )}
@@ -18246,6 +18864,315 @@ export default function AgencyShell() {
           </div>
         </>
       )}
+
+      {/* ═══ Schedule Setup Panel (Calendly-style) ═══ */}
+      {showScheduleSetup && currentRoom && (() => {
+        const ss = showScheduleSetup;
+        const isInterview = ss.type === "interview";
+        const schedKey = isInterview ? "interviewSchedule" : "auditionSchedule";
+        const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        const DAY_LETTERS = ["S","M","T","W","T","F","S"];
+        const defaultWeekly = [
+          {active:false, slots:[]},
+          {active:true, slots:[{start:"09:00",end:"12:00"},{start:"13:00",end:"17:00"}]},
+          {active:true, slots:[{start:"09:00",end:"12:00"},{start:"13:00",end:"17:00"}]},
+          {active:true, slots:[{start:"09:00",end:"12:00"},{start:"13:00",end:"17:00"}]},
+          {active:true, slots:[{start:"09:00",end:"12:00"},{start:"13:00",end:"17:00"}]},
+          {active:true, slots:[{start:"09:00",end:"12:00"},{start:"13:00",end:"17:00"}]},
+          {active:false, slots:[]},
+        ];
+        const sched = currentRoom[schedKey] || {};
+        const weekly = ss.weekly ?? sched.weekly ?? defaultWeekly;
+        const duration = ss.duration ?? sched.duration ?? (isInterview ? parseInt(currentRoom.interviewDuration || "30") : 30);
+        const buffer = ss.buffer ?? sched.buffer ?? (isInterview ? (currentRoom.interviewBuffer ?? 0) : 0);
+        const location = ss.location ?? sched.location ?? (isInterview ? (currentRoom.interviewFormat || "in_person") : "in_person");
+        const timezone = ss.timezone ?? sched.timezone ?? (currentRoom.interviewTimezone || "Europe/London");
+        const dateRange = ss.dateRange ?? sched.dateRange ?? 60;
+        const notice = ss.notice ?? sched.notice ?? 1;
+        const address = ss.address ?? sched.address ?? (currentRoom.location || "");
+        const provider = ss.provider ?? sched.provider ?? (currentRoom.meetingProvider || "google_meet");
+        const availMode = ss.availMode ?? sched.availMode ?? "dates";
+        const specificDates = ss.specificDates ?? sched.specificDates ?? [];
+        const upd = (k, v) => setShowScheduleSetup(p => ({...p, [k]: v}));
+        const updWeekly = (dayIdx, fn) => {
+          const next = [...weekly];
+          next[dayIdx] = fn(next[dayIdx]);
+          upd("weekly", next);
+        };
+        const totalSlots = weekly.reduce((sum, d) => {
+          if (!d.active) return sum;
+          return sum + d.slots.reduce((s, sl) => {
+            const [sh,sm] = sl.start.split(":").map(Number);
+            const [eh,em] = sl.end.split(":").map(Number);
+            const mins = (eh*60+em) - (sh*60+sm);
+            return s + Math.max(0, Math.floor(mins / (duration + buffer)));
+          }, 0);
+        }, 0);
+        const saveSchedule = () => {
+          const schedData = {weekly, duration, buffer, location, timezone, dateRange, notice, address, provider, availMode, specificDates};
+          setRooms(p => p.map(r => r.id === currentRoom.id ? {
+            ...r,
+            [schedKey]: schedData,
+            ...(isInterview ? {interviewFormat: location, interviewDuration: String(duration), interviewBuffer: buffer, interviewTimezone: timezone, meetingProvider: provider, allowCandidateSelfBook: true} : {}),
+          } : r));
+          showToast("Schedule saved");
+          setShowScheduleSetup(null);
+        };
+        const showPreview = ss.preview || false;
+        return (
+          <>
+            <div className="filter-side-backdrop" onClick={() => setShowScheduleSetup(null)} />
+            <div className="sched-panel">
+              <div className="sp-header" style={{position:"relative"}}>
+                <h2>{isInterview ? "Interview Schedule" : "Audition Schedule"}</h2>
+                <div className="sp-sub">Set your availability — {isInterview ? "candidates" : "artists"} book from open slots.</div>
+                <button className="sp-close" onClick={() => setShowScheduleSetup(null)}><I n="x" s={16}/></button>
+              </div>
+              {!showPreview ? (
+                <>
+                  <div className="sp-body">
+                    <div className="sp-section">
+                      <div className="sp-section-title">Slot Settings</div>
+                      <div className="sp-row">
+                        <label>Duration</label>
+                        <select value={duration} onChange={e => upd("duration", parseInt(e.target.value))} style={{flex:1}}>
+                          <option value={15}>15 minutes</option>
+                          <option value={30}>30 minutes</option>
+                          <option value={45}>45 minutes</option>
+                          <option value={60}>60 minutes</option>
+                          <option value={90}>90 minutes</option>
+                        </select>
+                      </div>
+                      <div className="sp-row">
+                        <label>Buffer</label>
+                        <select value={buffer} onChange={e => upd("buffer", parseInt(e.target.value))} style={{flex:1}}>
+                          <option value={0}>No buffer</option>
+                          <option value={5}>5 min</option>
+                          <option value={10}>10 min</option>
+                          <option value={15}>15 min</option>
+                          <option value={30}>30 min</option>
+                        </select>
+                      </div>
+                      <div className="sp-row">
+                        <label>Location</label>
+                        <div style={{display:"flex",gap:6,flex:1}}>
+                          {[{v:"in_person",l:"In Person"},{v:"video",l:"Video Call"},{v:"phone",l:"Phone"}].map(f => (
+                            <button key={f.v} className={`chip ${location===f.v?"on":""}`} onClick={() => upd("location", f.v)} style={{flex:1,fontSize:11,padding:"6px 0"}}>{f.l}</button>
+                          ))}
+                        </div>
+                      </div>
+                      {location === "in_person" && (
+                        <div className="sp-row">
+                          <label>Address</label>
+                          <input type="text" value={address} onChange={e => upd("address", e.target.value)} placeholder="e.g. Studio 4, London" style={{flex:1}}/>
+                        </div>
+                      )}
+                      {location === "video" && (
+                        <div className="sp-row">
+                          <label>Provider</label>
+                          <select value={provider} onChange={e => upd("provider", e.target.value)} style={{flex:1}}>
+                            <option value="google_meet">Google Meet</option>
+                            <option value="zoom">Zoom</option>
+                            <option value="teams">Microsoft Teams</option>
+                            <option value="custom">Custom URL</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="sp-section">
+                      <div className="sp-section-title">Availability</div>
+                      <div className="sp-row" style={{marginBottom:12}}>
+                        <label>Date range</label>
+                        <select value={dateRange} onChange={e => upd("dateRange", parseInt(e.target.value))} style={{flex:1}}>
+                          <option value={14}>14 days ahead</option>
+                          <option value={30}>30 days ahead</option>
+                          <option value={60}>60 days ahead</option>
+                          <option value={90}>90 days ahead</option>
+                        </select>
+                      </div>
+                      <div className="sp-row" style={{marginBottom:12}}>
+                        <label>Min. notice</label>
+                        <select value={notice} onChange={e => upd("notice", parseInt(e.target.value))} style={{flex:1}}>
+                          <option value={0}>No minimum</option>
+                          <option value={1}>1 day</option>
+                          <option value={2}>2 days</option>
+                          <option value={3}>3 days</option>
+                          <option value={7}>1 week</option>
+                        </select>
+                      </div>
+                      <div className="sp-row" style={{marginBottom:14}}>
+                        <label>Time zone</label>
+                        <select value={timezone} onChange={e => upd("timezone", e.target.value)} style={{flex:1}}>
+                          <option value="Europe/London">Europe/London (GMT)</option>
+                          <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                          <option value="Europe/Paris">Europe/Paris (CET)</option>
+                          <option value="Europe/Amsterdam">Europe/Amsterdam (CET)</option>
+                          <option value="America/New_York">America/New_York (ET)</option>
+                          <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                          <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="sp-section">
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                        <div className="sp-section-title" style={{margin:0}}>Availability</div>
+                        <div className="cand-view-toggle" style={{height:28}}>
+                          <button className={availMode==="dates"?"active":""} style={{fontSize:10,padding:"0 10px"}} onClick={() => upd("availMode","dates")}>Specific Dates</button>
+                          <button className={availMode==="weekly"?"active":""} style={{fontSize:10,padding:"0 10px"}} onClick={() => upd("availMode","weekly")}>Weekly</button>
+                        </div>
+                      </div>
+
+                      {availMode === "dates" && (
+                        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                          {specificDates.map((sd, di) => (
+                            <div key={di} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:"var(--g05)",borderRadius:10,border:"1px solid var(--g15)"}}>
+                              <input type="date" style={{flex:1,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.date} onChange={e => {
+                                const ds = [...specificDates]; ds[di] = {...ds[di], date:e.target.value};
+                                upd("specificDates", ds);
+                              }}/>
+                              <input type="time" style={{width:80,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.start} onChange={e => {
+                                const ds = [...specificDates]; ds[di] = {...ds[di], start:e.target.value};
+                                upd("specificDates", ds);
+                              }}/>
+                              <span style={{fontSize:11,color:"var(--g4)"}}>–</span>
+                              <input type="time" style={{width:80,padding:"5px 8px",border:"1px solid var(--g2)",borderRadius:8,fontSize:11,background:"var(--g1)"}} value={sd.end} onChange={e => {
+                                const ds = [...specificDates]; ds[di] = {...ds[di], end:e.target.value};
+                                upd("specificDates", ds);
+                              }}/>
+                              <button className="sp-slot-btn" onClick={() => upd("specificDates", specificDates.filter((_,j) => j !== di))} title="Remove"><I n="x" s={12}/></button>
+                            </div>
+                          ))}
+                          <button className="btn btn-s btn-sm" style={{alignSelf:"flex-start"}} onClick={() => upd("specificDates", [...specificDates, {date:"", start:"09:00", end:"17:00"}])}><I n="plus" s={11}/> Add date</button>
+                          {specificDates.length === 0 && (
+                            <div style={{fontSize:11,color:"var(--g4)",fontStyle:"italic",padding:"4px 0"}}>No dates added yet. Add specific {isInterview ? "interview" : "audition"} dates above.</div>
+                          )}
+                        </div>
+                      )}
+
+                      {availMode === "weekly" && (
+                        <>
+                        <div style={{fontSize:11,color:"var(--g4)",marginBottom:12,lineHeight:1.5}}>Set when you're available. Click a day to toggle it on/off.</div>
+                        {weekly.map((day, di) => (
+                          <div className="sp-day" key={di}>
+                            <div className={`sp-day-label ${day.active?"active":"inactive"}`} onClick={() => updWeekly(di, d => ({...d, active:!d.active, slots: !d.active && d.slots.length===0 ? [{start:"09:00",end:"17:00"}] : d.slots}))}>
+                              {DAY_LETTERS[di]}
+                            </div>
+                            <div className="sp-day-slots">
+                              {!day.active ? (
+                                <span className="sp-unavailable">Unavailable</span>
+                              ) : day.slots.length === 0 ? (
+                                <button className="sp-slot-btn add" onClick={() => updWeekly(di, d => ({...d, slots:[{start:"09:00",end:"17:00"}]}))}>
+                                  <I n="plus" s={14}/>
+                                </button>
+                              ) : day.slots.map((sl, si) => (
+                                <div className="sp-slot-row" key={si}>
+                                  <input type="time" value={sl.start} onChange={e => updWeekly(di, d => ({...d, slots: d.slots.map((s,i) => i===si ? {...s, start:e.target.value} : s)}))}/>
+                                  <span className="sp-slot-sep">–</span>
+                                  <input type="time" value={sl.end} onChange={e => updWeekly(di, d => ({...d, slots: d.slots.map((s,i) => i===si ? {...s, end:e.target.value} : s)}))}/>
+                                  <button className="sp-slot-btn" onClick={() => updWeekly(di, d => ({...d, slots: d.slots.filter((_,i) => i!==si), active: d.slots.length > 1}))} title="Remove"><I n="x" s={12}/></button>
+                                  {si === day.slots.length - 1 && (
+                                    <button className="sp-slot-btn add" onClick={() => updWeekly(di, d => ({...d, slots:[...d.slots, {start:"13:00",end:"17:00"}]}))} title="Add time block"><I n="plus" s={12}/></button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="sp-section" style={{borderBottom:"none"}}>
+                      <div className="sp-preview-card" style={{cursor:"pointer"}} onClick={() => upd("preview", true)}>
+                        <I n="eye" s={20} style={{color:"var(--ac)",marginBottom:8}}/>
+                        <h4>Preview Booking Page</h4>
+                        <p>See how {isInterview ? "candidates" : "artists"} will experience the scheduling flow.</p>
+                      </div>
+                      <div style={{textAlign:"center",marginTop:10,fontSize:11,color:"var(--g4)"}}>
+                        ~{totalSlots} slots available per week based on your schedule
+                      </div>
+                    </div>
+                  </div>
+                  <div className="sp-actions">
+                    <button className="btn btn-g" onClick={() => setShowScheduleSetup(null)}>Cancel</button>
+                    <button className="btn btn-p" onClick={saveSchedule}>Save Schedule</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="sp-body">
+                    <div style={{textAlign:"center",padding:"10px 0 16px"}}>
+                      <button className="btn btn-s btn-sm" onClick={() => upd("preview", false)} style={{marginBottom:16}}><I n="back" s={12}/> Back to settings</button>
+                    </div>
+                    <div style={{border:"1px solid var(--g2)",borderRadius:16,overflow:"hidden",background:"var(--sf)"}}>
+                      <div style={{padding:"20px 24px",borderBottom:"1px solid var(--g1)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                          <div style={{width:40,height:40,borderRadius:"50%",background:"var(--ac)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:14}}>TL</div>
+                          <div>
+                            <div style={{fontSize:11,color:"var(--g4)"}}>Theater Lanced</div>
+                            <div style={{fontSize:16,fontWeight:600,color:"var(--tx)"}}>{isInterview ? "Interview" : "Audition Slot"}</div>
+                          </div>
+                        </div>
+                        <div style={{display:"flex",gap:14,fontSize:11,color:"var(--g5)"}}>
+                          <span><I n="clock" s={11}/> {duration} min</span>
+                          <span><I n={location==="video"?"video":"map"} s={11}/> {location==="video"?"Video Call":location==="phone"?"Phone":address||"In Person"}</span>
+                        </div>
+                      </div>
+                      <div style={{padding:"16px 24px"}}>
+                        <div style={{fontSize:13,fontWeight:600,color:"var(--tx)",marginBottom:14}}>Select a Date & Time</div>
+                        {(() => {
+                          const now = new Date();
+                          const month = now.toLocaleString("en",{month:"long"});
+                          const year = now.getFullYear();
+                          const firstDay = new Date(year, now.getMonth(), 1).getDay();
+                          const daysInMonth = new Date(year, now.getMonth() + 1, 0).getDate();
+                          const cells = [];
+                          for (let i = 0; i < firstDay; i++) cells.push(null);
+                          for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+                          return (
+                            <>
+                              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                                <div style={{fontSize:13,fontWeight:600}}>{month} {year}</div>
+                                <div style={{fontSize:11,color:"var(--g4)"}}>{timezone}</div>
+                              </div>
+                              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,textAlign:"center",marginBottom:6}}>
+                                {["M","T","W","T","F","S","S"].map((d,i) => <div key={i} style={{fontSize:10,fontWeight:700,color:"var(--g4)",padding:4}}>{d}</div>)}
+                              </div>
+                              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,textAlign:"center"}}>
+                                {cells.map((d, i) => {
+                                  if (!d) return <div key={i}/>;
+                                  const dayOfWeek = new Date(year, now.getMonth(), d).getDay();
+                                  const isAvail = weekly[dayOfWeek]?.active && d >= now.getDate();
+                                  const isToday = d === now.getDate();
+                                  return (
+                                    <div key={i} style={{width:32,height:32,borderRadius:"50%",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:isAvail?600:400,color:isAvail?"var(--ac)":"var(--g3)",background:isToday?"var(--g1)":"transparent",cursor:isAvail?"pointer":"default",margin:"0 auto",transition:"all .12s",border:isAvail?"1px solid rgba(96,77,255,.2)":"1px solid transparent"}}>
+                                      {d}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          );
+                        })()}
+                        <div style={{marginTop:16,padding:"12px",background:"var(--g0)",borderRadius:10,fontSize:11,color:"var(--g4)",textAlign:"center",lineHeight:1.6}}>
+                          Select a highlighted date to see available time slots.
+                          <br/>Each slot is {duration} min{buffer > 0 ? ` with ${buffer} min buffer` : ""}.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="sp-actions">
+                    <button className="btn btn-g" onClick={() => upd("preview", false)}>Back to Settings</button>
+                    <button className="btn btn-p" onClick={saveSchedule}>Save Schedule</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       {/* ═══ TOAST ═══ */}
       {toast && <div className="toast"><I n="check" s={14}/> {toast}</div>}
