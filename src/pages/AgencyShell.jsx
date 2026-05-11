@@ -3115,6 +3115,9 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .briefing-item .bi-desc-input{font-size:11px;padding:6px 8px;background:var(--g1);border:1px solid var(--g2);border-radius:8px;width:100%;color:var(--g5);margin-top:4px;resize:none;min-height:32px;font-family:var(--sans)}
 .briefing-item .bi-file{display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:var(--g1);border-radius:8px;font-size:10px;color:var(--g4)}
 .briefing-item .bi-file-name{font-weight:600;color:var(--g5)}
+.briefing-item .bi-del{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--g4);transition:all .15s;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.briefing-item .bi-del:hover{background:#FFF0F0;color:var(--red)}
+.dark .briefing-item .bi-del:hover{background:rgba(255,80,80,.1)}
 /* Briefing preview in artist view */
 .rav-briefing{background:rgba(96,77,255,.03);border:1px solid rgba(96,77,255,.1);border-radius:14px;padding:16px 18px}
 .rav-briefing h3{font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
@@ -14194,10 +14197,7 @@ export default function AgencyShell() {
                         <h3 style={{margin:0}}>{briefingTabLabel}</h3>
                         <p className="rss-sub" style={{margin:"4px 0 0"}}>{currentRoom.opportunityType === "audition" ? "Provide repertoire materials and instructions for applicants to prepare before their audition." : "Provide reference materials and instructions for applicants to prepare and record their self-tape."}</p>
                       </div>
-                      <label className="switch" style={{flexShrink:0}}>
-                        <input type="checkbox" checked={roomBriefingEnabled} onChange={e => setRoomBriefingEnabled(e.target.checked)}/>
-                        <span className="slider"/>
-                      </label>
+                      <button className={`toggle${roomBriefingEnabled?" on":""}`} onClick={() => setRoomBriefingEnabled(p => !p)} style={{flexShrink:0}}/>
                     </div>
                     {roomBriefingEnabled && (
                       <>
@@ -14222,7 +14222,7 @@ export default function AgencyShell() {
                                       <button className="btn btn-sm" style={{marginLeft:"auto",fontSize:10,padding:"2px 8px"}} onClick={() => showToast("File upload — coming soon")}>Replace</button>
                                     </div>
                                   </div>
-                                  <button className="rm-del" onClick={() => setRoomBriefingMaterials(p => p.filter(m => m.id !== item.id))} title="Remove"><I n="trash" s={12}/></button>
+                                  <button className="bi-del" onClick={() => setRoomBriefingMaterials(p => p.filter(m => m.id !== item.id))} title="Remove"><I n="trash" s={13}/></button>
                                 </div>
                               ))}
                             </div>
