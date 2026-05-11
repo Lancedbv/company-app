@@ -3103,6 +3103,30 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .mat-preset .mp-text{flex:1;font-size:12px;font-weight:500;color:var(--tx)}
 .mat-preset .mp-sub{font-size:10px;color:var(--g4);font-weight:400}
 .mat-preset .mp-toggle{flex-shrink:0}
+/* Briefing materials */
+.briefing-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--g2);border-radius:12px;background:var(--sf);transition:all .15s}
+.briefing-item:hover{border-color:var(--g3)}
+.briefing-item .bi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.briefing-item .bi-icon.video{background:rgba(96,77,255,.08);color:var(--ac)}
+.briefing-item .bi-icon.document{background:rgba(245,166,35,.08);color:var(--amber)}
+.briefing-item .bi-icon.audio{background:rgba(29,185,84,.08);color:var(--green)}
+.briefing-item .bi-body{flex:1;min-width:0}
+.briefing-item .bi-title-input{font-size:13px;font-weight:600;padding:6px 8px;background:var(--g1);border:1px solid var(--g2);border-radius:8px;width:100%;color:var(--tx)}
+.briefing-item .bi-desc-input{font-size:11px;padding:6px 8px;background:var(--g1);border:1px solid var(--g2);border-radius:8px;width:100%;color:var(--g5);margin-top:4px;resize:none;min-height:32px;font-family:var(--sans)}
+.briefing-item .bi-file{display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:var(--g1);border-radius:8px;font-size:10px;color:var(--g4)}
+.briefing-item .bi-file-name{font-weight:600;color:var(--g5)}
+/* Briefing preview in artist view */
+.rav-briefing{background:rgba(96,77,255,.03);border:1px solid rgba(96,77,255,.1);border-radius:14px;padding:16px 18px}
+.rav-briefing h3{font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.rav-briefing .rav-briefing-desc{font-size:13px;color:var(--g5);line-height:1.6;margin-bottom:12px;white-space:pre-line}
+.rav-briefing-file{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--sf);border:1px solid var(--g2);border-radius:10px;margin-bottom:6px}
+.rav-briefing-file .bf-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rav-briefing-file .bf-icon.video{background:rgba(96,77,255,.08);color:var(--ac)}
+.rav-briefing-file .bf-icon.document{background:rgba(245,166,35,.08);color:var(--amber)}
+.rav-briefing-file .bf-icon.audio{background:rgba(29,185,84,.08);color:var(--green)}
+.rav-briefing-file .bf-title{font-size:12px;font-weight:600;color:var(--tx)}
+.rav-briefing-file .bf-desc{font-size:10px;color:var(--g4);margin-top:1px}
+.rav-briefing-file .bf-action{margin-left:auto;flex-shrink:0}
 /* Question builder card */
 .qb-card{border:2px solid var(--ac);border-radius:16px;padding:20px;margin-bottom:12px;margin-top:12px;background:var(--sf);animation:fadeIn .2s;box-shadow:0 2px 12px rgba(96,77,255,.06)}
 .qb-card .qb-row{display:flex;gap:8px;margin-bottom:12px}
@@ -5403,7 +5427,7 @@ function downloadQR(containerSelector, filename) {
 /* ━━━ Public Company Profile ━━━
    Full-screen overlay shown when viewing a company's public profile.
    Used for both the agency's own preview ("self") and any company in the network. */
-function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onUpdate, onFollow, onTogglePin, onOpenCompany, similarCompanies = [], showToast }) {
+function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, roomBriefingDescription = "", roomBriefingMaterials = [], onClose, onUpdate, onFollow, onTogglePin, onOpenCompany, similarCompanies = [], showToast }) {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "discover" | "people"
   const [editPane, setEditPane] = useState(null); // null | "banner" | "about" | "media" | "media-add" | "team" | "artists" | "settings"
   const [followed, setFollowed] = useState(false);
@@ -5894,6 +5918,8 @@ function PublicCompanyProfile({ profile, viewerMode, opportunities = [], roomMat
           roomMaterials={roomMaterials}
           roomQuestions={roomQuestions}
           roomProfileReqs={roomProfileReqs}
+          roomBriefingDescription={roomBriefingDescription}
+          roomBriefingMaterials={roomBriefingMaterials}
           onClose={() => setApplicationOpp(null)}
           onEmbed={(o) => { setApplicationOpp(null); setEmbedSingleOpp(o); }}
           onTogglePin={onTogglePin}
@@ -6199,7 +6225,7 @@ function EmbedJobsModal({ profile, opportunities = [], singleOpp = null, onClose
    - Marketing > Apply preview inside a room (variant="preview")
    The chrome (close button, scrim, page header) is owned by the parent;
    this component is just the body. */
-function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, isOwner = false, onEmbed, onTogglePin, showToast }) {
+function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, roomBriefingDescription = "", roomBriefingMaterials = [], isOwner = false, onEmbed, onTogglePin, showToast }) {
   const [stage, setStage] = useState("info"); // "info" | "auth"
   if (!room) return null;
 
@@ -6308,6 +6334,25 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
               <section className="rav-section rav-offer">
                 <h3>Offer</h3>
                 <p className="rav-prose">{room.offer}</p>
+              </section>
+            )}
+
+            {(roomBriefingDescription || roomBriefingMaterials.length > 0) && (
+              <section className="rav-section rav-briefing">
+                <h3><I n="book" s={15}/> {room.opportunityType === "audition" ? "Repertoire" : "Selftape"} — Directions</h3>
+                {roomBriefingDescription && <div className="rav-briefing-desc">{roomBriefingDescription}</div>}
+                {roomBriefingMaterials.map(b => (
+                  <div key={b.id} className="rav-briefing-file">
+                    <div className={`bf-icon ${b.type}`}><I n={b.type==="video"?"play":b.type==="audio"?"mic":"file"} s={15}/></div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div className="bf-title">{b.title}</div>
+                      {b.description && <div className="bf-desc">{b.description}</div>}
+                    </div>
+                    <button className="btn btn-s btn-sm bf-action" onClick={() => showToast?.(b.type === "video" ? "Video player — coming soon" : "Download — coming soon")}>
+                      <I n={b.type==="video"?"play":b.type==="audio"?"play":"download"} s={11}/> {b.type === "video" ? "Watch" : b.type === "audio" ? "Listen" : "Download"}
+                    </button>
+                  </div>
+                ))}
               </section>
             )}
 
@@ -6433,7 +6478,7 @@ function RoomApplicationView({ room, company = {}, roomMaterials = [], roomQuest
 
 /* Application form popup — thin wrapper around RoomApplicationView, shown
    over the public company profile when an opportunity card is clicked. */
-function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, onClose, onEmbed, onTogglePin, showToast }) {
+function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQuestions = [], roomProfileReqs = {}, roomBriefingDescription = "", roomBriefingMaterials = [], onClose, onEmbed, onTogglePin, showToast }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -6451,6 +6496,8 @@ function ApplicationFormModal({ opp, profile, isOwner, roomMaterials = [], roomQ
             roomMaterials={roomMaterials}
             roomQuestions={roomQuestions}
             roomProfileReqs={roomProfileReqs}
+            roomBriefingDescription={roomBriefingDescription}
+            roomBriefingMaterials={roomBriefingMaterials}
             isOwner={isOwner}
             onEmbed={onEmbed}
             onTogglePin={onTogglePin}
@@ -7224,6 +7271,12 @@ export default function AgencyShell() {
     {id:"mat-motivation1",type:"document",title:"Motivation Letter",enabled:true,required:true},
     {id:"mat3",type:"video",title:"Improvisation Video",enabled:true,required:false,custom:true},
   ]);
+  const [roomBriefingEnabled, setRoomBriefingEnabled] = useState(true);
+  const [roomBriefingDescription, setRoomBriefingDescription] = useState("Learn the choreography from the reference video below. Record yourself performing it from the front, full body visible, in a well-lit space. Maximum 2 minutes per variation. Please also review the music score for timing reference.");
+  const [roomBriefingMaterials, setRoomBriefingMaterials] = useState([
+    {id:"brief-1",title:"Choreography Reference — Variation A",description:"First variation, counts 1-32. Perform from the front angle.",type:"video",fileName:"choreo-variation-a.mp4",fileSize:"84 MB",thumb:"/demo/banners/danny-howe-gwqahislnra-unsplash.jpg"},
+    {id:"brief-2",title:"Music Score — Variation A",description:"Sheet music for timing reference",type:"document",fileName:"variation-a-score.pdf",fileSize:"2.4 MB"},
+  ]);
   const [roomQuestions, setRoomQuestions] = useState([
     {id:"q1",question:"Why are you interested in this opportunity?",answerType:"text",required:true},
     {id:"q2",question:"Are you available for the full rehearsal period?",answerType:"yesno",required:true},
@@ -7585,6 +7638,7 @@ export default function AgencyShell() {
   };
 
   const currentRoom = rooms.find(r => r.id === viewRoom);
+  const briefingTabLabel = currentRoom?.opportunityType === "audition" ? "Repertoire" : "Selftape";
   const roomCandidates = candidates.filter(c => c.roomId === viewRoom);
 
   const getCandidateInfo = (cand) => {
@@ -7803,6 +7857,8 @@ export default function AgencyShell() {
           roomMaterials={publicCompany === "self" ? roomMaterials : []}
           roomQuestions={publicCompany === "self" ? roomQuestions : []}
           roomProfileReqs={publicCompany === "self" ? roomProfileReqs : {}}
+          roomBriefingDescription={publicCompany === "self" ? roomBriefingDescription : ""}
+          roomBriefingMaterials={publicCompany === "self" ? roomBriefingMaterials : []}
           onClose={() => setPublicCompany(null)}
           onUpdate={(next) => setCompanyProfileEdits(p => ({ ...p, [publicCompany]: { ...(p[publicCompany] || {}), ...next } }))}
           onFollow={(company, isFollowing) => {
@@ -7861,6 +7917,8 @@ export default function AgencyShell() {
               roomMaterials={roomMaterials}
               roomQuestions={roomQuestions}
               roomProfileReqs={roomProfileReqs}
+              roomBriefingDescription={roomBriefingDescription}
+              roomBriefingMaterials={roomBriefingMaterials}
               isOwner={false}
               showToast={showToast}
             />
@@ -13479,6 +13537,7 @@ export default function AgencyShell() {
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   <button className={`chip ${roomSettingsTab==="post"?"on":""}`} onClick={() => setRoomSettingsTab("post")}>Post Details</button>
                   <button className={`chip ${roomSettingsTab==="requirements"?"on":""}`} onClick={() => setRoomSettingsTab("requirements")}>Application Form</button>
+                  {(currentRoom.opportunityType === "casting" || currentRoom.opportunityType === "audition") && <button className={`chip ${roomSettingsTab==="briefing"?"on":""}`} onClick={() => setRoomSettingsTab("briefing")}>{briefingTabLabel}</button>}
                   <button className={`chip ${roomSettingsTab==="selection"?"on":""}`} onClick={() => setRoomSettingsTab("selection")}>Selection Tools</button>
                   <button className={`chip ${roomSettingsTab==="team"?"on":""}`} onClick={() => setRoomSettingsTab("team")}>Team</button>
                 </div>
@@ -14064,6 +14123,18 @@ export default function AgencyShell() {
                           <span>Profile data is auto-filled from the artist's Lanced account. Missing fields will be requested before submission.</span>
                         </div>
                       )}
+                      {roomBriefingEnabled && (roomBriefingDescription || roomBriefingMaterials.length > 0) && (
+                        <div style={{background:"rgba(96,77,255,.03)",border:"1px solid rgba(96,77,255,.08)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+                          <div className="fp-materials-label" style={{display:"flex",alignItems:"center",gap:6}}><I n="book" s={11}/> {briefingTabLabel}</div>
+                          {roomBriefingDescription && <div style={{fontSize:11,color:"var(--g5)",lineHeight:1.5,marginBottom:roomBriefingMaterials.length>0?8:0,whiteSpace:"pre-line"}}>{roomBriefingDescription.length > 120 ? roomBriefingDescription.slice(0,120)+"…" : roomBriefingDescription}</div>}
+                          {roomBriefingMaterials.filter(b => b.title).map(b => (
+                            <div key={b.id} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"var(--tx)",padding:"3px 0"}}>
+                              <I n={b.type==="video"?"play":b.type==="audio"?"mic":"file"} s={10} style={{color:"var(--g4)"}}/>
+                              <span>{b.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       {roomMaterials.filter(m => m.enabled !== false && m.title).length > 0 && (
                         <div className="fp-materials">
                           <div className="fp-materials-label">Required Materials</div>
@@ -14111,6 +14182,59 @@ export default function AgencyShell() {
                       <button className="fp-submit">Submit Application</button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {roomSettingsTab === "briefing" && (
+                <div style={{maxWidth:640}}>
+                  <div className="room-settings-section">
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                      <div>
+                        <h3 style={{margin:0}}>{briefingTabLabel}</h3>
+                        <p className="rss-sub" style={{margin:"4px 0 0"}}>{currentRoom.opportunityType === "audition" ? "Provide repertoire materials and instructions for applicants to prepare before their audition." : "Provide reference materials and instructions for applicants to prepare and record their self-tape."}</p>
+                      </div>
+                      <label className="switch" style={{flexShrink:0}}>
+                        <input type="checkbox" checked={roomBriefingEnabled} onChange={e => setRoomBriefingEnabled(e.target.checked)}/>
+                        <span className="slider"/>
+                      </label>
+                    </div>
+                    {roomBriefingEnabled && (
+                      <>
+                        <div className="field" style={{marginBottom:16}}>
+                          <label style={{fontSize:12,fontWeight:600,color:"var(--tx)",marginBottom:6,display:"block"}}>Instructions for applicants</label>
+                          <textarea style={{width:"100%",minHeight:80,padding:"12px 14px",fontSize:13,borderRadius:10,background:"var(--g1)",border:"1px solid var(--g2)",fontFamily:"var(--sans)",color:"var(--tx)",resize:"vertical",lineHeight:1.6}} value={roomBriefingDescription} onChange={e => setRoomBriefingDescription(e.target.value)} placeholder={currentRoom.opportunityType === "audition" ? "Describe what repertoire applicants need to prepare…" : "Describe what applicants need to prepare for their self-tape…"}/>
+                        </div>
+                        {roomBriefingMaterials.length > 0 && (
+                          <div style={{marginBottom:12}}>
+                            <label style={{fontSize:12,fontWeight:600,color:"var(--tx)",marginBottom:8,display:"block"}}>Reference Files</label>
+                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                              {roomBriefingMaterials.map(item => (
+                                <div key={item.id} className="briefing-item">
+                                  <div className={`bi-icon ${item.type}`}><I n={item.type==="video"?"play":item.type==="audio"?"mic":"file"} s={18}/></div>
+                                  <div className="bi-body">
+                                    <input className="bi-title-input" value={item.title} onChange={e => setRoomBriefingMaterials(p => p.map(m => m.id === item.id ? {...m, title:e.target.value} : m))} placeholder="File title…"/>
+                                    <textarea className="bi-desc-input" value={item.description || ""} onChange={e => setRoomBriefingMaterials(p => p.map(m => m.id === item.id ? {...m, description:e.target.value} : m))} placeholder="Short description (optional)…" rows={1}/>
+                                    <div className="bi-file">
+                                      <I n={item.type==="video"?"film":item.type==="audio"?"mic":"file"} s={11}/>
+                                      <span className="bi-file-name">{item.fileName || "No file uploaded"}</span>
+                                      {item.fileSize && <span>· {item.fileSize}</span>}
+                                      <button className="btn btn-sm" style={{marginLeft:"auto",fontSize:10,padding:"2px 8px"}} onClick={() => showToast("File upload — coming soon")}>Replace</button>
+                                    </div>
+                                  </div>
+                                  <button className="rm-del" onClick={() => setRoomBriefingMaterials(p => p.filter(m => m.id !== item.id))} title="Remove"><I n="trash" s={12}/></button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                          <button className="btn btn-s btn-sm" onClick={() => setRoomBriefingMaterials(p => [...p, {id:"brief-"+Date.now(),title:"",description:"",type:"video",fileName:"",fileSize:""}])}><I n="play" s={12}/> Add Video</button>
+                          <button className="btn btn-s btn-sm" onClick={() => setRoomBriefingMaterials(p => [...p, {id:"brief-"+Date.now(),title:"",description:"",type:"document",fileName:"",fileSize:""}])}><I n="file" s={12}/> Add Document</button>
+                          <button className="btn btn-s btn-sm" onClick={() => setRoomBriefingMaterials(p => [...p, {id:"brief-"+Date.now(),title:"",description:"",type:"audio",fileName:"",fileSize:""}])}><I n="mic" s={12}/> Add Audio</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
