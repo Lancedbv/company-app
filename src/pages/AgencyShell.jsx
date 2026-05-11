@@ -90,8 +90,14 @@ const OPPORTUNITY_TYPES = [
   {key:"education",label:"Education",icon:"book",desc:"Run a school, training programme or workshop",color:"#8B5CF6",enabled:true},
 ];
 const getOpportunityType = (key) => OPPORTUNITY_TYPES.find(t => t.key === key) || OPPORTUNITY_TYPES[0];
-const INTERVIEW_ELIGIBLE_TYPES = ["open_call","residency","job_call"];
-const TYPES_WITH_CONTRACTS = ["audition","job_call","residency","education"];
+const INTERVIEW_ELIGIBLE_TYPES = ["open_call","residency","job_call","audition","competition"];
+const TYPES_WITH_CONTRACTS = ["audition","casting","job_call","open_call","residency","education"];
+const TYPES_PUBLIC_ONLY = ["open_call","residency","competition"];
+const TYPES_WITH_SCORING = ["competition","job_call","open_call","residency"];
+const TYPES_WITH_SHORTLIST = ["casting","open_call","residency"];
+const TYPES_WITH_WAITLIST = ["audition","casting","open_call","residency","competition"];
+const TYPES_WITH_ROUNDS = ["audition","casting","competition"];
+const TYPES_NO_FORMAT = ["job_call","open_call","residency","education"];
 
 const AUDITION_FORMATS = [
   {val:"private",title:"Private Auditions",desc:"Individual time-slot booking — artists pick their own audition slot",icon:"calendar"},
@@ -389,7 +395,7 @@ const MOCK_ROOMS = [
     id:"room3", title:"Freelance Teachers — Ballet, Modern, Contemporary",
     roles:["Ballet Teacher","Modern Teacher","Contemporary Teacher"], description:"Hiring freelance teachers across our school program. Open to applications year-round; flexible scheduling for working artists.",
     opportunityType:"job_call",
-    type:"open", format:"hybrid", status:"published",
+    type:"open", format:"online", status:"published",
     enableShortlist:true, enableWaitlist:true, enableInterviews:true,
     contracts:["Freelance","Part Time","Contract"],
     deadline:"May 30, 2026", resultsDate:"Rolling",
@@ -461,7 +467,7 @@ const MOCK_ROOMS = [
     id:"room7", title:"Young Choreographer Award 2027",
     roles:["Choreographer"], description:"Annual prize for emerging choreographers under 30. Finalists present a 10-minute work; winner receives a commission for the main stage and a €15,000 prize.",
     opportunityType:"competition",
-    type:"open", format:"hybrid", status:"published",
+    type:"open", format:"in_person", status:"published",
     enableShortlist:true, enableWaitlist:false,
     enableScoring:true,
     scoringScale:10,
@@ -1820,6 +1826,7 @@ body{font-family:var(--sans);background:var(--bg);background-image:radial-gradie
 .dark .aria-blob{opacity:.4}
 @media (prefers-reduced-motion:reduce){.aria-blob{animation:none}}
 .dash-bg{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
+.ctx-room .dash-bg,.ctx-showcase .dash-bg{display:none!important}
 .dash-blob{position:absolute;border-radius:50%;filter:blur(90px);will-change:transform,opacity;opacity:0}
 .dash-blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(100,90,255,.40),rgba(90,80,240,.06) 70%);top:-10%;left:-5%;animation:dashSweep1 36s linear infinite}
 .dash-blob-2{width:520px;height:520px;background:radial-gradient(circle,rgba(80,110,240,.36),rgba(100,130,250,.05) 70%);bottom:-8%;right:-6%;animation:dashSweep2 44s linear infinite;animation-delay:-12s}
@@ -1977,7 +1984,7 @@ textarea.wiz-input{min-height:110px;resize:vertical;font-family:var(--sans)}
 .wiz-tile .wt-name{font-size:13px;font-weight:600;color:var(--tx)}
 .wiz-tile .wt-star{position:absolute;top:8px;right:8px;color:#F59E0B;font-size:11px}
 .wiz-tile.fw{grid-column:1/-1}
-.wiz-footer{position:sticky;bottom:0;background:var(--bg);padding:18px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--g2);margin-top:32px}
+.wiz-footer{position:sticky;bottom:0;background:transparent;padding:24px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:32px}
 .wiz-step-pills{display:flex;gap:6px;margin-bottom:18px}
 .wiz-step-dot{flex:1;height:4px;background:var(--g2);border-radius:2px;transition:background .2s}
 .wiz-step-dot.on{background:var(--ac)}
@@ -2402,14 +2409,16 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .sel-card .sel-r{font-size:10px;color:var(--g4)}
 
 /* Create flow steps */
-.step-bar{display:flex;align-items:center;gap:8px;margin-bottom:24px}
-.step{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--g4)}
+.step-bar{display:flex;align-items:center;gap:8px;margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-behavior:smooth;padding:2px 0}
+.step-bar::-webkit-scrollbar{display:none}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--g4);white-space:nowrap;flex-shrink:0;animation:stepReveal .25s ease-out both}
 .step.active{color:var(--ac);font-weight:600}
 .step.done{color:var(--green)}
-.step .step-num{width:24px;height:24px;border-radius:50%;border:2px solid var(--g3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.step .step-num{width:24px;height:24px;border-radius:50%;border:2px solid var(--g3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
 .step.active .step-num{border-color:var(--ac);background:var(--ac);color:#fff}
 .step.done .step-num{border-color:var(--green);background:var(--green);color:#fff}
-.step-line{width:32px;height:2px;background:var(--g2)}
+.step-line{width:24px;height:2px;background:var(--g2);flex-shrink:0;animation:stepReveal .25s ease-out both}
+@keyframes stepReveal{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
 
 /* Share link bar */
 .share-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(96,77,255,.04);border:1px solid rgba(96,77,255,.12);border-radius:12px;margin-bottom:16px}
@@ -3633,9 +3642,12 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .ctx-showcase{--ctx-tint:rgba(96,77,255,.06);--ctx-accent:#7A66FF;background-image:radial-gradient(ellipse at 20% 0%,rgba(96,77,255,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(96,77,255,.08) 0%,transparent 50%);transition:background .4s ease}
 .ctx-room{--ctx-tint:rgba(26,86,219,.06);--ctx-accent:#1A56DB;background-image:radial-gradient(ellipse at 20% 0%,rgba(26,86,219,.10) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(26,86,219,.06) 0%,transparent 50%);transition:background .4s ease}
 .ctx-showcase::before,.ctx-room::before{content:'';position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ctx-accent),transparent 80%);z-index:210;animation:fadeIn .4s}
-.ctx-showcase .main,.ctx-room .main{position:fixed;top:12px;right:12px;bottom:12px;left:calc(var(--sb-w) + 24px);border-radius:20px;background:var(--sf);box-shadow:0 8px 40px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);animation:ctxPanelIn .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;margin:0;min-height:0}
-.ctx-showcase .main .breadcrumb-bar,.ctx-room .main .breadcrumb-bar{border-radius:20px 20px 0 0;flex-shrink:0;position:sticky;top:0;z-index:10}
+.ctx-showcase .main,.ctx-room .main{position:fixed;top:12px;right:12px;bottom:12px;left:calc(var(--sb-w) + 24px);border-radius:20px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);animation:ctxPanelIn .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;margin:0;min-height:0}
+.ctx-showcase .main .breadcrumb-bar,.ctx-room .main .breadcrumb-bar{border-radius:20px 20px 0 0;flex-shrink:0;position:sticky;top:0;z-index:10;background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+.dark .ctx-showcase .main .breadcrumb-bar,.dark .ctx-room .main .breadcrumb-bar{background:var(--sf)}
 .ctx-showcase .main .content,.ctx-room .main .content{overflow-y:auto;flex:1;min-height:0;padding-top:0;max-width:none}
+.ctx-room.has-setup-panel .main{right:324px;transition:right .3s ease}
+.sb-collapsed.ctx-room.has-setup-panel .main{right:324px}
 .ctx-showcase .pg-header,.ctx-room .pg-header{margin-bottom:0;padding-top:24px;padding-bottom:12px}
 .ctx-showcase .room-overview-banner,.ctx-room .room-overview-banner{margin-top:20px}
 .ctx-showcase .sc-overview-stats,.ctx-room .sc-overview-stats{margin-top:20px}
@@ -3650,9 +3662,37 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .ctx-showcase .main>*:nth-child(4),.ctx-room .main>*:nth-child(4){animation-delay:.09s}
 .ctx-showcase .main>*:nth-child(5),.ctx-room .main>*:nth-child(5){animation-delay:.12s}
 @keyframes ctxStagger{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── Setup Checklist Panel (right side, draft rooms) ─── */
+.setup-panel{position:fixed;top:12px;right:12px;bottom:12px;width:300px;background:#fff;overflow-y:auto;padding:24px 20px;animation:setupPanelIn .3s ease;z-index:100;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03)}
+.dark .setup-panel{background:var(--sf)}
+.setup-panel h3{font-family:var(--sans);font-size:15px;font-weight:600;margin-bottom:4px}
+.setup-panel .sp-sub{font-size:11px;color:var(--g4);margin-bottom:16px;line-height:1.4}
+.sp-progress{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.sp-progress-bar{flex:1;height:6px;background:var(--g1);border-radius:3px;overflow:hidden}
+.sp-progress-fill{height:100%;background:var(--ac);border-radius:3px;transition:width .4s ease}
+.sp-progress-text{font-size:11px;font-weight:700;color:var(--ac);white-space:nowrap}
+.sp-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:4px;cursor:pointer;transition:background .15s}
+.sp-item:hover{background:var(--g0)}
+.sp-item.done{opacity:.55}
+.sp-item.done:hover{opacity:.7}
+.sp-item .sp-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--g3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s}
+.sp-item.done .sp-check{border-color:var(--green);background:var(--green);color:#fff}
+.sp-item.active .sp-check{border-color:var(--ac);background:var(--ac);color:#fff}
+.sp-item .sp-label{font-size:12px;font-weight:500;color:var(--g6);line-height:1.4}
+.sp-item .sp-hint{font-size:10px;color:var(--g4);line-height:1.4;margin-top:2px}
+.sp-item.done .sp-label{text-decoration:line-through;color:var(--g4)}
+.sp-publish{margin-top:16px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--ac);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.sp-publish:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.sp-publish:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+.sp-dismiss{margin-top:8px;width:100%;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--g4);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:color .15s}
+.sp-dismiss:hover{color:var(--g6)}
+@keyframes setupPanelIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:900px){.setup-panel{display:none}}
 .dark .ctx-showcase{background-image:radial-gradient(ellipse at 20% 0%,rgba(122,102,255,.14) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(122,102,255,.08) 0%,transparent 50%)}
 .dark .ctx-room{background-image:radial-gradient(ellipse at 20% 0%,rgba(26,86,219,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(26,86,219,.08) 0%,transparent 50%)}
-.dark .ctx-showcase .main,.dark .ctx-room .main{box-shadow:0 8px 40px rgba(0,0,0,.2),0 0 0 1px rgba(255,255,255,.04)}
+.dark .ctx-showcase .main,.dark .ctx-room .main{background:var(--sf);box-shadow:0 8px 40px rgba(0,0,0,.2),0 0 0 1px rgba(255,255,255,.04)}
+.dark .setup-panel{box-shadow:0 8px 40px rgba(0,0,0,.2),0 0 0 1px rgba(255,255,255,.04)}
 
 /* ═══ V2: Sidebar context colors ═══ */
 .sidebar.sb-showcase,.sidebar.sb-room{top:12px;left:12px;bottom:12px;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);animation:sbSlideIn .3s cubic-bezier(.4,0,.2,1);overflow:hidden}
@@ -6982,7 +7022,7 @@ export default function AgencyShell() {
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('lanced-dark-mode') === 'true');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showDemoWelcome, setShowDemoWelcome] = useState(true);
+  const [showDemoWelcome, setShowDemoWelcome] = useState(false);
   useEffect(() => { localStorage.setItem('lanced-dark-mode', darkMode ? 'true' : 'false'); }, [darkMode]);
   useEffect(() => {
     if (!showUserMenu) return;
@@ -7114,10 +7154,11 @@ export default function AgencyShell() {
   }); // { memberId: { from, to } }
   const [showNewRoom, setShowNewRoom] = useState(false);
   const [showPublishPanel, setShowPublishPanel] = useState(false);
+  const [dismissedSetupPanels, setDismissedSetupPanels] = useState({});
   const [newRoom, setNewRoom] = useState({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
   const [newRoomRole, setNewRoomRole] = useState("");
   const [newRoomStep, setNewRoomStep] = useState(0);
-  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, useInterviews:false, auditionFormat:"regular", castingType:"open", accessType:"closed", capacityMode:"soft", groupCreationMode:"self_book", visibility:"public" });
+  const [newRoomConfig, setNewRoomConfig] = useState({ opportunityType:"casting", selectionType:"lists", requiredMaterials:[], useShortlist:true, useWaitlist:false, useEarlyInvites:false, useInterviews:false, useScoring:false, useVoting:false, auditionFormat:"regular", castingType:"open", accessType:"closed", capacityMode:"soft", groupCreationMode:"self_book" });
   const [interviewSlots, setInterviewSlots] = useState([
     {id:"is1", roomId:"room5", date:"Jun 5, 2026", time:"10:00", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/abc-defg-hij", candidateId:null, status:"open"},
     {id:"is2", roomId:"room5", date:"Jun 5, 2026", time:"10:45", duration:30, location:"Video Call", timezone:"Europe/London", meetingUrl:"https://meet.google.com/jkl-mnop-qrs", candidateId:null, status:"open"},
@@ -7647,31 +7688,35 @@ export default function AgencyShell() {
       return { id: "mat" + Date.now() + i, type: preset?.type || "document", title, enabled: true, required: true };
     });
     const roomShareId = newRoom.title.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,20) + "-" + Date.now().toString(36);
-    const isAudition = newRoomConfig.opportunityType === "audition";
-    const isInterviewEligible = INTERVIEW_ELIGIBLE_TYPES.includes(newRoomConfig.opportunityType);
-    const isCompetition = newRoomConfig.opportunityType === "competition";
+    const oppType = newRoomConfig.opportunityType;
+    const isAudition = oppType === "audition";
+    const isInterviewEligible = INTERVIEW_ELIGIBLE_TYPES.includes(oppType);
+    const isCompetition = oppType === "competition";
+    const hasRounds = TYPES_WITH_ROUNDS.includes(oppType) && newRoom.format !== "online";
     setRooms(p => [...p, {
       ...newRoom,
       id,
-      opportunityType: newRoomConfig.opportunityType || "casting",
+      opportunityType: oppType || "casting",
       type: newRoomConfig.castingType,
       status: "draft",
       createdAt: "Mar 20, 2026",
       stats: {total:0,shortlisted:0,potential:0,rejected:0,offered:0,reviewed:0},
       banner: null,
-      enableShortlist: isAudition ? false : newRoomConfig.useShortlist,
-      enableWaitlist: newRoomConfig.useWaitlist,
+      enableShortlist: TYPES_WITH_SHORTLIST.includes(oppType) ? newRoomConfig.useShortlist : false,
+      enableWaitlist: TYPES_WITH_WAITLIST.includes(oppType) ? newRoomConfig.useWaitlist : false,
       enableEarlyInvites: isAudition ? newRoomConfig.useEarlyInvites : false,
-      enableInterviews: newRoomConfig.opportunityType === "job_call" ? true : isInterviewEligible ? newRoomConfig.useInterviews : false,
+      enableInterviews: oppType === "job_call" ? true : isInterviewEligible ? newRoomConfig.useInterviews : false,
+      enableScoring: isCompetition ? true : TYPES_WITH_SCORING.includes(oppType) ? (newRoomConfig.useScoring || false) : false,
+      enableVotes: newRoomConfig.useVoting || false,
       interviewFormat: isInterviewEligible ? "in_person" : null,
       interviewDuration: isInterviewEligible ? "30" : null,
       auditionFormat: isAudition ? newRoomConfig.auditionFormat : null,
       accessType: isAudition ? newRoomConfig.accessType : null,
       capacityMode: isAudition ? newRoomConfig.capacityMode : null,
       groupCreationMode: isAudition && newRoomConfig.auditionFormat === "groups" ? newRoomConfig.groupCreationMode : null,
-      roundsEnabled: isAudition ? true : false,
+      roundsEnabled: hasRounds,
       selectionType: newRoomConfig.selectionType,
-      ...(isCompetition ? {
+      ...(isCompetition || (TYPES_WITH_SCORING.includes(oppType) && newRoomConfig.useScoring) ? {
         scoringCriteria: [
           {id:"sc"+Date.now()+"a",name:"Technique",weight:30},
           {id:"sc"+Date.now()+"b",name:"Creativity",weight:30},
@@ -7680,7 +7725,7 @@ export default function AgencyShell() {
         ],
         scoringScale: 10,
       } : {}),
-      visibility: newRoomConfig.visibility || "public",
+      visibility: newRoomConfig.castingType === "open" ? "public" : newRoomConfig.castingType === "closed_internal" ? "database" : newRoomConfig.castingType === "closed_link" ? "link" : "public",
       shareId: roomShareId,
       collaborationShareId: roomShareId + "-collab",
       shareSettings: {requireLogin:true,requirePassword:false,password:"",welcomeMessage:""},
@@ -7691,7 +7736,7 @@ export default function AgencyShell() {
     setShowNewRoom(false);
     setNewRoomStep(0);
     setNewRoom({title:"",roles:[],description:"",type:"open",format:"in_person",deadline:"",teamMemberIds:[],contracts:[]});
-    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"});
+    setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,useScoring:false,useVoting:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book"});
     const oppLabel = getOpportunityType(newRoomConfig.opportunityType || "casting").label;
     setViewRoom(id);
     setViewShowcase(null);
@@ -7826,7 +7871,8 @@ export default function AgencyShell() {
   }
 
   // ── Public preview (Client-facing showcase) ──
-  const interestedBtnPopup = (
+  const interestedBtnPopup = null;
+  const _interestedBtnPopupDisabled = (
     <>
       <button className="cl-interested-btn" onClick={() => setInterestedOpen(true)}>Interested?</button>
       {interestedOpen && (
@@ -8521,7 +8567,7 @@ export default function AgencyShell() {
 
   // ── Main app ──
   return (
-    <div className={`shell${sidebarCollapsed ? " sb-collapsed" : ""}${darkMode ? " dark" : ""}${viewRoom && currentRoom ? " ctx-room" : ""}${viewShowcase && currentShowcase ? " ctx-showcase" : ""}${presentMode === "builder" && page === "present" ? " prs-builder-active" : ""}${(page === "messages" && !viewShowcase && !viewRoom) || (viewRoom && currentRoom && roomPage === "communication") ? " on-messages" : ""}`}>
+    <div className={`shell${sidebarCollapsed ? " sb-collapsed" : ""}${darkMode ? " dark" : ""}${viewRoom && currentRoom ? " ctx-room" : ""}${viewRoom && currentRoom && currentRoom.status === "draft" && !dismissedSetupPanels[currentRoom.id] ? " has-setup-panel" : ""}${viewShowcase && currentShowcase ? " ctx-showcase" : ""}${presentMode === "builder" && page === "present" ? " prs-builder-active" : ""}${(page === "messages" && !viewShowcase && !viewRoom) || (viewRoom && currentRoom && roomPage === "communication") ? " on-messages" : ""}`}>
       <style>{CSS}</style>
 
       {/* ═══ SIDEBAR ═══ */}
@@ -9174,7 +9220,7 @@ export default function AgencyShell() {
                 <div className="pg-header" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div>
                     <h1>Artist <em>Database</em></h1>
-                    <p className="pg-sub">Your complete talent roster — organize artists into pools and mark your company roster.</p>
+                    <p className="pg-sub">Your complete talent database — organize artists into pools and mark your company members.</p>
                   </div>
                   <button className="btn btn-p mobile-hide" onClick={() => { setEditingArtist(null); setNewArt(emptyArtist); setShowAddArtist(true); }}>
                     <I n="plus" s={14} /> Add Artist
@@ -9184,7 +9230,7 @@ export default function AgencyShell() {
                 {/* Pool chips — single flat row */}
                 <div className="pool-chip-row">
                   <button className={`pool-chip${activePoolId === "all" ? " on" : ""}`} onClick={() => setActivePoolId("all")}>All Artists <span style={{opacity:.5,marginLeft:4}}>{artists.length}</span></button>
-                  <button className={`pool-chip${activePoolId === "roster" ? " on" : ""}`} onClick={() => setActivePoolId("roster")}>★ My Roster <span style={{opacity:.5,marginLeft:4}}>{rosterIds.size}</span></button>
+                  <button className={`pool-chip${activePoolId === "roster" ? " on" : ""}`} onClick={() => setActivePoolId("roster")}>★ My Company <span style={{opacity:.5,marginLeft:4}}>{rosterIds.size}</span></button>
                   {artistPools.map(p => (
                     <button key={p.id} className={`pool-chip${activePoolId === p.id ? " on" : ""}`} onClick={() => setActivePoolId(p.id)}>{p.name} <span style={{opacity:.55,marginLeft:4}}>{p.artistIds.length}</span></button>
                   ))}
@@ -9219,7 +9265,7 @@ export default function AgencyShell() {
                     open={showAdAdvFilters}
                     onClose={() => setShowAdAdvFilters(false)}
                     title="Filter your artists"
-                    subtitle="Narrow down your roster by role, location, and more."
+                    subtitle="Narrow down your company by role, location, and more."
                     filters={adFilters}
                     onChange={(k, v) => setAdFilters(p => ({ ...p, [k]: v }))}
                     onClear={() => setAdFilters({ artistType:"all", style:"all", skills:"", location:"", gender:"all", ethnicity:"", nationality:"", ageMin:"", ageMax:"", heightMin:"", heightMax:"" })}
@@ -9250,7 +9296,7 @@ export default function AgencyShell() {
                         <div className="db-img-wrap">
                           <img className="db-img" src={a.img} alt={a.name} />
                           {a.video && <div className="db-vid"><I n="play" s={7} /> Reel</div>}
-                          {rosterIds.has(a.id) && <div className="db-roster-badge">★ Roster</div>}
+                          {rosterIds.has(a.id) && <div className="db-roster-badge">★ Company</div>}
                         </div>
                         <div className="db-body">
                           <div className="db-name">{a.name}</div>
@@ -11307,7 +11353,7 @@ export default function AgencyShell() {
                 </div>
                 <div className="rt-pill">
                   <div className="rt-label">Format</div>
-                  <div className="rt-value">{currentRoom.format === "in_person" ? "In Person" : currentRoom.format === "online" ? "Online" : currentRoom.format === "hybrid" ? "Hybrid" : "Self-tape"}</div>
+                  <div className="rt-value">{currentRoom.format === "in_person" ? "In Person" : currentRoom.format === "online" ? "Online" : "Self-tape"}</div>
                 </div>
               </div>
 
@@ -11474,7 +11520,7 @@ export default function AgencyShell() {
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
                     {[
                       {icon:"briefcase",label:"Roles",value:currentRoom.roles?.join(", ")||"Not set"},
-                      {icon:"map-pin",label:"Format",value:currentRoom.format==="in_person"?"In Person":currentRoom.format==="online"?"Online":"Hybrid"},
+                      {icon:"map-pin",label:"Format",value:currentRoom.format==="in_person"?"In Person":"Online"},
                       {icon:"calendar",label:"Deadline",value:currentRoom.deadline||"Not set"},
                     ].map((item,i) => (
                       <div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:11}}>
@@ -16135,7 +16181,58 @@ export default function AgencyShell() {
           )}
 
         </div>
+
+
       </div>
+
+      {/* ═══ SETUP CHECKLIST PANEL (own panel, right side) ═══ */}
+      {viewRoom && currentRoom && currentRoom.status === "draft" && !dismissedSetupPanels[currentRoom.id] && (() => {
+        const steps = [
+          {key:"desc", label:"Add a description", hint:"Help candidates understand what you're looking for.", done:!!currentRoom.description, nav:()=>setRoomPage("settings")},
+          {key:"materials", label:"Set required materials", hint:"Define what candidates should submit (headshot, showreel, etc.).", done:roomMaterials.length > 0, nav:()=>setRoomPage("settings")},
+          {key:"deadline", label:"Set a deadline", hint:"Keep your opportunity on track with a submission deadline.", done:!!currentRoom.deadline, nav:()=>setRoomPage("settings")},
+          {key:"roles", label:"Add roles", hint:"Define the roles or positions you're looking to fill.", done:currentRoom.roles?.length > 0, nav:()=>setRoomPage("settings")},
+        ];
+        if (["audition","casting"].includes(currentRoom.opportunityType) && currentRoom.roundsEnabled !== false) {
+          const hasRounds = getActiveRoundsForRoom(currentRoom.id).length > 0;
+          steps.push({key:"rounds", label:"Setup rounds", hint:"Configure audition rounds, sessions and scheduling.", done:hasRounds, nav:()=>setRoomPage("settings")});
+        }
+        steps.push(
+          {key:"team", label:"Invite team members", hint:"Add collaborators to help review and select candidates.", done:currentRoom.teamMemberIds?.length > 0, nav:()=>setShowTeamModal(true)},
+          {key:"review", label:"Review your post", hint:"Preview how candidates will see your opportunity.", done:false, nav:()=>setPublicCasting(currentRoom.id)},
+          {key:"publish", label:"Publish opportunity", hint:"Make it live and start accepting applications.", done:currentRoom.status==="published", nav:()=>{}}
+        );
+        const doneCount = steps.filter(s => s.done).length;
+        const pct = Math.round((doneCount / steps.length) * 100);
+        const allRequired = !!currentRoom.description && !!currentRoom.deadline;
+        return (
+          <div className="setup-panel">
+            <h3>Before you publish</h3>
+            <div className="sp-sub">Complete these steps to get your opportunity ready for candidates.</div>
+            <div className="sp-progress">
+              <div className="sp-progress-bar"><div className="sp-progress-fill" style={{width:pct+"%"}}/></div>
+              <div className="sp-progress-text">{doneCount}/{steps.length}</div>
+            </div>
+            {steps.map((s, i) => (
+              <div className={`sp-item${s.done?" done":""}${!s.done && i === steps.findIndex(x=>!x.done)?" active":""}`} key={s.key} onClick={s.nav}>
+                <div className="sp-check">{s.done ? <I n="check" s={10}/> : (!s.done && i === steps.findIndex(x=>!x.done) ? <I n="arrow-right" s={10}/> : String(i+1))}</div>
+                <div>
+                  <div className="sp-label">{s.label}</div>
+                  <div className="sp-hint">{s.hint}</div>
+                </div>
+              </div>
+            ))}
+            <button className="sp-publish" disabled={!allRequired} onClick={() => {
+              setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, status:"active"} : r));
+              setDismissedSetupPanels(p => ({...p, [currentRoom.id]: true}));
+              showToast("Opportunity published!");
+            }}>
+              <I n="send" s={13}/> Publish Now
+            </button>
+            <button className="sp-dismiss" onClick={() => setDismissedSetupPanels(p => ({...p, [currentRoom.id]: true}))}>Dismiss for now</button>
+          </div>
+        );
+      })()}
 
       {/* ═══ NEW SHOWCASE MODAL ═══ */}
       {showNewShowcase && (
@@ -16704,7 +16801,7 @@ export default function AgencyShell() {
                       return n;
                     });
                   }}/>
-                  <span className="ad-pool-toggle-label">★ Part of My Roster</span>
+                  <span className="ad-pool-toggle-label">★ Part of My Company</span>
                   <span className="ad-pool-toggle-sub">Mark as signed with your company</span>
                 </label>
                 {artistPools.length > 0 && <div className="ad-pool-divider"/>}
@@ -17044,16 +17141,16 @@ export default function AgencyShell() {
               <h2>Add to Pool</h2>
               <button style={{background:"none",border:"none",cursor:"pointer",color:"var(--g4)",padding:4}} onClick={() => setMoveToPoolPicker(false)}><I n="x" s={18}/></button>
             </div>
-            <p className="sm-sub">Add the {selectedArtistIds.size} selected artist{selectedArtistIds.size===1?"":"s"} to a pool, or mark them as part of your roster.</p>
+            <p className="sm-sub">Add the {selectedArtistIds.size} selected artist{selectedArtistIds.size===1?"":"s"} to a pool, or mark them as part of your company.</p>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               <button className="pool-chip" style={{display:"flex",width:"100%",justifyContent:"space-between",padding:"10px 14px",borderColor:"rgba(255,180,0,.4)",background:"rgba(255,180,0,.08)",color:"var(--tx)"}} onClick={() => {
                 setRosterIds(prev => { const n = new Set(prev); selectedArtistIds.forEach(id => n.add(id)); return n; });
-                showToast(`Marked ${selectedArtistIds.size} artist${selectedArtistIds.size===1?"":"s"} as Roster`);
+                showToast(`Marked ${selectedArtistIds.size} artist${selectedArtistIds.size===1?"":"s"} as Company`);
                 setSelectedArtistIds(new Set());
                 setMoveToPoolPicker(false);
               }}>
-                <span>★ Mark as My Roster</span>
-                <span style={{opacity:.5,fontSize:11}}>{rosterIds.size} on roster</span>
+                <span>★ Mark as My Company</span>
+                <span style={{opacity:.5,fontSize:11}}>{rosterIds.size} in company</span>
               </button>
               <div style={{height:1,background:"var(--g2)",margin:"6px 0"}}/>
               {artistPools.map(p => (
@@ -17885,24 +17982,48 @@ export default function AgencyShell() {
 
       {/* ═══ NEW OPPORTUNITY MODAL (TYPE PICKER + 5-STEP CASTING WIZARD) ═══ */}
       {showNewRoom && (
-        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"}); }}>
+        <div className="overlay" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,useScoring:false,useVoting:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book"}); }}>
           <div className="new-room-modal" style={{maxWidth: 640}} onClick={e => e.stopPropagation()}>
 
-            {/* Step indicator — shown for casting + audition flows (steps 1+) */}
+            {/* Step indicator — progressive reveal, shown for steps 1+ */}
             {newRoomStep >= 1 && (
               <div className="step-bar">
-                {(newRoomConfig.opportunityType === "audition"
-                  ? ["Format","Access & Type","Details","Visibility"]
-                  : ["Application Mode","Selection","Format","Workflow","Details","Visibility"]
-                ).map((label, i) => {
-                  const step = i + 1;
-                  return [
-                    i > 0 && <div className="step-line" key={`l${i}`}/>,
-                    <div className={`step ${newRoomStep===step?"active":""} ${newRoomStep>step?"done":""}`} key={label}>
-                      <div className="step-num">{newRoomStep>step?<I n="check" s={12}/>:String(step)}</div> {label}
+                {(() => {
+                  const isAC = ["audition","casting"].includes(newRoomConfig.opportunityType);
+                  const isPO = TYPES_PUBLIC_ONLY.includes(newRoomConfig.opportunityType);
+                  const isOnline = newRoom.format === "online";
+                  let allSteps, visCount;
+                  if (isAC) {
+                    allSteps = isOnline
+                      ? [{l:"Access",s:1},{l:"Format",s:2},{l:"Selection",s:5},{l:"Workflow",s:6},{l:"Details",s:7}]
+                      : [{l:"Access",s:1},{l:"Format",s:2},{l:"Type",s:3},{l:"First Round",s:4},{l:"Selection",s:5},{l:"Workflow",s:6},{l:"Details",s:7}];
+                    visCount = isOnline
+                      ? (newRoomStep <= 1 ? 1 : newRoomStep <= 2 ? 2 : newRoomStep <= 5 ? 4 : 5)
+                      : (newRoomStep <= 1 ? 1 : newRoomStep <= 2 ? 2 : newRoomStep <= 4 ? 5 : newRoomStep <= 5 ? 6 : 7);
+                  } else if (isPO) {
+                    const noFmt = TYPES_NO_FORMAT.includes(newRoomConfig.opportunityType);
+                    allSteps = noFmt
+                      ? [{l:"Selection",s:2},{l:"Workflow",s:4},{l:"Details",s:5}]
+                      : [{l:"Selection",s:2},{l:"Format",s:3},{l:"Workflow",s:4},{l:"Details",s:5}];
+                    visCount = noFmt
+                      ? (newRoomStep <= 2 ? 1 : newRoomStep <= 4 ? 2 : 3)
+                      : (newRoomStep <= 2 ? 1 : newRoomStep <= 3 ? 2 : newRoomStep <= 4 ? 3 : 4);
+                  } else {
+                    const noFmt = TYPES_NO_FORMAT.includes(newRoomConfig.opportunityType);
+                    allSteps = noFmt
+                      ? [{l:"Access",s:1},{l:"Selection",s:2},{l:"Workflow",s:4},{l:"Details",s:5}]
+                      : [{l:"Access",s:1},{l:"Selection",s:2},{l:"Format",s:3},{l:"Workflow",s:4},{l:"Details",s:5}];
+                    visCount = noFmt
+                      ? (newRoomStep <= 1 ? 1 : newRoomStep <= 2 ? 2 : newRoomStep <= 4 ? 3 : 4)
+                      : (newRoomStep <= 1 ? 1 : newRoomStep <= 2 ? 2 : newRoomStep <= 3 ? 3 : newRoomStep <= 4 ? 4 : 5);
+                  }
+                  return allSteps.slice(0, visCount).map((item, i) => [
+                    i > 0 && <div className="step-line" key={`l${i}`} style={{animationDelay:`${i*50}ms`}}/>,
+                    <div className={`step ${newRoomStep===item.s?"active":""} ${newRoomStep>item.s?"done":""}`} key={item.l} style={{animationDelay:`${i*50}ms`}} ref={newRoomStep===item.s ? el => { if (el) requestAnimationFrame(() => el.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"})); } : undefined}>
+                      <div className="step-num">{newRoomStep>item.s?<I n="check" s={12}/>:String(i+1)}</div> {item.l}
                     </div>
-                  ];
-                })}
+                  ]);
+                })()}
               </div>
             )}
 
@@ -17927,11 +18048,16 @@ export default function AgencyShell() {
                   ))}
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book",visibility:"public"}); }}>Cancel</button>
+                  <button className="btn btn-s" onClick={() => { setShowNewRoom(false); setNewRoomStep(0); setNewRoomConfig({opportunityType:"casting",selectionType:"lists",requiredMaterials:[],useShortlist:true,useWaitlist:false,useEarlyInvites:false,useInterviews:false,useScoring:false,useVoting:false,auditionFormat:"regular",castingType:"open",accessType:"closed",capacityMode:"soft",groupCreationMode:"self_book"}); }}>Cancel</button>
                   <button className="btn btn-p" onClick={() => {
                     const opt = getOpportunityType(newRoomConfig.opportunityType);
                     if (!opt.enabled) { showToast(`${opt.label} setup coming soon — we're building this flow next.`); return; }
-                    setNewRoomStep(1);
+                    if (newRoomConfig.opportunityType !== "audition" && TYPES_PUBLIC_ONLY.includes(newRoomConfig.opportunityType)) {
+                      setNewRoomConfig(p => ({...p, castingType:"open"}));
+                      setNewRoomStep(2);
+                    } else {
+                      setNewRoomStep(1);
+                    }
                   }}>
                     Continue <I n="arrow" s={14}/>
                   </button>
@@ -17940,9 +18066,9 @@ export default function AgencyShell() {
             )}
 
             {/* ── Step 1: Application Mode (non-audition) ── */}
-            {newRoomStep === 1 && newRoomConfig.opportunityType !== "audition" && (
+            {newRoomStep === 1 && !["audition","casting"].includes(newRoomConfig.opportunityType) && (
               <>
-                <h2>Application Mode</h2>
+                <h2>Access</h2>
                 <p className="nrm-sub">How will candidates access this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()}?</p>
 
                 {savedRoomTemplates.length > 0 && (
@@ -17984,31 +18110,36 @@ export default function AgencyShell() {
             )}
 
             {/* ── Step 2: Selection Type (non-audition) ── */}
-            {newRoomStep === 2 && newRoomConfig.opportunityType !== "audition" && (
+            {newRoomStep === 2 && !["audition","casting"].includes(newRoomConfig.opportunityType) && (
               <>
                 <h2>Selection Type</h2>
                 <p className="nrm-sub">How will you organize your candidate selection?</p>
                 <div className="wizard-grid">
                   <div className={`wizard-option ${newRoomConfig.selectionType==="lists"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,selectionType:"lists"}))}>
                     <div className="wo-icon"><I n="layers" s={22}/></div>
-                    <h4>Lists</h4>
-                    <p>Organize candidates into lists — selected, shortlisted, waitlisted, etc.</p>
+                    <h4>Selection Lists</h4>
+                    <p>Group candidates into selection categories and send bulk invitations.</p>
                   </div>
                   <div className={`wizard-option ${newRoomConfig.selectionType==="rolling"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,selectionType:"rolling"}))}>
                     <div className="wo-icon"><I n="inbox" s={22}/></div>
                     <h4>Rolling Basis</h4>
-                    <p>Review and select candidates as applications come in, no fixed rounds.</p>
+                    <p>Send individual invites directly to candidates as you review — Tinder-style.</p>
                   </div>
                 </div>
+                {newRoomConfig.selectionType === "rolling" && (
+                  <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(245,166,35,.08)",border:"1px solid rgba(245,166,35,.2)",fontSize:12,color:"var(--g6)",marginTop:12}}>
+                    <I n="info" s={12} style={{verticalAlign:"-2px",marginRight:4,opacity:.6}}/> Rolling Basis changes candidate actions to <strong>Invite / Potential / Reject</strong> — invitations are sent individually instead of batch results.
+                  </div>
+                )}
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(1)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(3)}>Next <I n="arrow" s={14}/></button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(TYPES_PUBLIC_ONLY.includes(newRoomConfig.opportunityType) ? 0 : 1)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(TYPES_NO_FORMAT.includes(newRoomConfig.opportunityType) ? 4 : 3)}>Next <I n="arrow" s={14}/></button>
                 </div>
               </>
             )}
 
-            {/* ── Step 3: Format ── */}
-            {newRoomStep === 3 && newRoomConfig.opportunityType !== "audition" && (
+            {/* ── Step 3: Format (only for types that need it) ── */}
+            {newRoomStep === 3 && !["audition","casting"].includes(newRoomConfig.opportunityType) && !TYPES_NO_FORMAT.includes(newRoomConfig.opportunityType) && (
               <>
                 <h2>Format</h2>
                 <p className="nrm-sub">How will this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()} take place?</p>
@@ -18023,10 +18154,78 @@ export default function AgencyShell() {
                     <h4>In Person</h4>
                     <p>Candidates get invited to a physical session at your location.</p>
                   </div>
-                  <div className={`wizard-option ${newRoom.format==="hybrid"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"hybrid"}))}>
-                    <div className="wo-icon"><I n="layers" s={22}/></div>
-                    <h4>Hybrid</h4>
-                    <p>Combination of online submissions and in-person sessions.</p>
+                </div>
+                <div className="ns-actions">
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(2)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(4)}>Next <I n="arrow" s={14}/></button>
+                </div>
+              </>
+            )}
+
+            {/* ── Step 1: Access (Audition/Casting) ── */}
+            {newRoomStep === 1 && ["audition","casting"].includes(newRoomConfig.opportunityType) && (
+              <>
+                <h2>Access</h2>
+                <p className="nrm-sub">How will candidates access this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()}?</p>
+                <div className="wizard-grid">
+                  {[
+                    {val:"open",title:"Open Call",desc:"Anyone can apply through a public listing",icon:"globe"},
+                    {val:"closed_internal",title:"Internal Database",desc:"Select candidates from your artist database",icon:"users"},
+                    {val:"closed_link",title:"Invite with Link",desc:"Share a private link with selected candidates",icon:"share"},
+                  ].map(opt => (
+                    <div key={opt.val} className={`wizard-option ${newRoomConfig.castingType===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,castingType:opt.val}))}>
+                      <div className="wo-icon"><I n={opt.icon} s={22}/></div>
+                      <h4>{opt.title}</h4>
+                      <p>{opt.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="ns-actions">
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(0)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(2)}>Next <I n="arrow" s={14}/></button>
+                </div>
+              </>
+            )}
+
+            {/* ── Step 2: Format (Audition/Casting) — Online or In-Person ── */}
+            {newRoomStep === 2 && ["audition","casting"].includes(newRoomConfig.opportunityType) && (
+              <>
+                <h2>Format</h2>
+                <p className="nrm-sub">How will this {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()} take place?</p>
+                <div className="wizard-grid">
+                  <div className={`wizard-option ${newRoom.format==="online"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"online"}))}>
+                    <div className="wo-icon"><I n="globe" s={22}/></div>
+                    <h4>Online</h4>
+                    <p>No physical sessions — selections based on submissions only.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoom.format==="in_person"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"in_person"}))}>
+                    <div className="wo-icon"><I n="users" s={22}/></div>
+                    <h4>In Person</h4>
+                    <p>Artists attend at your location(s) for a live session.</p>
+                  </div>
+                </div>
+                <div className="ns-actions">
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(1)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(newRoom.format === "online" ? 5 : 3)}>Next <I n="arrow" s={14}/></button>
+                </div>
+              </>
+            )}
+
+            {/* ── Step 3: Type (Audition/Casting, In-Person only) — Walk-in or Invite-only ── */}
+            {newRoomStep === 3 && ["audition","casting"].includes(newRoomConfig.opportunityType) && (
+              <>
+                <h2>Type</h2>
+                <p className="nrm-sub">Who can attend this in-person {getOpportunityType(newRoomConfig.opportunityType).label.toLowerCase()}?</p>
+                <div className="wizard-grid">
+                  <div className={`wizard-option ${newRoomConfig.accessType==="open"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,accessType:"open"}))}>
+                    <div className="wo-icon"><I n="globe" s={22}/></div>
+                    <h4>Walk-in (Open)</h4>
+                    <p>Anyone can show up — applicants auto-join the first round.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoomConfig.accessType==="closed"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,accessType:"closed"}))}>
+                    <div className="wo-icon"><I n="lock" s={22}/></div>
+                    <h4>Invite-only (Closed)</h4>
+                    <p>Company reviews applications before granting access to the round.</p>
                   </div>
                 </div>
                 <div className="ns-actions">
@@ -18036,115 +18235,159 @@ export default function AgencyShell() {
               </>
             )}
 
-            {/* ── Step 1: Format (Audition) — Online or In-Person ── */}
-            {newRoomStep === 1 && newRoomConfig.opportunityType === "audition" && (
+            {/* ── Step 4: First Round (Audition/Casting, In-Person only) — Session type ── */}
+            {newRoomStep === 4 && ["audition","casting"].includes(newRoomConfig.opportunityType) && (
               <>
-                <h2>Format</h2>
-                <p className="nrm-sub">How will this audition take place?</p>
+                <h2>First Round</h2>
+                <p className="nrm-sub">What type of session will the first round be?</p>
                 <div className="wizard-grid">
-                  <div className={`wizard-option ${newRoom.format==="online"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"online"}))}>
+                  <div className={`wizard-option ${newRoomConfig.auditionFormat==="private"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:"private"}))}>
+                    <div className="wo-icon"><I n="calendar" s={22}/></div>
+                    <h4>Private 1:1 Sessions</h4>
+                    <p>Individual time-slot booking — artists pick their own slot.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoomConfig.auditionFormat==="groups"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:"groups"}))}>
+                    <div className="wo-icon"><I n="layers" s={22}/></div>
+                    <h4>Group Sessions</h4>
+                    <p>Artists are divided into groups — by self-booking or company assignment.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoomConfig.auditionFormat==="multi_location"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:"multi_location"}))}>
                     <div className="wo-icon"><I n="globe" s={22}/></div>
-                    <h4>Online Submission</h4>
-                    <p>Artists submit self-tapes or materials — no physical attendance required.</p>
-                  </div>
-                  <div className={`wizard-option ${newRoom.format==="in_person"?"selected":""}`} onClick={() => setNewRoom(p => ({...p,format:"in_person"}))}>
-                    <div className="wo-icon"><I n="users" s={22}/></div>
-                    <h4>In-Person Audition</h4>
-                    <p>Artists attend a physical audition at your location(s).</p>
+                    <h4>Multi-Location</h4>
+                    <p>Sessions across multiple cities or studios — each runs independently.</p>
                   </div>
                 </div>
+                <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(96,77,255,.06)",border:"1px solid rgba(96,77,255,.15)",fontSize:12,color:"var(--g6)",marginTop:12}}>
+                  <I n="info" s={12} style={{verticalAlign:"-2px",marginRight:4,opacity:.6}}/> You can configure groups, time slots, capacity, and locations after creating the opportunity.
+                </div>
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(0)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(newRoom.format === "online" ? 3 : 2)}>Next <I n="arrow" s={14}/></button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(3)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(5)}>Next <I n="arrow" s={14}/></button>
                 </div>
               </>
             )}
 
-            {/* ── Step 2: Access Type & Audition Format (Audition, In-Person only) ── */}
-            {newRoomStep === 2 && newRoomConfig.opportunityType === "audition" && (
+            {/* ── Step 5: Selection (Audition/Casting) ── */}
+            {newRoomStep === 5 && ["audition","casting"].includes(newRoomConfig.opportunityType) && (
               <>
-                <h2>Access & Audition Type</h2>
-                <p className="nrm-sub">Who can attend, and how is the audition structured?</p>
-
-                <div style={{marginBottom:20}}>
-                  <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>Access</div>
-                  <div className="wizard-grid">
-                    {ACCESS_TYPES.map(opt => (
-                      <div key={opt.val} className={`wizard-option ${newRoomConfig.accessType===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,accessType:opt.val}))}>
-                        <div className="wo-icon"><I n={opt.icon} s={22}/></div>
-                        <h4>{opt.title}</h4>
-                        <p>{opt.desc}</p>
-                      </div>
-                    ))}
+                <h2>Selection</h2>
+                <p className="nrm-sub">How will you organize your candidate selection?</p>
+                <div className="wizard-grid">
+                  <div className={`wizard-option ${newRoomConfig.selectionType==="lists"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,selectionType:"lists"}))}>
+                    <div className="wo-icon"><I n="layers" s={22}/></div>
+                    <h4>Selection Lists</h4>
+                    <p>Group candidates into selection categories and send bulk invitations.</p>
+                  </div>
+                  <div className={`wizard-option ${newRoomConfig.selectionType==="rolling"?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,selectionType:"rolling"}))}>
+                    <div className="wo-icon"><I n="inbox" s={22}/></div>
+                    <h4>Rolling Basis</h4>
+                    <p>Send individual invites directly to candidates as you review — Tinder-style.</p>
                   </div>
                 </div>
-
-                <div style={{marginBottom:20}}>
-                  <div style={{fontSize:12,fontWeight:600,color:"var(--g5)",marginBottom:8,textTransform:"uppercase",letterSpacing:".04em"}}>Audition Format</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                    {AUDITION_FORMATS.map(opt => (
-                      <div key={opt.val} className={`wizard-option ${newRoomConfig.auditionFormat===opt.val?"selected":""}`} onClick={() => setNewRoomConfig(p => ({...p,auditionFormat:opt.val}))}>
-                        <div className="wo-icon"><I n={opt.icon} s={22}/></div>
-                        <h4>{opt.title}</h4>
-                        <p>{opt.desc}</p>
-                      </div>
-                    ))}
+                {newRoomConfig.selectionType === "rolling" && (
+                  <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(245,166,35,.08)",border:"1px solid rgba(245,166,35,.2)",fontSize:12,color:"var(--g6)",marginTop:12}}>
+                    <I n="info" s={12} style={{verticalAlign:"-2px",marginRight:4,opacity:.6}}/> Rolling Basis changes candidate actions to <strong>Invite / Potential / Reject</strong> — invitations are sent individually instead of batch results.
                   </div>
-                </div>
-
-                <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(96,77,255,.06)",border:"1px solid rgba(96,77,255,.15)",fontSize:12,color:"var(--g6)",marginBottom:16}}>
-                  <I n="info" s={12} style={{verticalAlign:"-2px",marginRight:4,opacity:.6}}/> You can configure groups, time slots, capacity, and other details after creating the room.
-                </div>
-
+                )}
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(1)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(3)}>Next: Details <I n="arrow" s={14}/></button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(newRoom.format === "online" ? 2 : 4)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(6)}>Next <I n="arrow" s={14}/></button>
                 </div>
               </>
             )}
 
-            {/* ── Step 4: Workflow Options ── */}
-            {newRoomStep === 4 && newRoomConfig.opportunityType !== "audition" && (
+            {/* ── Workflow Options (step 4 for most types, step 6 for audition/casting) ── */}
+            {((!["audition","casting"].includes(newRoomConfig.opportunityType) && newRoomStep === 4) || (["audition","casting"].includes(newRoomConfig.opportunityType) && newRoomStep === 6)) && (
               <>
                 <h2>Workflow</h2>
                 <p className="nrm-sub">Configure your selection workflow. These can be changed later in settings.</p>
                 <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:14}}>
-                  <div className="settings-row">
-                    <div>
-                      <div className="sr-label">Use a shortlist before final selection?</div>
-                      <div className="sr-sub">Add a shortlist stage to narrow down candidates before making final picks.</div>
+                  {/* Early Invite — Audition only */}
+                  {newRoomConfig.opportunityType === "audition" && (
+                    <div className="settings-row">
+                      <div>
+                        <div className="sr-label">Enable Early Invites?</div>
+                        <div className="sr-sub">Send advance invitations to priority candidates before general applications open.</div>
+                      </div>
+                      <button className={`toggle ${newRoomConfig.useEarlyInvites?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useEarlyInvites:!p.useEarlyInvites}))} />
                     </div>
-                    <button className={`toggle ${newRoomConfig.useShortlist?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useShortlist:!p.useShortlist}))} />
-                  </div>
-                  <div className="settings-row">
-                    <div>
-                      <div className="sr-label">Enable Waitlist?</div>
-                      <div className="sr-sub">Place candidates on a waitlist if all spots are filled, in case someone drops out.</div>
+                  )}
+                  {/* Shortlist — Casting (online only), Open Call, Residency */}
+                  {TYPES_WITH_SHORTLIST.includes(newRoomConfig.opportunityType) && !(newRoomConfig.opportunityType === "casting" && newRoom.format !== "online") && (
+                    <div className="settings-row" style={newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType) ? {opacity:.5,pointerEvents:"none"} : {}}>
+                      <div>
+                        <div className="sr-label">Use a shortlist before final selection?</div>
+                        <div className="sr-sub">Add a shortlist stage to narrow down candidates before making final picks.{newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType) ? " (Disabled with Rolling Basis)" : ""}</div>
+                      </div>
+                      <button className={`toggle ${newRoomConfig.useShortlist && !(newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType))?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useShortlist:!p.useShortlist,useWaitlist:!p.useShortlist?false:p.useWaitlist}))} />
                     </div>
-                    <button className={`toggle ${newRoomConfig.useWaitlist?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useWaitlist:!p.useWaitlist}))} />
-                  </div>
-                  {INTERVIEW_ELIGIBLE_TYPES.includes(newRoomConfig.opportunityType) && (
+                  )}
+                  {/* Waitlist — Audition, Casting, Open Call, Residency, Competition */}
+                  {TYPES_WITH_WAITLIST.includes(newRoomConfig.opportunityType) && (
+                    <div className="settings-row" style={newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType) ? {opacity:.5,pointerEvents:"none"} : {}}>
+                      <div>
+                        <div className="sr-label">Enable Waitlist?</div>
+                        <div className="sr-sub">Maintain a ranked backup list in case selected candidates decline.{newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType) ? " (Disabled with Rolling Basis)" : ""}</div>
+                      </div>
+                      <button className={`toggle ${newRoomConfig.useWaitlist && !(newRoomConfig.selectionType === "rolling" && ["open_call","residency"].includes(newRoomConfig.opportunityType))?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useWaitlist:!p.useWaitlist,useShortlist:!p.useWaitlist?false:p.useShortlist}))} />
+                    </div>
+                  )}
+                  {/* Interview — auto-enabled for Job Call (no toggle), optional for eligible types */}
+                  {INTERVIEW_ELIGIBLE_TYPES.includes(newRoomConfig.opportunityType) && newRoomConfig.opportunityType !== "job_call" && (
                     <div className="settings-row">
                       <div>
                         <div className="sr-label">Enable Interview Stage?</div>
-                        <div className="sr-sub">Add a final interview step where shortlisted candidates are invited for a 1:1 or panel interview before selection.</div>
+                        <div className="sr-sub">Schedule structured 1:1 or panel conversations with candidates before final selection.</div>
                       </div>
                       <button className={`toggle ${newRoomConfig.useInterviews?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useInterviews:!p.useInterviews}))} />
                     </div>
                   )}
+                  {newRoomConfig.opportunityType === "job_call" && (
+                    <div className="settings-row" style={{opacity:.7}}>
+                      <div>
+                        <div className="sr-label">Interview Stage</div>
+                        <div className="sr-sub">Interviews are automatically enabled for Job Calls.</div>
+                      </div>
+                      <button className="toggle on" style={{pointerEvents:"none"}} />
+                    </div>
+                  )}
+                  {/* Scoring — auto-enabled for Competition, optional for Job Call, Open Call, Residency */}
+                  {newRoomConfig.opportunityType === "competition" && (
+                    <div className="settings-row" style={{opacity:.7}}>
+                      <div>
+                        <div className="sr-label">Scoring System</div>
+                        <div className="sr-sub">Scoring with weighted criteria and leaderboard is automatically enabled for Competitions.</div>
+                      </div>
+                      <button className="toggle on" style={{pointerEvents:"none"}} />
+                    </div>
+                  )}
+                  {TYPES_WITH_SCORING.includes(newRoomConfig.opportunityType) && newRoomConfig.opportunityType !== "competition" && (
+                    <div className="settings-row">
+                      <div>
+                        <div className="sr-label">Enable Scoring?</div>
+                        <div className="sr-sub">Evaluate candidates with structured, weighted scoring criteria and a leaderboard.</div>
+                      </div>
+                      <button className={`toggle ${newRoomConfig.useScoring?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useScoring:!p.useScoring}))} />
+                    </div>
+                  )}
+                  {/* Voting — available for all types */}
+                  <div className="settings-row">
+                    <div>
+                      <div className="sr-label">Enable Voting?</div>
+                      <div className="sr-sub">Let team members cast Yes / Maybe / No votes on candidates for quick consensus.</div>
+                    </div>
+                    <button className={`toggle ${newRoomConfig.useVoting?"on":""}`} onClick={() => setNewRoomConfig(p => ({...p,useVoting:!p.useVoting}))} />
+                  </div>
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(3)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(5)}>Next: Details <I n="arrow" s={14}/></button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(["audition","casting"].includes(newRoomConfig.opportunityType) ? 5 : TYPES_NO_FORMAT.includes(newRoomConfig.opportunityType) ? 2 : 3)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-p" onClick={() => setNewRoomStep(["audition","casting"].includes(newRoomConfig.opportunityType) ? 7 : 5)}>Next: Details <I n="arrow" s={14}/></button>
                 </div>
               </>
             )}
 
-            {/* ── Step 4: Workflow Options (non-audition only) ── */}
-            {/* Audition workflow options are now integrated into Step 2 (Access & Type) */}
-
-            {/* ── Step 5: Details (step 3 for auditions, step 5 for non-auditions) ── */}
-            {((newRoomStep === 5 && newRoomConfig.opportunityType !== "audition") || (newRoomStep === 3 && newRoomConfig.opportunityType === "audition")) && (
+            {/* ── Details (step 5 for most types, step 7 for audition/casting) ── */}
+            {((!["audition","casting"].includes(newRoomConfig.opportunityType) && newRoomStep === 5) || (["audition","casting"].includes(newRoomConfig.opportunityType) && newRoomStep === 7)) && (
               <>
                 <h2>{getOpportunityType(newRoomConfig.opportunityType).label} Details</h2>
                 <p className="nrm-sub">Fill in the basics. You can always edit these later.</p>
@@ -18194,34 +18437,7 @@ export default function AgencyShell() {
                   <input placeholder="e.g. Apr 15, 2026" value={newRoom.deadline} onChange={e => setNewRoom(p => ({...p, deadline:e.target.value}))}/>
                 </div>
                 <div className="ns-actions">
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? (newRoom.format === "online" ? 1 : 2) : 4)}><I n="back" s={14}/> Back</button>
-                  <button className="btn btn-p" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? 4 : 6)} disabled={!newRoom.title.trim()}>
-                    Next <I n="forward" s={14}/>
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* ═══ VISIBILITY STEP (Final for both auditions & castings) ═══ */}
-            {((newRoomStep === 6 && newRoomConfig.opportunityType !== "audition") || (newRoomStep === 4 && newRoomConfig.opportunityType === "audition")) && (
-              <>
-                <h2>Visibility</h2>
-                <p className="nrm-sub">Choose who can see and apply to this opportunity.</p>
-                <div className="format-grid" style={{marginTop:16}}>
-                  {[
-                    {key:"public", icon:"globe", label:"Public", desc:"Visible to everyone. Artists can find and apply directly."},
-                    {key:"database", icon:"users", label:"Database Only", desc:"Only visible to artists in your database. Not listed publicly."},
-                    {key:"link", icon:"link", label:"Per Link", desc:"Only accessible via a private link you share. Hidden from search and listings."},
-                  ].map(v => (
-                    <button key={v.key} className={`format-card ${newRoomConfig.visibility===v.key?"active":""}`} onClick={() => setNewRoomConfig(p => ({...p, visibility:v.key}))}>
-                      <I n={v.icon} s={22}/>
-                      <div className="fc-label">{v.label}</div>
-                      <div className="fc-desc">{v.desc}</div>
-                    </button>
-                  ))}
-                </div>
-                <div className="ns-actions" style={{marginTop:24}}>
-                  <button className="btn btn-g" onClick={() => setNewRoomStep(newRoomConfig.opportunityType === "audition" ? 3 : 5)}><I n="back" s={14}/> Back</button>
+                  <button className="btn btn-g" onClick={() => setNewRoomStep(["audition","casting"].includes(newRoomConfig.opportunityType) ? 6 : 4)}><I n="back" s={14}/> Back</button>
                   <button className="btn btn-p" onClick={handleCreateRoom} disabled={!newRoom.title.trim()}>
                     <I n="plus" s={14}/> Create {getOpportunityType(newRoomConfig.opportunityType).label}
                   </button>
@@ -18229,52 +18445,11 @@ export default function AgencyShell() {
               </>
             )}
 
+
           </div>
         </div>
       )}
 
-      {/* ═══ PUBLISH READINESS PANEL ═══ */}
-      {showPublishPanel && currentRoom && currentRoom.status === "draft" && (
-        <div style={{position:"fixed",bottom:0,left:"var(--sb-w)",right:0,zIndex:800,background:"var(--glass-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderTop:"1px solid var(--glass-border)",padding:"14px 24px",boxShadow:"0 -4px 24px rgba(0,0,0,.08)",animation:"slideUp .3s ease"}}>
-          <div style={{display:"flex",alignItems:"center",gap:16,maxWidth:900,margin:"0 auto"}}>
-            <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:700,color:"var(--g6)",marginBottom:6}}>Complete before publishing</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                {(() => {
-                  const steps = [];
-                  if (!currentRoom.description) steps.push({key:"desc",label:"Add description",done:false});
-                  else steps.push({key:"desc",label:"Description",done:true});
-                  if (!currentRoom.deadline) steps.push({key:"deadline",label:"Set deadline",done:false});
-                  else steps.push({key:"deadline",label:"Deadline",done:true});
-                  if (currentRoom.roles?.length === 0) steps.push({key:"roles",label:"Add roles",done:false});
-                  else steps.push({key:"roles",label:"Roles",done:true});
-                  if (currentRoom.opportunityType === "audition" && currentRoom.roundsEnabled !== false) {
-                    const hasRounds = getActiveRoundsForRoom(currentRoom.id).length > 0;
-                    steps.push({key:"rounds",label:hasRounds?"Rounds configured":"Setup rounds",done:hasRounds});
-                  }
-                  if (!currentRoom.teamMemberIds || currentRoom.teamMemberIds.length === 0) steps.push({key:"team",label:"Add team",done:false});
-                  else steps.push({key:"team",label:"Team",done:true});
-                  return steps.map(s => (
-                    <span key={s.key} style={{fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:40,display:"inline-flex",alignItems:"center",gap:4,background:s.done?"rgba(29,185,84,.1)":"rgba(245,166,35,.1)",color:s.done?"#1DB954":"var(--amber)",border:`1px solid ${s.done?"rgba(29,185,84,.2)":"rgba(245,166,35,.2)"}`}}>
-                      <I n={s.done?"check":"circle"} s={10}/> {s.label}
-                    </span>
-                  ));
-                })()}
-              </div>
-            </div>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <button className="btn btn-s" onClick={() => setShowPublishPanel(false)} style={{fontSize:11}}>Dismiss</button>
-              <button className="btn btn-p" style={{fontSize:12}} onClick={() => {
-                setRooms(p => p.map(r => r.id === currentRoom.id ? {...r, status:"active"} : r));
-                setShowPublishPanel(false);
-                showToast("Room published!");
-              }} disabled={!currentRoom.description || !currentRoom.deadline}>
-                <I n="send" s={13}/> Publish
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══ ARTIST CONFIRMATION / RSVP MODAL ═══ */}
       {showConfirmationModal && (() => {
