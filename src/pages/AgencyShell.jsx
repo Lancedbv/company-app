@@ -4,6 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Chart from "react-apexcharts";
 import UniversalAuth from "./UniversalAuth";
+import UniversalOnboarding, { createOnboardingState } from "./UniversalOnboarding";
+import { ONBOARDING_CONFIG } from "./onboardingConfig.jsx";
 import { QRCodeSVG } from "qrcode.react";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -6954,8 +6956,17 @@ export default function AgencyShell() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPass, setAuthPass] = useState("");
 
+  // Onboarding state — demo only, in-memory (never auto-starts on app open)
+  const [onboardingState, setOnboardingState] = useState(null);
+  const [obFirstName, setObFirstName] = useState("");
+
   // Navigation: workspace pages vs showcase pages
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Collapse the real sidebar when the in-app onboarding (conversation/learning) begins
+  useEffect(() => {
+    const s = onboardingState?.stage;
+    if (s === "conversation" || s === "learning") setSidebarCollapsed(true);
+  }, [onboardingState?.stage]);
   const [page, setPage] = useState("dashboard"); // dashboard | showcases | rooms | artist-db | agency-settings | messages | network | promote | analytics | artists | settings | tracking | requests
   // Network tab state
   // Aria casting assistant state
@@ -8583,9 +8594,31 @@ export default function AgencyShell() {
   // ── Auth screens ──
   if (auth !== "app") {
     return (
-      <UniversalAuth onAuth={() => setAuth("app")} />
+      <UniversalAuth onAuth={(result) => {
+        setAuth("app");
+        if (result?.firstName) setObFirstName(result.firstName);
+      }} />
     );
   }
+
+  // ── Onboarding ──
+  // Welcome + purpose are cinematic full-screen takeovers (like the auth screens).
+  if (onboardingState && (onboardingState.stage === "welcome" || onboardingState.stage === "purpose")) {
+    return (
+      <div className={`shell${darkMode ? " dark" : ""}`}>
+        <style>{CSS}</style>
+        <UniversalOnboarding
+          config={ONBOARDING_CONFIG}
+          state={onboardingState}
+          setState={setOnboardingState}
+          firstName={obFirstName || onboardingState.firstName || "there"}
+          onComplete={() => setOnboardingState(prev => ({ ...prev, stage: "complete" }))}
+        />
+      </div>
+    );
+  }
+  // Conversation + learning render INSIDE the real shell (real sidebar stays, collapsed) — see .main below.
+  const obInShell = onboardingState && (onboardingState.stage === "conversation" || onboardingState.stage === "learning");
 
   // ── Completion helpers ──
   const getShowcaseCompletion = (sc) => {
@@ -8631,6 +8664,16 @@ export default function AgencyShell() {
   return (
     <div className={`shell${sidebarCollapsed ? " sb-collapsed" : ""}${darkMode ? " dark" : ""}${viewRoom && currentRoom ? " ctx-room" : ""}${viewRoom && currentRoom && currentRoom.status === "draft" && !dismissedSetupPanels[currentRoom.id] ? " has-setup-panel" : ""}${viewShowcase && currentShowcase ? " ctx-showcase" : ""}${presentMode === "builder" && page === "present" ? " prs-builder-active" : ""}${(page === "messages" && !viewShowcase && !viewRoom) || (viewRoom && currentRoom && roomPage === "communication") ? " on-messages" : ""}`}>
       <style>{CSS}</style>
+
+      {/* ═══ ONBOARDING DEMO TRIGGER ═══ */}
+      {!onboardingState && (
+      <button
+        onClick={() => setOnboardingState(createOnboardingState(ONBOARDING_CONFIG, "new", obFirstName || "Wouter"))}
+        style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",zIndex:100,display:"inline-flex",alignItems:"center",gap:8,padding:"8px 20px",background:"linear-gradient(135deg,var(--ac),#604DFF)",color:"#fff",border:"none",borderRadius:20,fontFamily:"var(--sans)",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 12px rgba(96,77,255,.25)",letterSpacing:".01em"}}
+      >
+        ✨ Onboarding Experience
+      </button>
+      )}
 
       {/* ═══ SIDEBAR ═══ */}
       <aside className={`sidebar${viewRoom && currentRoom ? " sb-room" : viewShowcase && currentShowcase ? " sb-showcase" : ""}`}>
@@ -8920,7 +8963,17 @@ export default function AgencyShell() {
       </aside>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className={`main${page === "messages" && !viewShowcase && !viewRoom ? " on-messages" : ""}`}>
+      <div className={`main${page === "messages" && !viewShowcase && !viewRoom ? " on-messages" : ""}${obInShell ? " ob-main-host" : ""}`}>
+        {obInShell && (
+          <UniversalOnboarding
+            embedded
+            config={ONBOARDING_CONFIG}
+            state={onboardingState}
+            setState={setOnboardingState}
+            firstName={obFirstName || onboardingState.firstName || "there"}
+            onComplete={() => setOnboardingState(prev => ({ ...prev, stage: "complete" }))}
+          />
+        )}
 
         {/* Top action bar — sticky, translucent, content scrolls beneath */}
         <div className="agency-topbar on-blob-bg">
