@@ -132,20 +132,24 @@ export function UpgradeModal({ open, onClose, feature, title, body, trigger, onG
                 <div style={{fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:".5px", color:"var(--ac)"}}>
                   {p.display_name}
                 </div>
-                <div style={{fontSize:22, fontWeight:700, color:"var(--tx)", margin:"4px 0"}}>
-                  {cost.amount == null ? "Custom" : `€${cost.amount}`}
-                  {cost.amount != null && <span style={{fontSize:11, color:"var(--g4)", fontWeight:400}}>/yr</span>}
+                <div style={{display:"flex", alignItems:"baseline", gap:6, margin:"4px 0"}}>
+                  <span style={{fontSize:22, fontWeight:700, color:"var(--tx)"}}>
+                    {cost.amount == null ? "Custom" : `€${cost.amount.toLocaleString("nl-NL")}`}
+                  </span>
+                  <span style={{fontSize:11, color:"var(--g4)"}}>
+                    {cost.amount == null ? "" : `/ yr · excl. VAT`}
+                  </span>
                 </div>
                 {cost.credit > 0 && (
-                  <div style={{fontSize:11, color:"var(--g4)", marginBottom:6}}>
-                    €{p.price_eur} − €{cost.credit} credit
+                  <div style={{fontSize:11, color:"var(--ac)", marginBottom:6, fontWeight:600}}>
+                    €{p.price_eur.toLocaleString("nl-NL")} − €{cost.credit} Audition Pass credit
                   </div>
                 )}
-                <div style={{fontSize:12, color:"var(--g5)", marginBottom:10}}>{p.tagline}</div>
-                <div style={{fontSize:11, color:"var(--g5)", lineHeight:1.5}}>
+                <div style={{fontSize:12, color:"var(--g5)", marginBottom:10, lineHeight:1.5}}>{p.tagline}</div>
+                <div style={{fontSize:11, color:"var(--g5)", lineHeight:1.6}}>
                   • {p.limits.calls_per_year === -1 ? "Unlimited" : p.limits.calls_per_year}{p.plan_id==="institution"?"+":""} calls / year<br/>
                   • {p.limits.team_members_max === -1 ? "Unlimited" : p.limits.team_members_max} team members<br/>
-                  • {p.limits.artist_database_size === -1 ? "Unlimited" : p.limits.artist_database_size} artists in DB
+                  • {p.limits.artist_database_size === -1 ? "Unlimited" : p.limits.artist_database_size} saved artists
                 </div>
               </div>
             );

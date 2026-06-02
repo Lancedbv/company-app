@@ -9876,32 +9876,36 @@ export default function AgencyShell() {
                           {currentPlan.display_name}
                         </span>
                       </div>
-                      <p className="ss-desc">{currentPlan.description}</p>
-                      <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--g1)",fontSize:13}}>
-                        <span style={{color:"var(--g4)"}}>Billing</span>
-                        <span style={{color:"var(--tx)",fontWeight:500}}>
-                          {currentPlan.billing_cycle === "one_time" ? "Pay per call" :
+                      {/* Headline price block matching the marketing cards */}
+                      <div style={{display:"flex", alignItems:"baseline", gap:10, marginBottom:6}}>
+                        <span style={{fontSize:36, fontWeight:700, color:"var(--tx)", lineHeight:1}}>
+                          {currentPlan.price_eur == null ? "Custom" : `€${currentPlan.price_eur.toLocaleString("nl-NL")}`}
+                        </span>
+                        {currentPlan.price_eur != null && (
+                          <span style={{fontSize:12, color:"var(--g4)"}}>excl. VAT</span>
+                        )}
+                      </div>
+                      {currentPlan.card_subtitle ? (
+                        <div style={{fontSize:12, color:"var(--g5)", marginBottom:12}}>{currentPlan.card_subtitle}</div>
+                      ) : currentPlan.monthly_equivalent_eur ? (
+                        <div style={{fontSize:12, color:"var(--g5)", marginBottom:12}}>~€{currentPlan.monthly_equivalent_eur}/mo</div>
+                      ) : currentPlan.price_eur == null ? (
+                        <div style={{fontSize:12, color:"var(--g5)", marginBottom:12}}>Scoped per contract · scaled to your operation</div>
+                      ) : null}
+                      <p className="ss-desc" style={{marginBottom:14}}>{currentPlan.description}</p>
+                      <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderTop:"1px solid var(--g1)",borderBottom:"1px solid var(--g1)",fontSize:13}}>
+                        <span style={{color:"var(--g5)"}}>Billing</span>
+                        <span style={{color:"var(--tx)",fontWeight:600}}>
+                          {currentPlan.billing_cycle === "one_time" ? "One-time" :
                            currentPlan.billing_cycle === "annual" ? "Annual" : "Custom invoice"}
                         </span>
                       </div>
-                      {currentPlan.price_eur != null && (
+                      {currentPlan.price_eur != null && currentPlan.billing_cycle === "annual" && (
                         <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--g1)",fontSize:13}}>
-                          <span style={{color:"var(--g4)"}}>Next Billing</span>
-                          <span style={{color:"var(--tx)",fontWeight:500}}>
-                            {currentPlan.billing_cycle === "one_time" ? "—" : "Jan 1, 2027"}
-                          </span>
+                          <span style={{color:"var(--g5)"}}>Next billing</span>
+                          <span style={{color:"var(--tx)",fontWeight:600}}>Jan 1, 2027</span>
                         </div>
                       )}
-                      <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",fontSize:13}}>
-                        <span style={{color:"var(--g4)"}}>Amount</span>
-                        <span style={{color:"var(--tx)",fontWeight:500,fontFamily:"var(--mono, monospace)"}}>
-                          {currentPlan.price_eur == null ? "Custom" : `€${currentPlan.price_eur}`}
-                          <span style={{color:"var(--g4)",fontWeight:400}}>
-                            {currentPlan.billing_cycle === "one_time" ? " one-time" :
-                             currentPlan.billing_cycle === "annual" ? "/yr" : ""}
-                          </span>
-                        </span>
-                      </div>
                       {ent.auditionPassCreditActive && currentPlan.plan_id === "audition_pass" && (
                         <div style={{
                           marginTop:14, padding:"10px 12px", borderRadius:10,

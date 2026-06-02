@@ -128,10 +128,10 @@ function TeamSetupForm({ data, onChange }) {
 
 function PlanBillingForm({ data, onChange, errors }) {
   const plans = [
-    { id: "audition_pass", name: "Audition Pass", price: "€899", priceSub: "one-time", desc: "Run one audition professionally — without the full season workspace." },
-    { id: "season",        name: "Season",        price: "€1,599", priceSub: "/year", desc: "Make Lanced your audition workspace for the season.", recommended: true },
-    { id: "company",       name: "Company",       price: "€3,999", priceSub: "/year", desc: "For teams running auditions across multiple productions." },
-    { id: "institution",   name: "Enterprise",    price: "Custom",       priceSub: "talk to us", desc: "For national companies, state institutions, conservatories, and multi-department venues running Lanced at scale." },
+    { id: "audition_pass", name: "Audition Pass", price: "€899",   priceSub: "excl. VAT",   desc: "Run one audition end to end without the full workspace. For companies that only need a single call this year — and want to try Lanced before committing." },
+    { id: "season",        name: "Season",        price: "€1,599", priceSub: "/year · excl. VAT", desc: "Your audition workspace for the season. Three calls, a company dashboard, artist database, and live support — built for the seasonal hiring rhythm.", recommended: true },
+    { id: "company",       name: "Company",       price: "€3,999", priceSub: "/year · excl. VAT", desc: "Lanced as part of your company's operating system. Ten calls, unlimited team, contracts & onboarding included, and dedicated support." },
+    { id: "institution",   name: "Enterprise",    price: "Custom", priceSub: "talk to us", desc: "Custom infrastructure for national companies, state institutions, conservatories, and multi-department venues. High-volume calls, SSO, custom DPA, and a priority SLA." },
   ];
 
   return (
@@ -190,13 +190,13 @@ function PlanBillingForm({ data, onChange, errors }) {
         </>
       )}
       {data.plan === "institution" && (
-        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(96,77,255,.06)", border:"1px solid rgba(96,77,255,.25)", fontSize:12, color:"var(--g5)"}}>
-          Enterprise plans are scoped per contract. Tell us about your organization and we'll come back with a proposal — usually within a week.
+        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(96,77,255,.06)", border:"1px solid rgba(96,77,255,.25)", fontSize:12, color:"var(--g5)", lineHeight:1.55}}>
+          <strong style={{color:"var(--tx)"}}>Scoped per contract · scaled to your operation.</strong> Enterprise plans are built around how your organization actually operates — high-volume calls, SSO, custom DPA, and priority SLA. We'll come back with a proposal, usually within a week.
         </div>
       )}
       {data.plan === "audition_pass" && (
-        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(245,166,35,.08)", border:"1px solid rgba(245,166,35,.3)", fontSize:12, color:"var(--g5)"}}>
-          One audition, no saved workspace. Upgrade within 60 days and €500 of your Audition Pass fee will credit toward your annual plan.
+        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(96,77,255,.06)", border:"1px solid rgba(96,77,255,.25)", fontSize:12, color:"var(--g5)", lineHeight:1.55}}>
+          <strong style={{color:"var(--tx)"}}>€500 credit toward annual upgrade.</strong> Buy the Audition Pass for €899 today; if you upgrade to Season or Company within 60 days, €500 is applied to the annual price. One Audition Pass per company per 12 months.
         </div>
       )}
     </>
