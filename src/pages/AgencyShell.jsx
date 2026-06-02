@@ -10082,25 +10082,28 @@ export default function AgencyShell() {
                                 ))}
                               </div>
 
-                              {/* CTA — text link with arrow */}
-                              <button
-                                onClick={onCta}
-                                disabled={isCurrent}
-                                style={{
-                                  marginTop:18, padding:0, background:"transparent", border:"none",
-                                  display:"flex", alignItems:"center", gap:6,
-                                  color: isCurrent ? "var(--g4)" : "var(--ac)",
-                                  fontSize:14, fontWeight:500,
-                                  cursor: isCurrent ? "default" : "pointer",
-                                  textAlign:"left",
-                                }}
-                              >
-                                {ctaLabel}
-                                {cost.credit > 0 && !isCurrent && !isEnterprise && (
-                                  <span style={{color:"var(--g4)", fontWeight:400}}> · €{cost.amount}</span>
-                                )}
-                                {!isCurrent && <span style={{fontSize:12, transform:"translateY(-1px)"}}>↗</span>}
-                              </button>
+                              {/* CTA — proper app button */}
+                              {(() => {
+                                // Primary action for Purchase / Upgrade / Talk to us;
+                                // secondary outline for Downgrade; greyed disabled for Current plan
+                                const variant =
+                                  isCurrent                 ? "btn-g" :
+                                  ctaLabel === "Downgrade"  ? "btn-s" :
+                                  "btn-p";
+                                return (
+                                  <button
+                                    onClick={onCta}
+                                    disabled={isCurrent}
+                                    className={`btn ${variant} btn-sm`}
+                                    style={{marginTop:18, width:"100%", justifyContent:"center"}}
+                                  >
+                                    {ctaLabel}
+                                    {cost.credit > 0 && !isCurrent && !isEnterprise && (
+                                      <span style={{opacity:.75, marginLeft:6}}>· €{cost.amount}</span>
+                                    )}
+                                  </button>
+                                );
+                              })()}
                             </div>
                           );
                         })}
