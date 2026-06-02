@@ -6986,7 +6986,7 @@ export default function AgencyShell() {
     if (limit.isBlocked && ent.planId === "company") {
       upgrade.promptUpgrade({
         title: "You've hit your Company call limit",
-        body: `You've used all ${limit.limit} calls included in Company. Extra calls are €399 each, or upgrade to Institution for higher volume + custom infrastructure.`,
+        body: `You've used all ${limit.limit} calls included in Company. Extra calls are €399 each, or move to Enterprise for higher volume and custom infrastructure.`,
         trigger: "company_to_institution",
       });
       return;
@@ -7532,7 +7532,7 @@ export default function AgencyShell() {
         upgrade.promptUpgrade({
           title: `Your artist database is full`,
           body: ent.planId === "audition_pass"
-            ? "Audition Pass doesn't include a saved artist database. Upgrade to Season (€1,599/yr) to keep up to 100 artists, or Company (€3,999/yr) for 200."
+            ? "Audition Pass doesn't include a saved artist database. Upgrade to Season (€1,599/yr) to keep up to 100 artists, or Company (€3,999/yr) for 250."
             : `You're at the ${cap.limit}-artist limit for ${ent.plan.display_name}. Upgrade for more capacity.`,
         });
         return;
@@ -8921,12 +8921,12 @@ export default function AgencyShell() {
               </div>
             </div>
             <nav className="sidebar-nav">
-              {/* ARIA — Institution only */}
+              {/* ARIA — Enterprise only */}
               <button
                 className={`sidebar-item sidebar-aria ${page==="aria"?"active":""}`}
                 onClick={() => {
                   if (!ent.hasFeature("aria_ai_access")) {
-                    upgrade.promptUpgrade({ feature: "aria_ai_access", body: "ARIA is the Lanced AI assistant — included with Institution plans. It scores applicants against your brief, surfaces best matches, and explains its reasoning." });
+                    upgrade.promptUpgrade({ feature: "aria_ai_access", body: "ARIA is the Lanced AI assistant — included with Enterprise plans. It scores applicants against your brief, surfaces best matches, and explains its reasoning." });
                     return;
                   }
                   setPage("aria");
@@ -9968,7 +9968,7 @@ export default function AgencyShell() {
                                 onClick={() => {
                                   if (isCurrent) return;
                                   if (plan.price_eur == null) {
-                                    showToast("Sales team will be in touch about Institution plans");
+                                    showToast("Sales team will be in touch about Enterprise plans");
                                     return;
                                   }
                                   ent.setPlanId(plan.plan_id);
@@ -9983,6 +9983,56 @@ export default function AgencyShell() {
                             </div>
                           );
                         })}
+                      </div>
+
+                      {/* NextGen Creator Initiative — funding for independent makers */}
+                      <div style={{
+                        marginTop:16, padding:"14px 16px", borderRadius:14,
+                        background:"linear-gradient(135deg, rgba(96,77,255,.06), rgba(245,166,35,.06))",
+                        border:"1px solid rgba(96,77,255,.20)",
+                        display:"flex", alignItems:"center", gap:14,
+                      }}>
+                        <div style={{flex:1, minWidth:0}}>
+                          <div style={{fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:".5px", color:"var(--ac)", marginBottom:4}}>
+                            NextGen Creator Initiative
+                          </div>
+                          <div style={{fontSize:13, color:"var(--tx)", fontWeight:600, marginBottom:2}}>
+                            Are you an independent choreographer or emerging collective?
+                          </div>
+                          <div style={{fontSize:12, color:"var(--g5)", lineHeight:1.5}}>
+                            Apply for Lanced funding toward an Audition Pass — same professional tools, project-fit price. Reviewed by our team within 5 working days.
+                          </div>
+                        </div>
+                        <a
+                          href="https://lanced.com/nextgen"
+                          target="_blank" rel="noopener noreferrer"
+                          className="btn btn-s btn-sm"
+                          style={{whiteSpace:"nowrap", textDecoration:"none"}}
+                        >
+                          Apply →
+                        </a>
+                      </div>
+
+                      {/* Enterprise CTA */}
+                      <div style={{
+                        marginTop:10, padding:"12px 16px", borderRadius:12,
+                        background:"var(--sf)", border:"1px solid var(--g2)",
+                        display:"flex", alignItems:"center", gap:14, fontSize:12,
+                      }}>
+                        <div style={{flex:1}}>
+                          <strong style={{color:"var(--tx)"}}>Looking to incorporate Lanced across your entire organization?</strong>
+                          <div style={{color:"var(--g5)", marginTop:2}}>
+                            We work with national companies, state institutions, and multi-department venues on custom contracts.
+                          </div>
+                        </div>
+                        <a
+                          href="https://lanced.com/enterprise"
+                          target="_blank" rel="noopener noreferrer"
+                          className="btn btn-s btn-sm"
+                          style={{whiteSpace:"nowrap", textDecoration:"none"}}
+                        >
+                          Request Enterprise info →
+                        </a>
                       </div>
                     </div>
 
@@ -10278,13 +10328,13 @@ export default function AgencyShell() {
                   <div className="settings-section">
                     <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
                       <h3 style={{margin:0}}>Single Sign-On (SSO)</h3>
-                      {!ent.hasFeature("sso_access") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "sso_access" })}>Institution</LockPill>}
+                      {!ent.hasFeature("sso_access") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "sso_access" })}>Enterprise</LockPill>}
                     </div>
                     <p className="ss-desc">SAML / OIDC SSO for your whole team.</p>
                     {ent.hasFeature("sso_access") ? (
                       <button className="btn btn-s">Configure SSO →</button>
                     ) : (
-                      <UpgradeBanner compact feature="sso_access" message="SSO is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "sso_access" })} />
+                      <UpgradeBanner compact feature="sso_access" message="SSO is an Enterprise-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "sso_access" })} />
                     )}
                   </div>
 
@@ -10292,7 +10342,7 @@ export default function AgencyShell() {
                   <div className="settings-section">
                     <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
                       <h3 style={{margin:0}}>Data Residency</h3>
-                      {!ent.hasFeature("data_residency_choice") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })}>Institution</LockPill>}
+                      {!ent.hasFeature("data_residency_choice") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })}>Enterprise</LockPill>}
                     </div>
                     <p className="ss-desc">Choose where your data is stored — EU, UK, or US.</p>
                     {ent.hasFeature("data_residency_choice") ? (
@@ -10302,7 +10352,7 @@ export default function AgencyShell() {
                         <option value="us">United States (Virginia)</option>
                       </select>
                     ) : (
-                      <UpgradeBanner compact feature="data_residency_choice" message="Data residency is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })} />
+                      <UpgradeBanner compact feature="data_residency_choice" message="Data residency is an Enterprise-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })} />
                     )}
                   </div>
 
@@ -10310,13 +10360,13 @@ export default function AgencyShell() {
                   <div className="settings-section">
                     <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
                       <h3 style={{margin:0}}>Custom Data Processing Agreement</h3>
-                      {!ent.hasFeature("custom_dpa") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "custom_dpa" })}>Institution</LockPill>}
+                      {!ent.hasFeature("custom_dpa") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "custom_dpa" })}>Enterprise</LockPill>}
                     </div>
                     <p className="ss-desc">Negotiated DPA tailored to your institution's legal team.</p>
                     {ent.hasFeature("custom_dpa") ? (
                       <button className="btn btn-s">Download executed DPA →</button>
                     ) : (
-                      <UpgradeBanner compact feature="custom_dpa" message="Custom DPA is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "custom_dpa" })} />
+                      <UpgradeBanner compact feature="custom_dpa" message="Custom DPA is an Enterprise-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "custom_dpa" })} />
                     )}
                   </div>
                 </>

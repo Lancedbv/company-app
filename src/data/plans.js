@@ -187,8 +187,8 @@ export const PLANS = [
     limits: {
       calls_per_year: 10,
       team_members_max: -1,
-      artist_database_size: 200,
-      network_messages_per_month: 50,
+      artist_database_size: 250,
+      network_messages_per_month: 75,
       max_additional_media_requirements: -1,
     },
     features: {
@@ -224,17 +224,17 @@ export const PLANS = [
     promote_tier: "dedicated_campaigns",
   },
   {
-    plan_id: "institution",
-    display_name: "Institution",
-    price_eur: 5000, // anchor — actual contracts are custom-negotiated
-    price_label: "from €5,000/yr",
+    plan_id: "institution", // kept internal id for stability; display name is "Enterprise"
+    display_name: "Enterprise",
+    price_eur: null,
+    price_label: "Custom",
     billing_cycle: "custom_invoice",
     monthly_equivalent_eur: null,
     overage_price_per_call_eur: null,
     purchase_limit_per_year: null,
     is_most_popular: false,
-    tagline: "For large institutions with complex workflows, data, AI, and support needs.",
-    description: "Custom infrastructure for large institutions and state venues: 20+ calls, guided onboarding, custom forms, ARIA, full data privacy controls, SSO, custom DPA, data residency, and a priority SLA.",
+    tagline: "Custom infrastructure for organizations running Lanced at scale.",
+    description: "For national companies, state institutions, conservatories, and multi-department venues. Custom contracts that fit how your organization actually operates — high-volume calls, SSO, custom data residency and DPAs, multi-department workspaces, AI-assisted casting, custom forms, priority SLA, and guided onboarding with our team.",
     limits: {
       calls_per_year: 20,
       team_members_max: -1,

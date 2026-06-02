@@ -131,7 +131,7 @@ function PlanBillingForm({ data, onChange, errors }) {
     { id: "audition_pass", name: "Audition Pass", price: "€899", priceSub: "one-time", desc: "Run one audition professionally — without the full season workspace." },
     { id: "season",        name: "Season",        price: "€1,599", priceSub: "/year", desc: "Make Lanced your audition workspace for the season.", recommended: true },
     { id: "company",       name: "Company",       price: "€3,999", priceSub: "/year", desc: "For teams running auditions across multiple productions." },
-    { id: "institution",   name: "Institution",   price: "from €5,000", priceSub: "/year", desc: "For large institutions with custom workflows, data, AI, and support needs." },
+    { id: "institution",   name: "Enterprise",    price: "Custom",       priceSub: "talk to us", desc: "For national companies, state institutions, conservatories, and multi-department venues running Lanced at scale." },
   ];
 
   return (
@@ -191,7 +191,7 @@ function PlanBillingForm({ data, onChange, errors }) {
       )}
       {data.plan === "institution" && (
         <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(96,77,255,.06)", border:"1px solid rgba(96,77,255,.25)", fontSize:12, color:"var(--g5)"}}>
-          Our team will reach out to scope your Institution contract — pricing starts at €5,000/year.
+          Enterprise plans are scoped per contract. Tell us about your organization and we'll come back with a proposal — usually within a week.
         </div>
       )}
       {data.plan === "audition_pass" && (
