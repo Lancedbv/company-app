@@ -9872,17 +9872,20 @@ export default function AgencyShell() {
                     <div className="settings-section">
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                         <h3 style={{margin:0}}>Current Plan</h3>
-                        <span style={{padding:"4px 14px",borderRadius:20,background:"rgba(96,77,255,.1)",color:"var(--ac)",fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px"}}>
+                        <span style={{padding:"4px 14px",borderRadius:20,background:"rgba(96,77,255,.10)",color:"var(--ac)",fontSize:11,fontWeight:500,letterSpacing:".3px"}}>
                           {currentPlan.display_name}
                         </span>
                       </div>
-                      {/* Headline price block matching the marketing cards */}
+                      {/* Headline price + plan name matching the marketing cards */}
+                      <div style={{fontSize:20, fontWeight:500, color:"var(--ac)", letterSpacing:"-.01em", marginBottom:8}}>
+                        {currentPlan.display_name}
+                      </div>
                       <div style={{display:"flex", alignItems:"baseline", gap:10, marginBottom:6}}>
-                        <span style={{fontSize:36, fontWeight:700, color:"var(--tx)", lineHeight:1}}>
-                          {currentPlan.price_eur == null ? "Custom" : `€${currentPlan.price_eur.toLocaleString("nl-NL")}`}
+                        <span style={{fontSize:30, fontWeight:500, color:"var(--tx)", lineHeight:1, letterSpacing:"-.02em"}}>
+                          {currentPlan.price_eur == null ? "Custom" : currentPlan.price_eur === 0 ? "€0" : `€${currentPlan.price_eur.toLocaleString("nl-NL")}`}
                         </span>
-                        {currentPlan.price_eur != null && (
-                          <span style={{fontSize:12, color:"var(--g4)"}}>excl. VAT</span>
+                        {currentPlan.price_eur != null && currentPlan.price_eur > 0 && (
+                          <span style={{fontSize:11, color:"var(--g4)", fontWeight:400}}>excl. VAT</span>
                         )}
                       </div>
                       {currentPlan.card_subtitle ? (
@@ -9931,19 +9934,29 @@ export default function AgencyShell() {
                     <div className="settings-section">
                       <h3>Available Plans</h3>
                       <p className="ss-desc">Choose the plan that fits your company.</p>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:14,marginTop:8}}>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(5, 1fr)",gap:12,marginTop:8}}>
                         {ent.PLANS.map(plan => {
                           const isCurrent = plan.plan_id === ent.planId;
                           const cost = ent.upgradeCost(plan.plan_id);
 
-                          // Display helpers — these mirror the reference cards
+                          // Tier ranking — for Upgrade vs Downgrade decision
+                          const tier = { free: 0, audition_pass: 1, season: 2, company: 3, institution: 4 };
+                          const myTier = tier[plan.plan_id] ?? 0;
+                          const currentTier = tier[ent.planId] ?? 0;
+
+                          const isEnterprise = plan.plan_id === "institution";
+                          const isFree = plan.plan_id === "free";
+
+                          // Display helpers — mirror the reference cards
                           const callsLabel =
-                            plan.plan_id === "audition_pass" ? "1" :
-                            plan.plan_id === "institution"   ? "20+ / year" :
+                            isFree                            ? "Open board only" :
+                            plan.plan_id === "audition_pass"  ? "1" :
+                            isEnterprise                      ? "20+ / year" :
                             `${plan.limits.calls_per_year} / year`;
                           const teamLabel =
                             plan.limits.team_members_max === -1 ? "Unlimited" :
                             plan.plan_id === "audition_pass"   ? `Max ${plan.limits.team_members_max}` :
+                            isFree                              ? "1 (you)" :
                             String(plan.limits.team_members_max);
                           const artistDbLabel =
                             plan.limits.artist_database_size === -1 ? "Unlimited" :
@@ -9958,6 +9971,7 @@ export default function AgencyShell() {
                             plan.plan_id === "season"      ? "Add-on (€399)" :
                             "—";
                           const supportLabel =
+                            plan.support_tier === "community"              ? "Community" :
                             plan.support_tier === "email"                  ? "Email" :
                             plan.support_tier === "live_chat_and_email"    ? "Live Chat / Email" :
                             plan.support_tier === "dedicated"              ? "Dedicated" :
@@ -9975,7 +9989,14 @@ export default function AgencyShell() {
                             { label: "Support",               value: supportLabel },
                           ];
 
-                          const isEnterprise = plan.price_eur == null;
+                          // CTA logic: Purchase / Upgrade / Downgrade / Talk to us
+                          let ctaLabel = "Purchase";
+                          if (isCurrent)              ctaLabel = "Current plan";
+                          else if (isEnterprise)      ctaLabel = "Talk to us";
+                          else if (currentTier === 0) ctaLabel = isFree ? "Switch to Free" : "Purchase";
+                          else if (myTier > currentTier) ctaLabel = "Upgrade";
+                          else if (myTier < currentTier) ctaLabel = "Downgrade";
+
                           const onCta = () => {
                             if (isCurrent) return;
                             if (isEnterprise) { setShowEnterpriseQuoteModal(true); return; }
@@ -9991,14 +10012,14 @@ export default function AgencyShell() {
                               border: isCurrent ? "2px solid var(--ac)" : (plan.is_most_popular ? "2px solid var(--ac)" : "1px solid var(--g2)"),
                               padding:"22px 18px 18px",
                               display:"flex", flexDirection:"column",
-                              minHeight: 540,
+                              minHeight: 560,
                               boxShadow: isCurrent || plan.is_most_popular ? "0 4px 16px rgba(96,77,255,.08)" : "none",
                             }}>
                               {/* Most popular / Current badge — top tab */}
                               {(plan.is_most_popular || isCurrent) && (
                                 <div style={{
                                   position:"absolute", top:-12, left:18,
-                                  fontSize:11, fontWeight:600,
+                                  fontSize:11, fontWeight:500,
                                   padding:"4px 12px", borderRadius:8,
                                   background:"var(--ac)", color:"#fff",
                                   whiteSpace:"nowrap",
@@ -10007,18 +10028,18 @@ export default function AgencyShell() {
                                 </div>
                               )}
 
-                              {/* Header — name */}
-                              <div style={{fontSize:22, fontWeight:600, color:"var(--tx)", marginBottom:14}}>
+                              {/* Header — plan name in brand color, lighter weight */}
+                              <div style={{fontSize:20, fontWeight:500, color:"var(--ac)", letterSpacing:"-.01em", marginBottom:12}}>
                                 {plan.display_name}
                               </div>
 
-                              {/* Price + excl VAT inline */}
+                              {/* Price + excl VAT inline — lighter weight */}
                               <div style={{display:"flex", alignItems:"baseline", gap:8, marginBottom:4}}>
-                                <span style={{fontSize:36, fontWeight:700, color:"var(--tx)", lineHeight:1}}>
-                                  {isEnterprise ? "Custom" : `€${plan.price_eur.toLocaleString("nl-NL")}`}
+                                <span style={{fontSize:30, fontWeight:500, color:"var(--tx)", lineHeight:1, letterSpacing:"-.02em"}}>
+                                  {isEnterprise ? "Custom" : isFree ? "€0" : `€${plan.price_eur.toLocaleString("nl-NL")}`}
                                 </span>
-                                {!isEnterprise && (
-                                  <span style={{fontSize:11, color:"var(--g4)"}}>excl. VAT</span>
+                                {!isEnterprise && !isFree && (
+                                  <span style={{fontSize:11, color:"var(--g4)", fontWeight:400}}>excl. VAT</span>
                                 )}
                               </div>
 
@@ -10065,15 +10086,15 @@ export default function AgencyShell() {
                                   marginTop:18, padding:0, background:"transparent", border:"none",
                                   display:"flex", alignItems:"center", gap:6,
                                   color: isCurrent ? "var(--g4)" : "var(--ac)",
-                                  fontSize:14, fontWeight:600,
+                                  fontSize:14, fontWeight:500,
                                   cursor: isCurrent ? "default" : "pointer",
                                   textAlign:"left",
                                 }}
                               >
-                                {isCurrent ? "Current plan" :
-                                 isEnterprise ? "Talk to us" :
-                                 cost.credit > 0 ? `Request a quote · €${cost.amount}` :
-                                 "Request a quote"}
+                                {ctaLabel}
+                                {cost.credit > 0 && !isCurrent && !isEnterprise && (
+                                  <span style={{color:"var(--g4)", fontWeight:400}}> · €{cost.amount}</span>
+                                )}
                                 {!isCurrent && <span style={{fontSize:12, transform:"translateY(-1px)"}}>↗</span>}
                               </button>
                             </div>
@@ -20318,34 +20339,59 @@ export default function AgencyShell() {
       />
 
       {/* ═══ NEXTGEN CREATOR INITIATIVE — APPLICATION MODAL ═══ */}
-      {showNextGenApply && (
-        <div onClick={() => setShowNextGenApply(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
-          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:18, width:"100%", maxWidth:640, maxHeight:"90vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+      {showNextGenApply && (() => {
+        // Local field styles — self-contained, doesn't rely on .ob-field
+        const fieldWrap = { display:"flex", flexDirection:"column", gap:6 };
+        const fieldLabel = { fontSize:12, fontWeight:500, color:"var(--g6)", letterSpacing:"-.005em" };
+        const fieldInput = {
+          width:"100%", padding:"10px 12px", borderRadius:10,
+          border:"1px solid var(--g2)", background:"var(--bg)",
+          fontSize:13, color:"var(--tx)", fontFamily:"var(--sans)",
+          outline:"none", boxSizing:"border-box",
+        };
+        const fieldHint = { fontSize:11, color:"var(--g4)", lineHeight:1.4 };
+        return (
+        <div onClick={() => setShowNextGenApply(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.55)", backdropFilter:"blur(4px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
+          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:20, width:"100%", maxWidth:560, maxHeight:"92vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 24px 70px rgba(0,0,0,.30)"}}>
+
             {/* Header */}
-            <div style={{padding:"22px 28px 14px", borderBottom:"1px solid var(--g1)"}}>
-              <div style={{fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:".6px", color:"var(--ac)", marginBottom:6}}>
+            <div style={{padding:"24px 28px 18px", borderBottom:"1px solid var(--g1)"}}>
+              <div style={{fontSize:10, fontWeight:500, textTransform:"uppercase", letterSpacing:".8px", color:"var(--ac)", marginBottom:8}}>
                 NextGen Creator Initiative
               </div>
-              <h2 style={{margin:0, fontSize:20, color:"var(--tx)"}}>Apply for Lanced funding</h2>
-              <p style={{margin:"6px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.5}}>
-                In the performing arts, the next major Artistic Director is often today's freelance choreographer running their first project. Tell us about yours and we'll come back with a funded price within <strong style={{color:"var(--tx)"}}>5 working days</strong>.
+              <h2 style={{margin:0, fontSize:22, fontWeight:500, color:"var(--tx)", letterSpacing:"-.015em"}}>
+                Apply for Lanced funding
+              </h2>
+              <p style={{margin:"8px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.55}}>
+                Tell us about your project — we'll come back with a funded price within <span style={{color:"var(--tx)", fontWeight:500}}>5 working days</span>.
               </p>
             </div>
 
-            {/* Form */}
-            <div style={{padding:"18px 28px"}}>
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
-                <div className="ob-field"><label>Organisation / project name *</label>
-                  <input value={nextGenForm.organizationName} onChange={e => setNextGenForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. The Movement Lab" />
+            {/* Form body */}
+            <div style={{padding:"22px 28px", display:"flex", flexDirection:"column", gap:18}}>
+
+              {/* Section: About you */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>
+                  About you
                 </div>
-                <div className="ob-field"><label>Your name *</label>
-                  <input value={nextGenForm.contactName} onChange={e => setNextGenForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Organisation / project name *</label>
+                  <input style={fieldInput} value={nextGenForm.organizationName} onChange={e => setNextGenForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. The Movement Lab" />
                 </div>
-                <div className="ob-field"><label>Email *</label>
-                  <input type="email" value={nextGenForm.email} onChange={e => setNextGenForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" />
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Your name *</label>
+                    <input style={fieldInput} value={nextGenForm.contactName} onChange={e => setNextGenForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+                  </div>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Email *</label>
+                    <input style={fieldInput} type="email" value={nextGenForm.email} onChange={e => setNextGenForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" />
+                  </div>
                 </div>
-                <div className="ob-field"><label>You are *</label>
-                  <select value={nextGenForm.role} onChange={e => setNextGenForm(f => ({...f, role: e.target.value}))}>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>You are *</label>
+                  <select style={fieldInput} value={nextGenForm.role} onChange={e => setNextGenForm(f => ({...f, role: e.target.value}))}>
                     <option value="choreographer">Independent choreographer</option>
                     <option value="collective">Project-based collective</option>
                     <option value="emerging_company">Emerging company</option>
@@ -20355,49 +20401,80 @@ export default function AgencyShell() {
                 </div>
               </div>
 
-              <div className="ob-field" style={{marginTop:10}}>
-                <label>What's the project? *</label>
-                <input value={nextGenForm.projectName} onChange={e => setNextGenForm(f => ({...f, projectName: e.target.value}))} placeholder="Working title or project name" />
-              </div>
-              <div className="ob-field">
-                <label>Tell us more — what are you casting, when, and any context that helps *</label>
-                <textarea value={nextGenForm.projectDescription} onChange={e => setNextGenForm(f => ({...f, projectDescription: e.target.value}))} rows={4} placeholder="e.g. Two-week residency producing a 30-minute new work; need to cast 4 contemporary dancers in September; backed by a Mondriaan microgrant…" />
-              </div>
-              <div className="ob-field">
-                <label>Budget situation *</label>
-                <textarea value={nextGenForm.budgetSituation} onChange={e => setNextGenForm(f => ({...f, budgetSituation: e.target.value}))} rows={2} placeholder="Project grant, self-funded, residency stipend, etc. The more honest, the better the fit." />
+              <div style={{height:1, background:"var(--g1)"}}/>
+
+              {/* Section: The project */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>
+                  The project
+                </div>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>What's the project? *</label>
+                  <input style={fieldInput} value={nextGenForm.projectName} onChange={e => setNextGenForm(f => ({...f, projectName: e.target.value}))} placeholder="Working title or project name" />
+                </div>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Tell us more *</label>
+                  <textarea style={{...fieldInput, resize:"vertical", minHeight:90}} value={nextGenForm.projectDescription} onChange={e => setNextGenForm(f => ({...f, projectDescription: e.target.value}))} rows={4} placeholder="What are you casting, when, and any context that helps?" />
+                  <div style={fieldHint}>e.g. Two-week residency producing a 30-minute new work; casting 4 contemporary dancers in September.</div>
+                </div>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Budget situation *</label>
+                  <textarea style={{...fieldInput, resize:"vertical", minHeight:64}} value={nextGenForm.budgetSituation} onChange={e => setNextGenForm(f => ({...f, budgetSituation: e.target.value}))} rows={2} placeholder="Project grant, self-funded, residency stipend, etc." />
+                  <div style={fieldHint}>The more honest, the better the fit.</div>
+                </div>
               </div>
 
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
-                <div className="ob-field">
-                  <label>What can you contribute? (EUR)</label>
-                  <input type="text" value={nextGenForm.requestedAmount} onChange={e => setNextGenForm(f => ({...f, requestedAmount: e.target.value}))} placeholder="e.g. 250" />
-                  <div style={{fontSize:11, color:"var(--g4)", marginTop:4}}>Lanced will cover the rest of the €899 Audition Pass cost based on the review.</div>
+              <div style={{height:1, background:"var(--g1)"}}/>
+
+              {/* Section: Contribution & supporting docs */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>
+                  Contribution
                 </div>
-                <div className="ob-field">
-                  <label>Supporting document</label>
-                  <button type="button" className="btn btn-s btn-sm" style={{width:"100%"}} onClick={() => { setNextGenForm(f => ({...f, supportingDoc: "grant-letter.pdf"})); showToast("Demo: file attached"); }}>
-                    <I n="upload" s={14}/> {nextGenForm.supportingDoc || "Attach grant letter, residency confirmation, or ID"}
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>What can you contribute? (EUR)</label>
+                  <input style={fieldInput} type="text" value={nextGenForm.requestedAmount} onChange={e => setNextGenForm(f => ({...f, requestedAmount: e.target.value}))} placeholder="e.g. 250" />
+                  <div style={fieldHint}>Lanced covers the rest of the €899 Audition Pass cost based on the review.</div>
+                </div>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Supporting document</label>
+                  <button
+                    type="button"
+                    onClick={() => { setNextGenForm(f => ({...f, supportingDoc: f.supportingDoc ? null : "grant-letter.pdf"})); showToast(nextGenForm.supportingDoc ? "Removed" : "Demo: file attached"); }}
+                    style={{
+                      ...fieldInput,
+                      cursor:"pointer", textAlign:"left",
+                      display:"flex", alignItems:"center", gap:10,
+                      background: nextGenForm.supportingDoc ? "rgba(96,77,255,.06)" : "var(--bg)",
+                      borderStyle: nextGenForm.supportingDoc ? "solid" : "dashed",
+                      borderColor: nextGenForm.supportingDoc ? "var(--ac)" : "var(--g2)",
+                      color: nextGenForm.supportingDoc ? "var(--ac)" : "var(--g5)",
+                    }}
+                  >
+                    <I n={nextGenForm.supportingDoc ? "check" : "upload"} s={14}/>
+                    <span style={{flex:1}}>{nextGenForm.supportingDoc || "Attach grant letter, residency confirmation, or ID"}</span>
+                    {nextGenForm.supportingDoc && <span style={{fontSize:11, color:"var(--g4)"}}>Remove</span>}
                   </button>
                 </div>
               </div>
 
-              <label style={{display:"flex", alignItems:"flex-start", gap:8, fontSize:12, color:"var(--g5)", marginTop:14, lineHeight:1.5}}>
-                <input type="checkbox" checked={nextGenForm.agreed} onChange={e => setNextGenForm(f => ({...f, agreed: e.target.checked}))} style={{marginTop:3}} />
-                <span>I confirm the information above is accurate. I understand that if my application doesn't fit the programme, I can still purchase an Audition Pass at the standard €899, and that one application is allowed per organisation per 12 months.</span>
+              {/* Agreement */}
+              <label style={{display:"flex", alignItems:"flex-start", gap:10, fontSize:12, color:"var(--g5)", lineHeight:1.55, padding:"12px 14px", borderRadius:10, background:"var(--sf)", border:"1px solid var(--g1)", cursor:"pointer"}}>
+                <input type="checkbox" checked={nextGenForm.agreed} onChange={e => setNextGenForm(f => ({...f, agreed: e.target.checked}))} style={{marginTop:2, flexShrink:0}} />
+                <span>I confirm the information above is accurate. If my application doesn't fit the programme, I can still purchase an Audition Pass at the standard €899. One application is allowed per organisation per 12 months.</span>
               </label>
             </div>
 
             {/* Footer */}
-            <div style={{padding:"14px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14}}>
-              <div style={{fontSize:11, color:"var(--g4)"}}>
-                Reviewed personally by our team — not an automated discount.
+            <div style={{padding:"16px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14, background:"var(--sf)"}}>
+              <div style={{fontSize:11, color:"var(--g4)", lineHeight:1.4}}>
+                Reviewed personally by our team —<br/>not an automated discount.
               </div>
               <div style={{display:"flex", gap:8}}>
                 <button className="btn btn-s btn-sm" onClick={() => setShowNextGenApply(false)}>Cancel</button>
                 <button
                   className="btn btn-p btn-sm"
-                  disabled={!nextGenForm.organizationName || !nextGenForm.email || !nextGenForm.projectName || !nextGenForm.projectDescription || !nextGenForm.budgetSituation || !nextGenForm.agreed}
+                  disabled={!nextGenForm.organizationName || !nextGenForm.contactName || !nextGenForm.email || !nextGenForm.projectName || !nextGenForm.projectDescription || !nextGenForm.budgetSituation || !nextGenForm.agreed}
                   onClick={() => {
                     setShowNextGenApply(false);
                     showToast("Application submitted — we'll be in touch within 5 working days.");
@@ -20410,27 +20487,42 @@ export default function AgencyShell() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══ ENTERPRISE — REQUEST QUOTE MODAL ═══ */}
-      {showEnterpriseQuoteModal && (
-        <div onClick={() => setShowEnterpriseQuoteModal(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
-          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:18, width:"100%", maxWidth:600, maxHeight:"90vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
-            <div style={{padding:"22px 28px 14px", borderBottom:"1px solid var(--g1)"}}>
-              <div style={{fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:".6px", color:"var(--ac)", marginBottom:6}}>Enterprise</div>
-              <h2 style={{margin:0, fontSize:20, color:"var(--tx)"}}>Request a quote</h2>
-              <p style={{margin:"6px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.5}}>
-                Tell us about your organisation, your hiring rhythm, and what you need integrated. We'll come back with a tailored proposal — usually within a week.
+      {showEnterpriseQuoteModal && (() => {
+        const fieldWrap = { display:"flex", flexDirection:"column", gap:6 };
+        const fieldLabel = { fontSize:12, fontWeight:500, color:"var(--g6)", letterSpacing:"-.005em" };
+        const fieldInput = {
+          width:"100%", padding:"10px 12px", borderRadius:10,
+          border:"1px solid var(--g2)", background:"var(--bg)",
+          fontSize:13, color:"var(--tx)", fontFamily:"var(--sans)",
+          outline:"none", boxSizing:"border-box",
+        };
+        return (
+        <div onClick={() => setShowEnterpriseQuoteModal(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.55)", backdropFilter:"blur(4px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
+          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:20, width:"100%", maxWidth:580, maxHeight:"92vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 24px 70px rgba(0,0,0,.30)"}}>
+            <div style={{padding:"24px 28px 18px", borderBottom:"1px solid var(--g1)"}}>
+              <div style={{fontSize:10, fontWeight:500, textTransform:"uppercase", letterSpacing:".8px", color:"var(--ac)", marginBottom:8}}>Enterprise</div>
+              <h2 style={{margin:0, fontSize:22, fontWeight:500, color:"var(--tx)", letterSpacing:"-.015em"}}>Request a quote</h2>
+              <p style={{margin:"8px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.55}}>
+                Tell us about your organisation and what you need integrated. We'll come back with a tailored proposal — usually within a week.
               </p>
             </div>
 
-            <div style={{padding:"18px 28px"}}>
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
-                <div className="ob-field"><label>Organisation *</label>
-                  <input value={enterpriseForm.organizationName} onChange={e => setEnterpriseForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. Royal National Ballet" />
+            <div style={{padding:"22px 28px", display:"flex", flexDirection:"column", gap:18}}>
+
+              {/* Section: Organisation */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>Organisation</div>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Organisation *</label>
+                  <input style={fieldInput} value={enterpriseForm.organizationName} onChange={e => setEnterpriseForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. Royal National Ballet" />
                 </div>
-                <div className="ob-field"><label>Organisation type *</label>
-                  <select value={enterpriseForm.organizationType} onChange={e => setEnterpriseForm(f => ({...f, organizationType: e.target.value}))}>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Organisation type *</label>
+                  <select style={fieldInput} value={enterpriseForm.organizationType} onChange={e => setEnterpriseForm(f => ({...f, organizationType: e.target.value}))}>
                     <option value="national_company">National company / state ballet or opera</option>
                     <option value="conservatory">Conservatory / training programme</option>
                     <option value="multi_department">Multi-department venue</option>
@@ -20438,42 +20530,68 @@ export default function AgencyShell() {
                     <option value="other">Other</option>
                   </select>
                 </div>
-                <div className="ob-field"><label>Contact name *</label>
-                  <input value={enterpriseForm.contactName} onChange={e => setEnterpriseForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+              </div>
+
+              <div style={{height:1, background:"var(--g1)"}}/>
+
+              {/* Section: Contact */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>Contact</div>
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Contact name *</label>
+                    <input style={fieldInput} value={enterpriseForm.contactName} onChange={e => setEnterpriseForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+                  </div>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Work email *</label>
+                    <input style={fieldInput} type="email" value={enterpriseForm.email} onChange={e => setEnterpriseForm(f => ({...f, email: e.target.value}))} placeholder="you@organisation.com" />
+                  </div>
                 </div>
-                <div className="ob-field"><label>Work email *</label>
-                  <input type="email" value={enterpriseForm.email} onChange={e => setEnterpriseForm(f => ({...f, email: e.target.value}))} placeholder="you@organisation.com" />
-                </div>
-                <div className="ob-field"><label>Phone (optional)</label>
-                  <input value={enterpriseForm.phone} onChange={e => setEnterpriseForm(f => ({...f, phone: e.target.value}))} placeholder="+31 …" />
-                </div>
-                <div className="ob-field"><label>Departments running hiring</label>
-                  <select value={enterpriseForm.departments} onChange={e => setEnterpriseForm(f => ({...f, departments: e.target.value}))}>
-                    <option value="1">1</option>
-                    <option value="2-3">2–3</option>
-                    <option value="4-6">4–6</option>
-                    <option value="7+">7+</option>
-                  </select>
-                </div>
-                <div className="ob-field"><label>Hiring calls per year *</label>
-                  <select value={enterpriseForm.callsPerYear} onChange={e => setEnterpriseForm(f => ({...f, callsPerYear: e.target.value}))}>
-                    <option value="20-30">20–30</option>
-                    <option value="30-50">30–50</option>
-                    <option value="50-100">50–100</option>
-                    <option value="100+">100+</option>
-                  </select>
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Phone (optional)</label>
+                  <input style={fieldInput} value={enterpriseForm.phone} onChange={e => setEnterpriseForm(f => ({...f, phone: e.target.value}))} placeholder="+31 …" />
                 </div>
               </div>
 
-              <div className="ob-field" style={{marginTop:6}}>
-                <label>What do you need? (multi-select)</label>
-                <div style={{display:"flex", flexWrap:"wrap", gap:8, marginTop:4}}>
+              <div style={{height:1, background:"var(--g1)"}}/>
+
+              {/* Section: Scale */}
+              <div style={{display:"flex", flexDirection:"column", gap:14}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>Scale</div>
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Departments hiring</label>
+                    <select style={fieldInput} value={enterpriseForm.departments} onChange={e => setEnterpriseForm(f => ({...f, departments: e.target.value}))}>
+                      <option value="1">1</option>
+                      <option value="2-3">2–3</option>
+                      <option value="4-6">4–6</option>
+                      <option value="7+">7+</option>
+                    </select>
+                  </div>
+                  <div style={fieldWrap}>
+                    <label style={fieldLabel}>Calls per year *</label>
+                    <select style={fieldInput} value={enterpriseForm.callsPerYear} onChange={e => setEnterpriseForm(f => ({...f, callsPerYear: e.target.value}))}>
+                      <option value="20-30">20–30</option>
+                      <option value="30-50">30–50</option>
+                      <option value="50-100">50–100</option>
+                      <option value="100+">100+</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{height:1, background:"var(--g1)"}}/>
+
+              {/* Section: Needs */}
+              <div style={{display:"flex", flexDirection:"column", gap:10}}>
+                <div style={{fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", color:"var(--g4)"}}>What do you need?</div>
+                <div style={{display:"flex", flexWrap:"wrap", gap:8}}>
                   {[
                     {k:"sso",        l:"SSO integration"},
                     {k:"residency",  l:"Data residency / DPA"},
                     {k:"multi_dept", l:"Multi-department workspaces"},
                     {k:"forms",      l:"Custom application forms"},
-                    {k:"aria",       l:"ARIA AI assistance"},
+                    {k:"aria",       l:"ARIA AI"},
                     {k:"sla",        l:"Priority SLA"},
                     {k:"onboarding", l:"Guided onboarding"},
                   ].map(opt => {
@@ -20482,25 +20600,25 @@ export default function AgencyShell() {
                       <button key={opt.k} type="button"
                         onClick={() => setEnterpriseForm(f => ({...f, needs: on ? f.needs.filter(x => x !== opt.k) : [...f.needs, opt.k]}))}
                         style={{
-                          padding:"6px 12px", borderRadius:999, fontSize:12, cursor:"pointer",
+                          padding:"7px 12px", borderRadius:999, fontSize:12, cursor:"pointer",
                           border: on ? "1px solid var(--ac)" : "1px solid var(--g2)",
-                          background: on ? "rgba(96,77,255,.08)" : "var(--sf)",
+                          background: on ? "rgba(96,77,255,.08)" : "var(--bg)",
                           color: on ? "var(--ac)" : "var(--g6)",
-                          fontWeight: on ? 600 : 500,
+                          fontWeight: on ? 500 : 400,
+                          transition:"all .15s",
                         }}
                       >{opt.l}</button>
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="ob-field" style={{marginTop:10}}>
-                <label>Anything else we should know?</label>
-                <textarea value={enterpriseForm.notes} onChange={e => setEnterpriseForm(f => ({...f, notes: e.target.value}))} rows={3} placeholder="Timeline, integrations, existing tooling, procurement context, etc." />
+                <div style={fieldWrap}>
+                  <label style={fieldLabel}>Anything else we should know?</label>
+                  <textarea style={{...fieldInput, resize:"vertical", minHeight:72}} value={enterpriseForm.notes} onChange={e => setEnterpriseForm(f => ({...f, notes: e.target.value}))} rows={3} placeholder="Timeline, integrations, existing tooling, procurement context, etc." />
+                </div>
               </div>
             </div>
 
-            <div style={{padding:"14px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14}}>
+            <div style={{padding:"16px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14, background:"var(--sf)"}}>
               <div style={{fontSize:11, color:"var(--g4)"}}>We typically reply within a week.</div>
               <div style={{display:"flex", gap:8}}>
                 <button className="btn btn-s btn-sm" onClick={() => setShowEnterpriseQuoteModal(false)}>Cancel</button>
@@ -20519,7 +20637,8 @@ export default function AgencyShell() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {interestedBtnPopup}
     </div>
