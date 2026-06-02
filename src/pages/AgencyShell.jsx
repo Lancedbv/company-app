@@ -6960,6 +6960,18 @@ export default function AgencyShell() {
   const ent = useEntitlements();
   const upgrade = useUpgradePrompt();
   const [showPlanSwitcher, setShowPlanSwitcher] = useState(false);
+  const [showNextGenApply, setShowNextGenApply] = useState(false);
+  const [showEnterpriseQuoteModal, setShowEnterpriseQuoteModal] = useState(false);
+  const [nextGenForm, setNextGenForm] = useState({
+    organizationName: "", contactName: "", email: "",
+    role: "choreographer", projectName: "", projectDescription: "",
+    budgetSituation: "", requestedAmount: "", supportingDoc: null, agreed: false,
+  });
+  const [enterpriseForm, setEnterpriseForm] = useState({
+    organizationName: "", contactName: "", email: "", phone: "",
+    organizationType: "national_company", callsPerYear: "20-50",
+    departments: "1", needs: [], notes: "",
+  });
 
   // Gated open of "New Opportunity" wizard — enforces quota + Audition Pass hard block.
   // `rooms` is defined later in this component, so reference it via the closure.
@@ -9968,7 +9980,7 @@ export default function AgencyShell() {
                                 onClick={() => {
                                   if (isCurrent) return;
                                   if (plan.price_eur == null) {
-                                    showToast("Sales team will be in touch about Enterprise plans");
+                                    setShowEnterpriseQuoteModal(true);
                                     return;
                                   }
                                   ent.setPlanId(plan.plan_id);
@@ -9976,7 +9988,7 @@ export default function AgencyShell() {
                                 }}
                               >
                                 {isCurrent ? "Current Plan" :
-                                 plan.price_eur == null ? "Talk to us" :
+                                 plan.price_eur == null ? "Request Quote" :
                                  cost.credit > 0 ? `Upgrade · €${cost.amount}` :
                                  "Upgrade"}
                               </button>
@@ -10003,14 +10015,13 @@ export default function AgencyShell() {
                             Apply for Lanced funding toward an Audition Pass — same professional tools, project-fit price. Reviewed by our team within 5 working days.
                           </div>
                         </div>
-                        <a
-                          href="https://lanced.com/nextgen"
-                          target="_blank" rel="noopener noreferrer"
+                        <button
                           className="btn btn-s btn-sm"
-                          style={{whiteSpace:"nowrap", textDecoration:"none"}}
+                          onClick={() => setShowNextGenApply(true)}
+                          style={{whiteSpace:"nowrap"}}
                         >
-                          Apply →
-                        </a>
+                          Apply for funding →
+                        </button>
                       </div>
 
                       {/* Enterprise CTA */}
@@ -10020,19 +10031,18 @@ export default function AgencyShell() {
                         display:"flex", alignItems:"center", gap:14, fontSize:12,
                       }}>
                         <div style={{flex:1}}>
-                          <strong style={{color:"var(--tx)"}}>Looking to incorporate Lanced across your entire organization?</strong>
+                          <strong style={{color:"var(--tx)"}}>Looking to run Lanced across your entire organization?</strong>
                           <div style={{color:"var(--g5)", marginTop:2}}>
                             We work with national companies, state institutions, and multi-department venues on custom contracts.
                           </div>
                         </div>
-                        <a
-                          href="https://lanced.com/enterprise"
-                          target="_blank" rel="noopener noreferrer"
+                        <button
                           className="btn btn-s btn-sm"
-                          style={{whiteSpace:"nowrap", textDecoration:"none"}}
+                          onClick={() => setShowEnterpriseQuoteModal(true)}
+                          style={{whiteSpace:"nowrap"}}
                         >
-                          Request Enterprise info →
-                        </a>
+                          Request Quote →
+                        </button>
                       </div>
                     </div>
 
@@ -20222,6 +20232,210 @@ export default function AgencyShell() {
         trigger={upgrade.state.trigger}
         onGoToBilling={() => { setPage("agency-settings"); setAgencySettingsTab("plan"); }}
       />
+
+      {/* ═══ NEXTGEN CREATOR INITIATIVE — APPLICATION MODAL ═══ */}
+      {showNextGenApply && (
+        <div onClick={() => setShowNextGenApply(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
+          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:18, width:"100%", maxWidth:640, maxHeight:"90vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+            {/* Header */}
+            <div style={{padding:"22px 28px 14px", borderBottom:"1px solid var(--g1)"}}>
+              <div style={{fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:".6px", color:"var(--ac)", marginBottom:6}}>
+                NextGen Creator Initiative
+              </div>
+              <h2 style={{margin:0, fontSize:20, color:"var(--tx)"}}>Apply for Lanced funding</h2>
+              <p style={{margin:"6px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.5}}>
+                In the performing arts, the next major Artistic Director is often today's freelance choreographer running their first project. Tell us about yours and we'll come back with a funded price within <strong style={{color:"var(--tx)"}}>5 working days</strong>.
+              </p>
+            </div>
+
+            {/* Form */}
+            <div style={{padding:"18px 28px"}}>
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                <div className="ob-field"><label>Organisation / project name *</label>
+                  <input value={nextGenForm.organizationName} onChange={e => setNextGenForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. The Movement Lab" />
+                </div>
+                <div className="ob-field"><label>Your name *</label>
+                  <input value={nextGenForm.contactName} onChange={e => setNextGenForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+                </div>
+                <div className="ob-field"><label>Email *</label>
+                  <input type="email" value={nextGenForm.email} onChange={e => setNextGenForm(f => ({...f, email: e.target.value}))} placeholder="you@example.com" />
+                </div>
+                <div className="ob-field"><label>You are *</label>
+                  <select value={nextGenForm.role} onChange={e => setNextGenForm(f => ({...f, role: e.target.value}))}>
+                    <option value="choreographer">Independent choreographer</option>
+                    <option value="collective">Project-based collective</option>
+                    <option value="emerging_company">Emerging company</option>
+                    <option value="graduate">Recent graduate / early-career</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="ob-field" style={{marginTop:10}}>
+                <label>What's the project? *</label>
+                <input value={nextGenForm.projectName} onChange={e => setNextGenForm(f => ({...f, projectName: e.target.value}))} placeholder="Working title or project name" />
+              </div>
+              <div className="ob-field">
+                <label>Tell us more — what are you casting, when, and any context that helps *</label>
+                <textarea value={nextGenForm.projectDescription} onChange={e => setNextGenForm(f => ({...f, projectDescription: e.target.value}))} rows={4} placeholder="e.g. Two-week residency producing a 30-minute new work; need to cast 4 contemporary dancers in September; backed by a Mondriaan microgrant…" />
+              </div>
+              <div className="ob-field">
+                <label>Budget situation *</label>
+                <textarea value={nextGenForm.budgetSituation} onChange={e => setNextGenForm(f => ({...f, budgetSituation: e.target.value}))} rows={2} placeholder="Project grant, self-funded, residency stipend, etc. The more honest, the better the fit." />
+              </div>
+
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                <div className="ob-field">
+                  <label>What can you contribute? (EUR)</label>
+                  <input type="text" value={nextGenForm.requestedAmount} onChange={e => setNextGenForm(f => ({...f, requestedAmount: e.target.value}))} placeholder="e.g. 250" />
+                  <div style={{fontSize:11, color:"var(--g4)", marginTop:4}}>Lanced will cover the rest of the €899 Audition Pass cost based on the review.</div>
+                </div>
+                <div className="ob-field">
+                  <label>Supporting document</label>
+                  <button type="button" className="btn btn-s btn-sm" style={{width:"100%"}} onClick={() => { setNextGenForm(f => ({...f, supportingDoc: "grant-letter.pdf"})); showToast("Demo: file attached"); }}>
+                    <I n="upload" s={14}/> {nextGenForm.supportingDoc || "Attach grant letter, residency confirmation, or ID"}
+                  </button>
+                </div>
+              </div>
+
+              <label style={{display:"flex", alignItems:"flex-start", gap:8, fontSize:12, color:"var(--g5)", marginTop:14, lineHeight:1.5}}>
+                <input type="checkbox" checked={nextGenForm.agreed} onChange={e => setNextGenForm(f => ({...f, agreed: e.target.checked}))} style={{marginTop:3}} />
+                <span>I confirm the information above is accurate. I understand that if my application doesn't fit the programme, I can still purchase an Audition Pass at the standard €899, and that one application is allowed per organisation per 12 months.</span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div style={{padding:"14px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14}}>
+              <div style={{fontSize:11, color:"var(--g4)"}}>
+                Reviewed personally by our team — not an automated discount.
+              </div>
+              <div style={{display:"flex", gap:8}}>
+                <button className="btn btn-s btn-sm" onClick={() => setShowNextGenApply(false)}>Cancel</button>
+                <button
+                  className="btn btn-p btn-sm"
+                  disabled={!nextGenForm.organizationName || !nextGenForm.email || !nextGenForm.projectName || !nextGenForm.projectDescription || !nextGenForm.budgetSituation || !nextGenForm.agreed}
+                  onClick={() => {
+                    setShowNextGenApply(false);
+                    showToast("Application submitted — we'll be in touch within 5 working days.");
+                    setNextGenForm({organizationName:"",contactName:"",email:"",role:"choreographer",projectName:"",projectDescription:"",budgetSituation:"",requestedAmount:"",supportingDoc:null,agreed:false});
+                  }}
+                >
+                  Submit application
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ENTERPRISE — REQUEST QUOTE MODAL ═══ */}
+      {showEnterpriseQuoteModal && (
+        <div onClick={() => setShowEnterpriseQuoteModal(false)} style={{position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .15s ease"}}>
+          <div onClick={(e) => e.stopPropagation()} style={{background:"var(--bg)", borderRadius:18, width:"100%", maxWidth:600, maxHeight:"90vh", overflowY:"auto", border:"1px solid var(--g2)", boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+            <div style={{padding:"22px 28px 14px", borderBottom:"1px solid var(--g1)"}}>
+              <div style={{fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:".6px", color:"var(--ac)", marginBottom:6}}>Enterprise</div>
+              <h2 style={{margin:0, fontSize:20, color:"var(--tx)"}}>Request a quote</h2>
+              <p style={{margin:"6px 0 0", fontSize:13, color:"var(--g5)", lineHeight:1.5}}>
+                Tell us about your organisation, your hiring rhythm, and what you need integrated. We'll come back with a tailored proposal — usually within a week.
+              </p>
+            </div>
+
+            <div style={{padding:"18px 28px"}}>
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+                <div className="ob-field"><label>Organisation *</label>
+                  <input value={enterpriseForm.organizationName} onChange={e => setEnterpriseForm(f => ({...f, organizationName: e.target.value}))} placeholder="e.g. Royal National Ballet" />
+                </div>
+                <div className="ob-field"><label>Organisation type *</label>
+                  <select value={enterpriseForm.organizationType} onChange={e => setEnterpriseForm(f => ({...f, organizationType: e.target.value}))}>
+                    <option value="national_company">National company / state ballet or opera</option>
+                    <option value="conservatory">Conservatory / training programme</option>
+                    <option value="multi_department">Multi-department venue</option>
+                    <option value="federal">Federal cultural institution</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="ob-field"><label>Contact name *</label>
+                  <input value={enterpriseForm.contactName} onChange={e => setEnterpriseForm(f => ({...f, contactName: e.target.value}))} placeholder="Full name" />
+                </div>
+                <div className="ob-field"><label>Work email *</label>
+                  <input type="email" value={enterpriseForm.email} onChange={e => setEnterpriseForm(f => ({...f, email: e.target.value}))} placeholder="you@organisation.com" />
+                </div>
+                <div className="ob-field"><label>Phone (optional)</label>
+                  <input value={enterpriseForm.phone} onChange={e => setEnterpriseForm(f => ({...f, phone: e.target.value}))} placeholder="+31 …" />
+                </div>
+                <div className="ob-field"><label>Departments running hiring</label>
+                  <select value={enterpriseForm.departments} onChange={e => setEnterpriseForm(f => ({...f, departments: e.target.value}))}>
+                    <option value="1">1</option>
+                    <option value="2-3">2–3</option>
+                    <option value="4-6">4–6</option>
+                    <option value="7+">7+</option>
+                  </select>
+                </div>
+                <div className="ob-field"><label>Hiring calls per year *</label>
+                  <select value={enterpriseForm.callsPerYear} onChange={e => setEnterpriseForm(f => ({...f, callsPerYear: e.target.value}))}>
+                    <option value="20-30">20–30</option>
+                    <option value="30-50">30–50</option>
+                    <option value="50-100">50–100</option>
+                    <option value="100+">100+</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="ob-field" style={{marginTop:6}}>
+                <label>What do you need? (multi-select)</label>
+                <div style={{display:"flex", flexWrap:"wrap", gap:8, marginTop:4}}>
+                  {[
+                    {k:"sso",        l:"SSO integration"},
+                    {k:"residency",  l:"Data residency / DPA"},
+                    {k:"multi_dept", l:"Multi-department workspaces"},
+                    {k:"forms",      l:"Custom application forms"},
+                    {k:"aria",       l:"ARIA AI assistance"},
+                    {k:"sla",        l:"Priority SLA"},
+                    {k:"onboarding", l:"Guided onboarding"},
+                  ].map(opt => {
+                    const on = enterpriseForm.needs.includes(opt.k);
+                    return (
+                      <button key={opt.k} type="button"
+                        onClick={() => setEnterpriseForm(f => ({...f, needs: on ? f.needs.filter(x => x !== opt.k) : [...f.needs, opt.k]}))}
+                        style={{
+                          padding:"6px 12px", borderRadius:999, fontSize:12, cursor:"pointer",
+                          border: on ? "1px solid var(--ac)" : "1px solid var(--g2)",
+                          background: on ? "rgba(96,77,255,.08)" : "var(--sf)",
+                          color: on ? "var(--ac)" : "var(--g6)",
+                          fontWeight: on ? 600 : 500,
+                        }}
+                      >{opt.l}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="ob-field" style={{marginTop:10}}>
+                <label>Anything else we should know?</label>
+                <textarea value={enterpriseForm.notes} onChange={e => setEnterpriseForm(f => ({...f, notes: e.target.value}))} rows={3} placeholder="Timeline, integrations, existing tooling, procurement context, etc." />
+              </div>
+            </div>
+
+            <div style={{padding:"14px 28px 22px", borderTop:"1px solid var(--g1)", display:"flex", justifyContent:"space-between", alignItems:"center", gap:14}}>
+              <div style={{fontSize:11, color:"var(--g4)"}}>We typically reply within a week.</div>
+              <div style={{display:"flex", gap:8}}>
+                <button className="btn btn-s btn-sm" onClick={() => setShowEnterpriseQuoteModal(false)}>Cancel</button>
+                <button
+                  className="btn btn-p btn-sm"
+                  disabled={!enterpriseForm.organizationName || !enterpriseForm.contactName || !enterpriseForm.email}
+                  onClick={() => {
+                    setShowEnterpriseQuoteModal(false);
+                    showToast("Quote request sent — our team will be in touch shortly.");
+                    setEnterpriseForm({organizationName:"",contactName:"",email:"",phone:"",organizationType:"national_company",callsPerYear:"20-50",departments:"1",needs:[],notes:""});
+                  }}
+                >
+                  Send request
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {interestedBtnPopup}
     </div>

@@ -82,8 +82,8 @@ export const PLANS = [
     overage_price_per_call_eur: null,
     purchase_limit_per_year: 1,
     is_most_popular: false,
-    tagline: "Run one audition professionally.",
-    description: "For companies that need one professional audition without the full season workspace. Publish and manage a single audition with basic applicant management and email support — no saved dancer database, no pools, no applicant history beyond that audition.",
+    tagline: "Run one call professionally.",
+    description: "For companies that need to run a single audition, casting, job, open call, competition, or residency — without committing to the full season workspace. Basic applicant management and email support. No saved artist database, no pools, no history beyond that call.",
     limits: {
       calls_per_year: 1,
       team_members_max: 3,
@@ -132,8 +132,8 @@ export const PLANS = [
     overage_price_per_call_eur: 499,
     purchase_limit_per_year: null,
     is_most_popular: true,
-    tagline: "Make Lanced your audition workspace for the season.",
-    description: "Your audition workspace for the season. Three calls, applicant history, basic artist pools, multi-role and multi-location calls, team role assignment, and live chat + email support. Extra calls at €499 each.",
+    tagline: "Your hiring workspace for the season.",
+    description: "All your artistic hiring — auditions, castings, jobs, open calls, competitions, residencies — in one workspace. Three calls a year, applicant history, basic artist pools, multi-role and multi-location calls, team role assignment, and live chat + email support. Extra calls at €499 each.",
     limits: {
       calls_per_year: 3,
       team_members_max: 5,
@@ -182,8 +182,8 @@ export const PLANS = [
     overage_price_per_call_eur: 399,
     purchase_limit_per_year: null,
     is_most_popular: false,
-    tagline: "For teams running auditions across multiple productions.",
-    description: "Lanced as part of your company's operating system. Ten calls, unlimited team members, dedicated support, contracts & onboarding included, audit logs and custom retention, and dedicated promotional campaigns. Extra calls at €399 each.",
+    tagline: "Your central hub for all artistic hiring.",
+    description: "Lanced as your company's operating system for hiring artists. Ten calls a year across every hiring type — auditions, castings, jobs, open calls, competitions, residencies — with unlimited team members, dedicated support, contracts and onboarding included, audit logs, custom retention, and dedicated promotional campaigns. Extra calls at €399 each.",
     limits: {
       calls_per_year: 10,
       team_members_max: -1,
