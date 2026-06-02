@@ -15,6 +15,7 @@
 
 export const FEATURE_FLAGS = [
   "company_workspace",
+  "member_activity_tracking", // who reviewed/voted/scored what, per-member analytics
   "applicant_history_tracking",
   "multiple_roles_per_call",
   "multiple_locations_per_call",
@@ -49,6 +50,7 @@ export const LIMIT_KEYS = [
 
 export const FEATURE_LABELS = {
   company_workspace: "Company Workspace",
+  member_activity_tracking: "Activity Tracking",
   applicant_history_tracking: "Applicant History",
   multiple_roles_per_call: "Multiple Roles per Call",
   multiple_locations_per_call: "Multi-Location Calls",
@@ -94,6 +96,7 @@ export const PLANS = [
     },
     features: {
       company_workspace: false,
+      member_activity_tracking: false,
       artist_pools: "none",
       applicant_history_tracking: false,
       multiple_roles_per_call: false,
@@ -146,6 +149,7 @@ export const PLANS = [
     },
     features: {
       company_workspace: false,
+      member_activity_tracking: false,
       artist_pools: "none",
       applicant_history_tracking: false,
       multiple_roles_per_call: false,
@@ -196,6 +200,7 @@ export const PLANS = [
     },
     features: {
       company_workspace: true,
+      member_activity_tracking: true,
       artist_pools: "basic",
       applicant_history_tracking: true,
       multiple_roles_per_call: true,
@@ -246,6 +251,7 @@ export const PLANS = [
     },
     features: {
       company_workspace: true,
+      member_activity_tracking: true,
       artist_pools: "full_plus_custom",
       applicant_history_tracking: true,
       multiple_roles_per_call: true,
@@ -297,6 +303,7 @@ export const PLANS = [
     },
     features: {
       company_workspace: true,
+      member_activity_tracking: true,
       artist_pools: "full_plus_custom",
       applicant_history_tracking: true,
       multiple_roles_per_call: true,

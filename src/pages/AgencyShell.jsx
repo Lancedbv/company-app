@@ -9934,8 +9934,8 @@ export default function AgencyShell() {
                     <div className="settings-section">
                       <h3>Available Plans</h3>
                       <p className="ss-desc">Choose the plan that fits your company.</p>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(5, 1fr)",gap:12,marginTop:8}}>
-                        {ent.PLANS.map(plan => {
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:12,marginTop:8}}>
+                        {ent.PLANS.filter(p => p.plan_id !== "free").map(plan => {
                           const isCurrent = plan.plan_id === ent.planId;
                           const cost = ent.upgradeCost(plan.plan_id);
 
@@ -9949,14 +9949,12 @@ export default function AgencyShell() {
 
                           // Display helpers — mirror the reference cards
                           const callsLabel =
-                            isFree                            ? "Open board only" :
                             plan.plan_id === "audition_pass"  ? "1" :
                             isEnterprise                      ? "20+ / year" :
                             `${plan.limits.calls_per_year} / year`;
                           const teamLabel =
                             plan.limits.team_members_max === -1 ? "Unlimited" :
                             plan.plan_id === "audition_pass"   ? `Max ${plan.limits.team_members_max}` :
-                            isFree                              ? "1 (you)" :
                             String(plan.limits.team_members_max);
                           const artistDbLabel =
                             plan.limits.artist_database_size === -1 ? "Unlimited" :
@@ -9978,11 +9976,17 @@ export default function AgencyShell() {
                             plan.support_tier === "dedicated_priority_sla" ? "Dedicated · Priority SLA" :
                             "—";
                           const workspaceLabel = plan.features.company_workspace ? "Yes" : "—";
+                          // Activity tracking — Audition Pass = Basic, Season+ = Yes, Company+ = + Audit logs
+                          const activityLabel =
+                            !plan.features.member_activity_tracking ? (plan.plan_id === "audition_pass" ? "Basic" : "—") :
+                            plan.features.audit_logs ? "Yes · Audit logs" :
+                            "Yes";
 
                           const rows = [
                             { label: "Calls",                 value: callsLabel },
                             { label: "Workspace dashboard",   value: workspaceLabel },
                             { label: "Team members",          value: teamLabel },
+                            { label: "Activity tracking",     value: activityLabel },
                             { label: "Artist database",       value: artistDbLabel },
                             { label: "Network messages",      value: messagesLabel },
                             { label: "Contracts & onboarding",value: contractsLabel },
@@ -10128,6 +10132,39 @@ export default function AgencyShell() {
                           Apply for funding →
                         </button>
                       </div>
+
+                      {/* Free option — downgrade target / community access */}
+                      {(() => {
+                        const isOnFree = ent.planId === "free";
+                        return (
+                          <div style={{
+                            marginTop:10, padding:"12px 16px", borderRadius:12,
+                            background:"var(--sf)", border:"1px solid var(--g2)",
+                            display:"flex", alignItems:"center", gap:14, fontSize:12,
+                          }}>
+                            <div style={{flex:1}}>
+                              <strong style={{color:"var(--tx)"}}>Just want to promote your listing on the Open Board?</strong>
+                              <div style={{color:"var(--g5)", marginTop:2}}>
+                                Free for the community — no workspace, no applicant management, just visibility on the Lanced Open Board. Always free.
+                              </div>
+                            </div>
+                            <button
+                              className="btn btn-s btn-sm"
+                              onClick={() => {
+                                if (isOnFree) return;
+                                if (confirm("Downgrade to Free will end your workspace access at the end of your current billing period. Continue?")) {
+                                  ent.setPlanId("free");
+                                  showToast("Switched to Free — workspace access ends Jan 1, 2027");
+                                }
+                              }}
+                              disabled={isOnFree}
+                              style={{whiteSpace:"nowrap"}}
+                            >
+                              {isOnFree ? "Current plan" : "Use Free plan →"}
+                            </button>
+                          </div>
+                        );
+                      })()}
 
                       {/* Enterprise CTA */}
                       <div style={{
