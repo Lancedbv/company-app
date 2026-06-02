@@ -9927,70 +9927,150 @@ export default function AgencyShell() {
                     <div className="settings-section">
                       <h3>Available Plans</h3>
                       <p className="ss-desc">Choose the plan that fits your company.</p>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:10,marginTop:8}}>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:14,marginTop:8}}>
                         {ent.PLANS.map(plan => {
                           const isCurrent = plan.plan_id === ent.planId;
                           const cost = ent.upgradeCost(plan.plan_id);
+
+                          // Display helpers — these mirror the reference cards
+                          const callsLabel =
+                            plan.plan_id === "audition_pass" ? "1" :
+                            plan.plan_id === "institution"   ? "20+ / year" :
+                            `${plan.limits.calls_per_year} / year`;
+                          const teamLabel =
+                            plan.limits.team_members_max === -1 ? "Unlimited" :
+                            plan.plan_id === "audition_pass"   ? `Max ${plan.limits.team_members_max}` :
+                            String(plan.limits.team_members_max);
+                          const artistDbLabel =
+                            plan.limits.artist_database_size === -1 ? "Unlimited" :
+                            plan.limits.artist_database_size === 0  ? "—" :
+                            `${plan.limits.artist_database_size} saved`;
+                          const messagesLabel =
+                            plan.limits.network_messages_per_month === -1 ? "Unlimited" :
+                            plan.limits.network_messages_per_month === 0  ? "—" :
+                            `${plan.limits.network_messages_per_month} / month`;
+                          const contractsLabel =
+                            plan.features.contract_signing ? "Included" :
+                            plan.plan_id === "season"      ? "Add-on (€399)" :
+                            "—";
+                          const supportLabel =
+                            plan.support_tier === "email"                  ? "Email" :
+                            plan.support_tier === "live_chat_and_email"    ? "Live Chat / Email" :
+                            plan.support_tier === "dedicated"              ? "Dedicated" :
+                            plan.support_tier === "dedicated_priority_sla" ? "Dedicated · Priority SLA" :
+                            "—";
+                          const workspaceLabel = plan.features.company_workspace ? "Yes" : "—";
+
+                          const rows = [
+                            { label: "Calls",                 value: callsLabel },
+                            { label: "Workspace dashboard",   value: workspaceLabel },
+                            { label: "Team members",          value: teamLabel },
+                            { label: "Artist database",       value: artistDbLabel },
+                            { label: "Network messages",      value: messagesLabel },
+                            { label: "Contracts & onboarding",value: contractsLabel },
+                            { label: "Support",               value: supportLabel },
+                          ];
+
+                          const isEnterprise = plan.price_eur == null;
+                          const onCta = () => {
+                            if (isCurrent) return;
+                            if (isEnterprise) { setShowEnterpriseQuoteModal(true); return; }
+                            ent.setPlanId(plan.plan_id);
+                            showToast(`Switched to ${plan.display_name}`);
+                          };
+
                           return (
                             <div key={plan.plan_id} style={{
-                              padding:14,
-                              border: isCurrent ? "2px solid var(--ac)" : (plan.is_most_popular ? "2px solid #F5A623" : "1px solid var(--g2)"),
-                              borderRadius:14,
                               position:"relative",
-                              background:"var(--sf)",
-                              display:"flex", flexDirection:"column", gap:6,
+                              borderRadius:16,
+                              background:"#fff",
+                              border: isCurrent ? "2px solid var(--ac)" : (plan.is_most_popular ? "2px solid var(--ac)" : "1px solid var(--g2)"),
+                              padding:"22px 18px 18px",
+                              display:"flex", flexDirection:"column",
+                              minHeight: 540,
+                              boxShadow: isCurrent || plan.is_most_popular ? "0 4px 16px rgba(96,77,255,.08)" : "none",
                             }}>
-                              {isCurrent && (
-                                <div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",padding:"3px 10px",borderRadius:20,background:"var(--ac)",color:"#fff",whiteSpace:"nowrap"}}>
-                                  Current
+                              {/* Most popular / Current badge — top tab */}
+                              {(plan.is_most_popular || isCurrent) && (
+                                <div style={{
+                                  position:"absolute", top:-12, left:18,
+                                  fontSize:11, fontWeight:600,
+                                  padding:"4px 12px", borderRadius:8,
+                                  background:"var(--ac)", color:"#fff",
+                                  whiteSpace:"nowrap",
+                                }}>
+                                  {isCurrent ? "Current plan" : "Most popular"}
                                 </div>
                               )}
-                              {!isCurrent && plan.is_most_popular && (
-                                <div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",padding:"3px 10px",borderRadius:20,background:"#F5A623",color:"#3A2A00",whiteSpace:"nowrap"}}>
-                                  Most popular
-                                </div>
-                              )}
-                              <div style={{fontSize:14,fontWeight:700,color:"var(--tx)",marginTop:isCurrent||plan.is_most_popular?4:0}}>{plan.display_name}</div>
-                              <div style={{fontSize:18,fontWeight:700,color:"var(--ac)",fontFamily:"var(--mono, monospace)"}}>
-                                {plan.price_eur == null ? "Custom" : `€${plan.price_eur}`}
-                                <span style={{fontSize:10,color:"var(--g4)",fontWeight:400}}>
-                                  {plan.billing_cycle === "one_time" ? " one-time" : (plan.price_eur != null ? "/yr" : "")}
+
+                              {/* Header — name */}
+                              <div style={{fontSize:22, fontWeight:600, color:"var(--tx)", marginBottom:14}}>
+                                {plan.display_name}
+                              </div>
+
+                              {/* Price + excl VAT inline */}
+                              <div style={{display:"flex", alignItems:"baseline", gap:8, marginBottom:4}}>
+                                <span style={{fontSize:36, fontWeight:700, color:"var(--tx)", lineHeight:1}}>
+                                  {isEnterprise ? "Custom" : `€${plan.price_eur.toLocaleString("nl-NL")}`}
                                 </span>
-                              </div>
-                              {cost.credit > 0 && !isCurrent && (
-                                <div style={{fontSize:10,color:"var(--ac)",fontWeight:600}}>
-                                  €{cost.amount} with €{cost.credit} credit
-                                </div>
-                              )}
-                              <div style={{fontSize:11,color:"var(--g5)",lineHeight:1.5,minHeight:60}}>
-                                {plan.tagline}
-                              </div>
-                              <div style={{fontSize:10,color:"var(--g4)",lineHeight:1.6,borderTop:"1px solid var(--g1)",paddingTop:8}}>
-                                <div>• {plan.limits.calls_per_year === -1 ? "Unlimited" : plan.limits.calls_per_year}{plan.plan_id==="institution"?"+":""} calls/year</div>
-                                <div>• {plan.limits.team_members_max === -1 ? "Unlimited" : plan.limits.team_members_max} team members</div>
-                                <div>• {plan.limits.artist_database_size === -1 ? "Unlimited" : (plan.limits.artist_database_size || "—")} artists in DB</div>
-                                {plan.overage_price_per_call_eur && (
-                                  <div>• Extra calls €{plan.overage_price_per_call_eur}</div>
+                                {!isEnterprise && (
+                                  <span style={{fontSize:11, color:"var(--g4)"}}>excl. VAT</span>
                                 )}
                               </div>
+
+                              {/* Subtitle slot — €500 credit OR monthly equivalent */}
+                              {plan.card_subtitle ? (
+                                <div style={{fontSize:12, color:"var(--g5)", marginBottom:14}}>{plan.card_subtitle}</div>
+                              ) : plan.monthly_equivalent_eur ? (
+                                <div style={{fontSize:12, color:"var(--g5)", marginBottom:14}}>~€{plan.monthly_equivalent_eur}/mo</div>
+                              ) : isEnterprise ? (
+                                <div style={{fontSize:12, color:"var(--g5)", marginBottom:14}}>Scoped per contract · scaled to your operation</div>
+                              ) : (
+                                <div style={{height:18, marginBottom:14}} />
+                              )}
+
+                              {/* Description — 3-4 line paragraph */}
+                              <div style={{
+                                fontSize:13, color:"var(--g6)", lineHeight:1.55,
+                                marginBottom:18, minHeight:90,
+                              }}>
+                                {plan.description}
+                              </div>
+
+                              {/* Feature rows */}
+                              <div style={{display:"flex", flexDirection:"column", marginTop:"auto"}}>
+                                {rows.map((r, i) => (
+                                  <div key={r.label} style={{
+                                    display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8,
+                                    padding:"10px 0",
+                                    borderTop: i === 0 ? "1px solid var(--g1)" : "none",
+                                    borderBottom:"1px solid var(--g1)",
+                                    fontSize:12,
+                                  }}>
+                                    <span style={{color:"var(--g5)"}}>{r.label}</span>
+                                    <span style={{color:"var(--tx)", fontWeight:600, textAlign:"right"}}>{r.value}</span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* CTA — text link with arrow */}
                               <button
-                                className={`btn btn-sm ${isCurrent ? "btn-g" : "btn-p"}`}
-                                style={{width:"100%",marginTop:6}}
+                                onClick={onCta}
                                 disabled={isCurrent}
-                                onClick={() => {
-                                  if (isCurrent) return;
-                                  if (plan.price_eur == null) {
-                                    setShowEnterpriseQuoteModal(true);
-                                    return;
-                                  }
-                                  ent.setPlanId(plan.plan_id);
-                                  showToast(`Switched to ${plan.display_name}`);
+                                style={{
+                                  marginTop:18, padding:0, background:"transparent", border:"none",
+                                  display:"flex", alignItems:"center", gap:6,
+                                  color: isCurrent ? "var(--g4)" : "var(--ac)",
+                                  fontSize:14, fontWeight:600,
+                                  cursor: isCurrent ? "default" : "pointer",
+                                  textAlign:"left",
                                 }}
                               >
-                                {isCurrent ? "Current Plan" :
-                                 plan.price_eur == null ? "Request Quote" :
-                                 cost.credit > 0 ? `Upgrade · €${cost.amount}` :
-                                 "Upgrade"}
+                                {isCurrent ? "Current plan" :
+                                 isEnterprise ? "Talk to us" :
+                                 cost.credit > 0 ? `Request a quote · €${cost.amount}` :
+                                 "Request a quote"}
+                                {!isCurrent && <span style={{fontSize:12, transform:"translateY(-1px)"}}>↗</span>}
                               </button>
                             </div>
                           );

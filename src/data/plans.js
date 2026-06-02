@@ -83,7 +83,8 @@ export const PLANS = [
     purchase_limit_per_year: 1,
     is_most_popular: false,
     tagline: "Run one call professionally.",
-    description: "For companies that need to run a single audition, casting, job, open call, competition, or residency — without committing to the full season workspace. Basic applicant management and email support. No saved artist database, no pools, no history beyond that call.",
+    description: "Run one audition end to end without the full workspace. For companies that only need a single call this year — and want to try Lanced before committing.",
+    card_subtitle: "€500 credit toward annual upgrade",
     limits: {
       calls_per_year: 1,
       team_members_max: 3,
@@ -133,7 +134,7 @@ export const PLANS = [
     purchase_limit_per_year: null,
     is_most_popular: true,
     tagline: "Your hiring workspace for the season.",
-    description: "All your artistic hiring — auditions, castings, jobs, open calls, competitions, residencies — in one workspace. Three calls a year, applicant history, basic artist pools, multi-role and multi-location calls, team role assignment, and live chat + email support. Extra calls at €499 each.",
+    description: "Your audition workspace for the season. Three calls, a company dashboard, artist database, and live support — built for the seasonal hiring rhythm.",
     limits: {
       calls_per_year: 3,
       team_members_max: 5,
@@ -183,7 +184,7 @@ export const PLANS = [
     purchase_limit_per_year: null,
     is_most_popular: false,
     tagline: "Your central hub for all artistic hiring.",
-    description: "Lanced as your company's operating system for hiring artists. Ten calls a year across every hiring type — auditions, castings, jobs, open calls, competitions, residencies — with unlimited team members, dedicated support, contracts and onboarding included, audit logs, custom retention, and dedicated promotional campaigns. Extra calls at €399 each.",
+    description: "Lanced as part of your company's operating system. Ten calls, unlimited team, contracts & onboarding included, and dedicated support.",
     limits: {
       calls_per_year: 10,
       team_members_max: -1,
@@ -233,8 +234,8 @@ export const PLANS = [
     overage_price_per_call_eur: null,
     purchase_limit_per_year: null,
     is_most_popular: false,
-    tagline: "Custom infrastructure for organizations running Lanced at scale.",
-    description: "For national companies, state institutions, conservatories, and multi-department venues. Custom contracts that fit how your organization actually operates — high-volume calls, SSO, custom data residency and DPAs, multi-department workspaces, AI-assisted casting, custom forms, priority SLA, and guided onboarding with our team.",
+    tagline: "Scoped per contract · scaled to your operation",
+    description: "Custom infrastructure for national companies, state institutions, conservatories, and multi-department venues. High-volume calls, SSO, custom DPA, and a priority SLA.",
     limits: {
       calls_per_year: 20,
       team_members_max: -1,
