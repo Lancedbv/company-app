@@ -128,9 +128,10 @@ function TeamSetupForm({ data, onChange }) {
 
 function PlanBillingForm({ data, onChange, errors }) {
   const plans = [
-    { id: "starter", name: "Starter", price: "Free", desc: "For small companies getting started" },
-    { id: "professional", name: "Professional", price: "€49/mo", desc: "For growing companies with active hiring" },
-    { id: "enterprise", name: "Enterprise", price: "€149/mo", desc: "For large organizations with multiple teams" },
+    { id: "audition_pass", name: "Audition Pass", price: "€899", priceSub: "one-time", desc: "Run one audition professionally — without the full season workspace." },
+    { id: "season",        name: "Season",        price: "€1,599", priceSub: "/year", desc: "Make Lanced your audition workspace for the season.", recommended: true },
+    { id: "company",       name: "Company",       price: "€3,999", priceSub: "/year", desc: "For teams running auditions across multiple productions." },
+    { id: "institution",   name: "Institution",   price: "from €5,000", priceSub: "/year", desc: "For large institutions with custom workflows, data, AI, and support needs." },
   ];
 
   return (
@@ -145,24 +146,38 @@ function PlanBillingForm({ data, onChange, errors }) {
               onClick={() => onChange("plan", plan.id)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${data.plan === plan.id ? "var(--ac)" : "var(--g2)"}`,
+                padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${data.plan === plan.id ? "var(--ac)" : (plan.recommended ? "rgba(245,166,35,.6)" : "var(--g2)")}`,
                 background: data.plan === plan.id ? "rgba(96,77,255,.06)" : "var(--bg)",
                 cursor: "pointer", textAlign: "left", fontFamily: "var(--sans)", transition: "all .2s",
+                position: "relative",
               }}
             >
-              <div>
+              {plan.recommended && data.plan !== plan.id && (
+                <div style={{
+                  position: "absolute", top: -8, right: 14,
+                  fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px",
+                  padding: "2px 8px", borderRadius: 12,
+                  background: "#F5A623", color: "#3A2A00",
+                }}>
+                  Recommended
+                </div>
+              )}
+              <div style={{flex:1, minWidth:0, paddingRight:12}}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--tx)" }}>{plan.name}</div>
                 <div style={{ fontSize: 12, color: "var(--g4)", marginTop: 2 }}>{plan.desc}</div>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: data.plan === plan.id ? "var(--ac)" : "var(--tx)", whiteSpace: "nowrap" }}>
-                {plan.price}
+              <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: data.plan === plan.id ? "var(--ac)" : "var(--tx)" }}>
+                  {plan.price}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--g4)" }}>{plan.priceSub}</div>
               </div>
             </button>
           ))}
         </div>
         {errors.plan && <div className="ob-field-error">{errors.plan}</div>}
       </div>
-      {data.plan && data.plan !== "starter" && (
+      {data.plan && data.plan !== "audition_pass" && data.plan !== "institution" && (
         <>
           <div className="ob-field">
             <label>Billing Email</label>
@@ -174,12 +189,22 @@ function PlanBillingForm({ data, onChange, errors }) {
           </div>
         </>
       )}
+      {data.plan === "institution" && (
+        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(96,77,255,.06)", border:"1px solid rgba(96,77,255,.25)", fontSize:12, color:"var(--g5)"}}>
+          Our team will reach out to scope your Institution contract — pricing starts at €5,000/year.
+        </div>
+      )}
+      {data.plan === "audition_pass" && (
+        <div style={{padding:"12px 14px", borderRadius:12, background:"rgba(245,166,35,.08)", border:"1px solid rgba(245,166,35,.3)", fontSize:12, color:"var(--g5)"}}>
+          One audition, no saved workspace. Upgrade within 60 days and €500 of your Audition Pass fee will credit toward your annual plan.
+        </div>
+      )}
     </>
   );
 }
 
 function VerificationForm({ data, onChange }) {
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(() => !!data.verified);
 
   return (
     <>
@@ -238,19 +263,17 @@ export const ONBOARDING_CONFIG = {
   welcome: {
     newUser: {
       lines: [
-        { text: "Welcome, {firstName},", type: "hero", delay: 0 },
-        { text: "to Lanced.", type: "brand", delay: 900 },
-        { text: "Where you discover and hire extraordinary talent.", type: "tagline", delay: 1900 },
+        { text: "{firstName}, welcome to Lanced!", type: "hero", delay: 0 },
+        { text: "Where you discover and hire extraordinary talent.", type: "tagline", delay: 1100 },
       ],
       cta: "Let's go",
     },
     existingUser: {
       lines: [
-        { text: "Welcome back, {firstName},", type: "hero", delay: 0 },
-        { text: "to the new Lanced.", type: "brand", delay: 900 },
-        { text: "A lot has changed. Let us show you around.", type: "tagline", delay: 1900 },
+        { text: "{firstName}, welcome to Lanced 2.0!", type: "hero", delay: 0 },
+        { text: "We're excited to show you the new platform. Let's get started.", type: "tagline", delay: 1100 },
       ],
-      cta: "Show me what's new",
+      cta: "Let's get started",
     },
   },
 
@@ -265,6 +288,22 @@ export const ONBOARDING_CONFIG = {
     { id: "other", label: "Something else", icon: "sparkle" },
   ],
 
+  // Returning-user ("What's New" / 2.0) profile — pre-fills the review-and-confirm flow.
+  existingProfile: {
+    purposes: ["castings", "hiring"],
+    name: "Theater Lanced",
+    type: "Theater Company",
+    address: "12 Stage Lane, London, UK",
+    website: "https://theaterlanced.com",
+    email: "team@theaterlanced.com",
+    tagline: "Where bold stories come to life.",
+    team: ["sophie@theaterlanced.com", "james@theaterlanced.com"],
+    plan: "season",
+    billingEmail: "billing@theaterlanced.com",
+    vat: "GB123456789",
+    verified: true,
+  },
+
   dataSteps: [
     {
       id: "business-details",
@@ -272,6 +311,10 @@ export const ONBOARDING_CONFIG = {
       intro: "Great choices! Let's start with the basics.",
       prompt: "First, tell us about your company.",
       cta: "Let's do it",
+      introExisting: "Welcome back! Let's make sure everything's still up to date.",
+      promptExisting: "Here are your company details — give them a quick check.",
+      ctaExisting: "Review details",
+      successMessageExisting: "All confirmed — your details are up to date.",
       skippable: false,
       component: BusinessDetailsForm,
       validate: (data) => {
@@ -292,6 +335,8 @@ export const ONBOARDING_CONFIG = {
       title: "Logo & Tagline",
       prompt: "Now let's give your space some personality.",
       cta: "Upload logo",
+      promptExisting: "Your logo and tagline — still looking good?",
+      ctaExisting: "Review branding",
       skipLabel: "Skip for now",
       skippable: true,
       component: LogoUploadForm,
@@ -304,11 +349,13 @@ export const ONBOARDING_CONFIG = {
       title: "Team Setup",
       prompt: "Want to invite your team? Collaboration is better together.",
       cta: "Invite team",
+      promptExisting: "Here's your team. Want to invite anyone new?",
+      ctaExisting: "Review team",
       skipLabel: "I'll do this later",
       skippable: true,
       component: TeamSetupForm,
       validate: () => ({ valid: true, errors: {} }),
-      mapFromProfile: () => ({}),
+      mapFromProfile: (profile) => ({ inviteEmails: profile.team || [] }),
       successMessage: "Perfect. Your team invites are ready.",
     },
     {
@@ -316,6 +363,8 @@ export const ONBOARDING_CONFIG = {
       title: "Plan & Billing",
       prompt: "Let's pick a plan that works for you.",
       cta: "Choose a plan",
+      promptExisting: "Here's your current plan. Keep it, or upgrade for the new features.",
+      ctaExisting: "Review plan",
       skippable: false,
       component: PlanBillingForm,
       validate: (data) => {
@@ -323,7 +372,7 @@ export const ONBOARDING_CONFIG = {
         if (!data.plan) errors.plan = "Please select a plan";
         return { valid: Object.keys(errors).length === 0, errors };
       },
-      mapFromProfile: () => ({}),
+      mapFromProfile: (profile) => ({ plan: profile.plan, billingEmail: profile.billingEmail, vat: profile.vat }),
       successMessage: "Great choice. You're all set with the essentials.",
     },
     {
@@ -331,10 +380,13 @@ export const ONBOARDING_CONFIG = {
       title: "Verification",
       prompt: "One last thing — let's verify your account.",
       cta: "Verify now",
+      promptExisting: "Your account's already verified — just confirm to wrap up.",
+      ctaExisting: "Confirm",
+      successMessageExisting: "All set — welcome back to Lanced 2.0.",
       skippable: false,
       component: VerificationForm,
       validate: (data) => ({ valid: data.verified === true, errors: data.verified ? {} : { verified: "Please verify your email" } }),
-      mapFromProfile: () => ({}),
+      mapFromProfile: (profile) => ({ verified: !!profile.verified }),
       successMessage: "You're verified! Welcome to Lanced.",
     },
   ],
@@ -376,6 +428,19 @@ export const ONBOARDING_CONFIG = {
       skipLabel: "I'll figure it out",
     },
   ],
+
+  learningIntro: "You've got the essentials down. Here are a few quick guides, picked just for you.",
+  learningEmpty: "You're all set — no extra guides needed right now. You can always find tutorials in the Academy.",
+  learningSuccess: "Nice — you know your way around Lanced now.",
+
+  tips: [
+    { id: "tip-search", title: "Quick navigation", prompt: "A little tip — press ⌘K (or Ctrl+K) anywhere to jump straight to any room, artist, or setting." },
+    { id: "tip-team", title: "Bring your team in", prompt: "Lanced is better together. Invite colleagues anytime from Settings — roles keep everyone at the right access level." },
+    { id: "tip-academy", title: "Learn as you grow", prompt: "The Academy is full of short guides on hiring, casting, and discovery. Pop in whenever you want to go deeper." },
+  ],
+
+  completeMessage: "That's everything — your workspace is ready. Time to find your next great artist.",
+  completeCta: "Enter Lanced",
 
   whatsNew: {
     videoSrc: null,

@@ -9,6 +9,9 @@ import { ONBOARDING_CONFIG } from "./onboardingConfig.jsx";
 import { QRCodeSVG } from "qrcode.react";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
+import { useEntitlements } from "../lib/entitlements";
+import { UpgradeModal, UpgradeBanner, LockPill, useUpgradePrompt } from "../lib/UpgradePrompt";
+import { FEATURE_LABELS } from "../data/plans";
 
 /* ━━━ MOCK DATA ━━━ */
 const MOCK_AGENCY = {
@@ -4166,6 +4169,8 @@ body:has(.filter-side-panel) .cl-interested-btn{display:none}
 .team-fab{bottom:80px;width:44px;height:44px}.team-fab-panel,.team-chat{bottom:134px;right:16px;width:calc(100vw - 32px);max-width:360px}
 .mobile-nav{display:flex}
 .mobile-topbar{display:flex}
+.shell.ob-running .mobile-nav{display:none!important}
+.shell.ob-running .mobile-topbar{display:none!important}
 .sb-toggle{display:none!important}
 /* Context panels: override fixed positioning on mobile */
 .ctx-showcase .main,.ctx-room .main{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;border-radius:0!important;box-shadow:none!important;min-height:100vh;background:transparent!important}
@@ -6951,6 +6956,50 @@ function PublicCastingPreview({ room, roomMaterials = [] }) {
 
 /* ━━━ APP ━━━ */
 export default function AgencyShell() {
+  // ─── Entitlements / paywall ────────────────────────────────────────────────
+  const ent = useEntitlements();
+  const upgrade = useUpgradePrompt();
+  const [showPlanSwitcher, setShowPlanSwitcher] = useState(false);
+
+  // Gated open of "New Opportunity" wizard — enforces quota + Audition Pass hard block.
+  // `rooms` is defined later in this component, so reference it via the closure.
+  const tryOpenNewRoom = () => {
+    const callCount = (typeof rooms !== "undefined" ? rooms.length : 0);
+    if (ent.planId === "audition_pass" && callCount >= 1) {
+      upgrade.promptUpgrade({
+        title: "You've used your Audition Pass",
+        body: "Audition Pass is hard-capped at one audition per company per year. Upgrade to keep posting — €500 of your Audition Pass fee credits toward any annual plan (within 60 days).",
+        trigger: "audition_pass_block",
+      });
+      return;
+    }
+    const limit = ent.checkLimit("calls_per_year", callCount);
+    if (limit.isBlocked && ent.planId === "season") {
+      // soft prompt + allow continuing as overage at €499
+      upgrade.promptUpgrade({
+        title: `You've hit your ${ent.plan.display_name} call limit`,
+        body: `You've used all ${limit.limit} calls included in Season. Extra calls are €499 each, or upgrade to Company (€3,999/yr, 10 calls). Company breaks even at the 8th call.`,
+        trigger: "season_to_company_urgent",
+      });
+      return;
+    }
+    if (limit.isBlocked && ent.planId === "company") {
+      upgrade.promptUpgrade({
+        title: "You've hit your Company call limit",
+        body: `You've used all ${limit.limit} calls included in Company. Extra calls are €399 each, or upgrade to Institution for higher volume + custom infrastructure.`,
+        trigger: "company_to_institution",
+      });
+      return;
+    }
+    // Soft trigger near limit on Season
+    const trigger = ent.callUpgradeTrigger(callCount);
+    if (trigger === "season_to_company_soft") {
+      // soft inline — don't block, just nudge via toast
+      showToast("Heads-up: you're approaching your Season call limit. Consider Company.");
+    }
+    setShowNewRoom(true);
+  };
+
   const [auth, setAuth] = useState("login"); // login | signup | app
   const [authName, setAuthName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
@@ -6962,10 +7011,11 @@ export default function AgencyShell() {
 
   // Navigation: workspace pages vs showcase pages
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Collapse the real sidebar when the in-app onboarding (conversation/learning) begins
+  // Collapse the real sidebar for the whole onboarding flow so it's already collapsed when the
+  // full-screen welcome/purpose overlay shrinks to reveal it for the conversation (no flash).
   useEffect(() => {
     const s = onboardingState?.stage;
-    if (s === "conversation" || s === "learning") setSidebarCollapsed(true);
+    if (s === "welcome" || s === "purpose" || s === "conversation" || s === "learning") setSidebarCollapsed(true);
   }, [onboardingState?.stage]);
   const [page, setPage] = useState("dashboard"); // dashboard | showcases | rooms | artist-db | agency-settings | messages | network | promote | analytics | artists | settings | tracking | requests
   // Network tab state
@@ -7476,6 +7526,17 @@ export default function AgencyShell() {
       showToast("Artist updated!");
       setEditingArtist(null);
     } else {
+      // Quota gate — block when artist DB cap is hit
+      const cap = ent.checkLimit("artist_database_size", artists.length);
+      if (cap.isBlocked) {
+        upgrade.promptUpgrade({
+          title: `Your artist database is full`,
+          body: ent.planId === "audition_pass"
+            ? "Audition Pass doesn't include a saved artist database. Upgrade to Season (€1,599/yr) to keep up to 100 artists, or Company (€3,999/yr) for 200."
+            : `You're at the ${cap.limit}-artist limit for ${ent.plan.display_name}. Upgrade for more capacity.`,
+        });
+        return;
+      }
       const id = "a" + Date.now();
       const artist = {
         ...newArt, id,
@@ -8602,23 +8663,11 @@ export default function AgencyShell() {
   }
 
   // ── Onboarding ──
-  // Welcome + purpose are cinematic full-screen takeovers (like the auth screens).
-  if (onboardingState && (onboardingState.stage === "welcome" || onboardingState.stage === "purpose")) {
-    return (
-      <div className={`shell${darkMode ? " dark" : ""}`}>
-        <style>{CSS}</style>
-        <UniversalOnboarding
-          config={ONBOARDING_CONFIG}
-          state={onboardingState}
-          setState={setOnboardingState}
-          firstName={obFirstName || onboardingState.firstName || "there"}
-          onComplete={() => setOnboardingState(prev => ({ ...prev, stage: "complete" }))}
-        />
-      </div>
-    );
-  }
-  // Conversation + learning render INSIDE the real shell (real sidebar stays, collapsed) — see .main below.
-  const obInShell = onboardingState && (onboardingState.stage === "conversation" || onboardingState.stage === "learning");
+  // All onboarding stages render through ONE persistent mount inside the shell, so the motion
+  // background never resets between welcome → purpose → conversation. Welcome + purpose expand to a
+  // full-screen cinematic takeover (via .ob-fullscreen); conversation + learning sit beside the
+  // collapsed real sidebar.
+  const obInShell = onboardingState && (onboardingState.stage === "welcome" || onboardingState.stage === "purpose" || onboardingState.stage === "conversation" || onboardingState.stage === "learning");
 
   // ── Completion helpers ──
   const getShowcaseCompletion = (sc) => {
@@ -8662,17 +8711,25 @@ export default function AgencyShell() {
 
   // ── Main app ──
   return (
-    <div className={`shell${sidebarCollapsed ? " sb-collapsed" : ""}${darkMode ? " dark" : ""}${viewRoom && currentRoom ? " ctx-room" : ""}${viewRoom && currentRoom && currentRoom.status === "draft" && !dismissedSetupPanels[currentRoom.id] ? " has-setup-panel" : ""}${viewShowcase && currentShowcase ? " ctx-showcase" : ""}${presentMode === "builder" && page === "present" ? " prs-builder-active" : ""}${(page === "messages" && !viewShowcase && !viewRoom) || (viewRoom && currentRoom && roomPage === "communication") ? " on-messages" : ""}`}>
+    <div className={`shell${sidebarCollapsed ? " sb-collapsed" : ""}${darkMode ? " dark" : ""}${viewRoom && currentRoom ? " ctx-room" : ""}${viewRoom && currentRoom && currentRoom.status === "draft" && !dismissedSetupPanels[currentRoom.id] ? " has-setup-panel" : ""}${viewShowcase && currentShowcase ? " ctx-showcase" : ""}${presentMode === "builder" && page === "present" ? " prs-builder-active" : ""}${(page === "messages" && !viewShowcase && !viewRoom) || (viewRoom && currentRoom && roomPage === "communication") ? " on-messages" : ""}${obInShell ? " ob-running" : ""}`}>
       <style>{CSS}</style>
 
-      {/* ═══ ONBOARDING DEMO TRIGGER ═══ */}
+      {/* ═══ ONBOARDING DEMO TRIGGERS ═══ */}
       {!onboardingState && (
-      <button
-        onClick={() => setOnboardingState(createOnboardingState(ONBOARDING_CONFIG, "new", obFirstName || "Wouter"))}
-        style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",zIndex:100,display:"inline-flex",alignItems:"center",gap:8,padding:"8px 20px",background:"linear-gradient(135deg,var(--ac),#604DFF)",color:"#fff",border:"none",borderRadius:20,fontFamily:"var(--sans)",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 12px rgba(96,77,255,.25)",letterSpacing:".01em"}}
-      >
-        ✨ Onboarding Experience
-      </button>
+      <div style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",zIndex:100,display:"inline-flex",alignItems:"center",gap:8}}>
+        <button
+          onClick={() => setOnboardingState(createOnboardingState(ONBOARDING_CONFIG, "new", obFirstName || "Wouter"))}
+          style={{display:"inline-flex",alignItems:"center",gap:8,padding:"8px 20px",background:"linear-gradient(135deg,var(--ac),#604DFF)",color:"#fff",border:"none",borderRadius:20,fontFamily:"var(--sans)",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 12px rgba(96,77,255,.25)",letterSpacing:".01em"}}
+        >
+          ✨ Onboarding Experience
+        </button>
+        <button
+          onClick={() => setOnboardingState(createOnboardingState(ONBOARDING_CONFIG, "existing", obFirstName || "Wouter"))}
+          style={{display:"inline-flex",alignItems:"center",gap:8,padding:"8px 20px",background:"#fff",color:"var(--ac)",border:"1.5px solid var(--ac)",borderRadius:20,fontFamily:"var(--sans)",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 12px rgba(96,77,255,.12)",letterSpacing:".01em"}}
+        >
+          🆕 What's New
+        </button>
+      </div>
       )}
 
       {/* ═══ SIDEBAR ═══ */}
@@ -8864,23 +8921,59 @@ export default function AgencyShell() {
               </div>
             </div>
             <nav className="sidebar-nav">
-              <button className={`sidebar-item sidebar-aria ${page==="aria"?"active":""}`} onClick={()=>setPage("aria")}>
+              {/* ARIA — Institution only */}
+              <button
+                className={`sidebar-item sidebar-aria ${page==="aria"?"active":""}`}
+                onClick={() => {
+                  if (!ent.hasFeature("aria_ai_access")) {
+                    upgrade.promptUpgrade({ feature: "aria_ai_access", body: "ARIA is the Lanced AI assistant — included with Institution plans. It scores applicants against your brief, surfaces best matches, and explains its reasoning." });
+                    return;
+                  }
+                  setPage("aria");
+                }}
+              >
                 <I n="aria" s={18}/>
                 <span className="sb-label">Aria</span>
-                <span className="sa-pill">AI</span>
+                <span className="sa-pill">{ent.hasFeature("aria_ai_access") ? "AI" : <I n="lock" s={10}/>}</span>
                 <span className="sb-tip">Aria</span>
               </button>
               <div className="sidebar-divider"/>
               <button className={`sidebar-item ${page==="dashboard"?"active":""}`} onClick={()=>setPage("dashboard")}><I n="home" s={18}/><span className="sb-label">Dashboard</span><span className="sb-tip">Dashboard</span></button>
               <button className={`sidebar-item ${page==="rooms"?"active":""}`} onClick={()=>setPage("rooms")}><I n="inbox" s={18}/><span className="sb-label">Opportunities</span><span className="sb-tip">Opportunities</span></button>
-              <button className={`sidebar-item ${page==="artist-db"?"active":""}`} onClick={()=>setPage("artist-db")}><I n="users" s={18}/><span className="sb-label">Artists</span><span className="sb-tip">Artists</span></button>
+              {/* Artists DB — requires workspace (Season+) */}
+              <button
+                className={`sidebar-item ${page==="artist-db"?"active":""}`}
+                onClick={() => {
+                  if (!ent.hasFeature("company_workspace")) {
+                    upgrade.promptUpgrade({ feature: "company_workspace", title: "Your artist database needs the workspace", body: "Audition Pass doesn't include the saved artist database — upgrade to Season (€1,599/yr) to keep dancer profiles, pools, and history across calls." });
+                    return;
+                  }
+                  setPage("artist-db");
+                }}
+              >
+                <I n="users" s={18}/><span className="sb-label">Artists</span><span className="sb-tip">Artists</span>
+                {!ent.hasFeature("company_workspace") && <span className="sidebar-badge" style={{background:"linear-gradient(135deg,#FFD86B,#F5A623)",color:"#3A2A00",display:"inline-flex",alignItems:"center",justifyContent:"center"}}><I n="lock" s={10}/></span>}
+              </button>
               <button className={`sidebar-item ${page==="messages"?"active":""}`} onClick={()=>setPage("messages")}>
                 <I n="chat" s={18}/><span className="sb-label">Communication</span><span className="sb-tip">Comms</span>
                 {conversations.reduce((sum,c) => sum + c.unread, 0) > 0 && <span className="sidebar-badge">{conversations.reduce((sum,c) => sum + c.unread, 0)}</span>}
               </button>
               <button className={`sidebar-item ${page==="analytics"?"active":""}`} onClick={()=>setPage("analytics")}><I n="board" s={18}/><span className="sb-label">Analytics</span><span className="sb-tip">Analytics</span></button>
               <div className="sidebar-divider"/>
-              <button className={`sidebar-item ${page==="network"?"active":""}`} onClick={()=>setPage("network")}><I n="share" s={18}/><span className="sb-label">Network</span><span className="sb-tip">Network</span></button>
+              {/* Network — requires workspace (Season+) */}
+              <button
+                className={`sidebar-item ${page==="network"?"active":""}`}
+                onClick={() => {
+                  if (!ent.hasFeature("company_workspace")) {
+                    upgrade.promptUpgrade({ feature: "company_workspace", title: "Network access needs the workspace", body: "Audition Pass doesn't include the Network — upgrade to Season for messaging and discovery across the Lanced community." });
+                    return;
+                  }
+                  setPage("network");
+                }}
+              >
+                <I n="share" s={18}/><span className="sb-label">Network</span><span className="sb-tip">Network</span>
+                {!ent.hasFeature("company_workspace") && <span className="sidebar-badge" style={{background:"linear-gradient(135deg,#FFD86B,#F5A623)",color:"#3A2A00",display:"inline-flex",alignItems:"center",justifyContent:"center"}}><I n="lock" s={10}/></span>}
+              </button>
               <button className={`sidebar-item ${page==="promote"?"active":""}`} onClick={()=>{setPage("promote");setPromoteView("home");}}><I n="globe" s={18}/><span className="sb-label">Promote</span><span className="sb-tip">Promote</span></button>
             </nav>
             <div style={{padding:"4px 10px 0"}}>
@@ -8971,15 +9064,100 @@ export default function AgencyShell() {
             state={onboardingState}
             setState={setOnboardingState}
             firstName={obFirstName || onboardingState.firstName || "there"}
-            onComplete={() => setOnboardingState(prev => ({ ...prev, stage: "complete" }))}
+            onComplete={() => {
+              const selectedPlan = onboardingState?.profile?.plan;
+              if (selectedPlan && ["audition_pass","season","company","institution"].includes(selectedPlan)) {
+                ent.setPlanId(selectedPlan);
+              }
+              setOnboardingState(prev => ({ ...prev, stage: "complete" }));
+            }}
           />
         )}
 
         {/* Top action bar — sticky, translucent, content scrolls beneath */}
         <div className="agency-topbar on-blob-bg">
-          <button className="topbar-pill topbar-premium" onClick={() => showToast("Premium plans — coming soon")}>
-            <span>Go Premium</span>
-          </button>
+          {/* Dev plan-switcher — visible during build-out so we can test gating */}
+          <div style={{position:"relative"}}>
+            <button
+              className="topbar-pill"
+              onClick={() => setShowPlanSwitcher(s => !s)}
+              style={{
+                background: "linear-gradient(135deg, rgba(96,77,255,.12), rgba(96,77,255,.04))",
+                boxShadow: "inset 0 0 0 1px rgba(96,77,255,.35)",
+                color: "var(--ac)",
+              }}
+              title="Dev tool — switch plan to test paywall"
+            >
+              <span style={{fontSize:10, opacity:.7, fontWeight:500, marginRight:4}}>Plan:</span>
+              <span>{ent.plan.display_name}</span>
+              <span style={{fontSize:9, opacity:.6, marginLeft:4}}>▾</span>
+            </button>
+            {showPlanSwitcher && (
+              <div
+                onClick={(e)=>e.stopPropagation()}
+                style={{
+                  position:"absolute", top:"calc(100% + 6px)", right:0, zIndex:1000,
+                  width:280, padding:10, borderRadius:14,
+                  background:"var(--bg)", border:"1px solid var(--g2)",
+                  boxShadow:"0 12px 36px rgba(0,0,0,.18)",
+                }}
+              >
+                <div style={{fontSize:10, color:"var(--g4)", fontWeight:600, textTransform:"uppercase", letterSpacing:".5px", padding:"4px 8px"}}>
+                  Dev plan switcher
+                </div>
+                {ent.PLANS.map(p => (
+                  <button
+                    key={p.plan_id}
+                    onClick={() => { ent.setPlanId(p.plan_id); setShowPlanSwitcher(false); showToast(`Switched to ${p.display_name}`); }}
+                    style={{
+                      display:"flex", alignItems:"center", justifyContent:"space-between",
+                      width:"100%", padding:"8px 10px", borderRadius:8,
+                      border:"none", cursor:"pointer", fontSize:12,
+                      background: ent.planId === p.plan_id ? "rgba(96,77,255,.10)" : "transparent",
+                      color: ent.planId === p.plan_id ? "var(--ac)" : "var(--tx)",
+                      fontWeight: ent.planId === p.plan_id ? 600 : 500,
+                      textAlign:"left",
+                    }}
+                  >
+                    <span>{p.display_name}</span>
+                    <span style={{fontSize:10, color:"var(--g4)"}}>
+                      {p.price_eur == null ? "Custom" : `€${p.price_eur}`}
+                    </span>
+                  </button>
+                ))}
+                <div style={{height:1, background:"var(--g2)", margin:"6px 8px"}}/>
+                <div style={{fontSize:10, color:"var(--g4)", fontWeight:600, textTransform:"uppercase", letterSpacing:".5px", padding:"4px 8px"}}>
+                  Add-ons
+                </div>
+                {ent.ADDONS.map(a => {
+                  const included = a.included_in_plans.includes(ent.planId);
+                  const available = a.available_for_plans.includes(ent.planId);
+                  const active = ent.hasAddon(a.addon_id);
+                  return (
+                    <label
+                      key={a.addon_id}
+                      style={{
+                        display:"flex", alignItems:"center", gap:8,
+                        padding:"6px 10px", borderRadius:8, cursor: available ? "pointer" : "default",
+                        fontSize:12, color: included ? "var(--g4)" : "var(--tx)",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        disabled={!available && !included}
+                        onChange={() => available && ent.toggleAddon(a.addon_id)}
+                      />
+                      <span style={{flex:1}}>{a.display_name}</span>
+                      <span style={{fontSize:10, color:"var(--g4)"}}>
+                        {included ? "Included" : `€${a.price_eur}/yr`}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <button className="topbar-pill notif-pill" onClick={() => setShowNotifPanel(true)}>
             <span>Notifications</span>
             {notifications.filter(n => !n.read).length > 0 && (
@@ -9211,7 +9389,7 @@ export default function AgencyShell() {
               <div className="dash-quick-nav" style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap",animation:"fadeIn .5s ease .15s both"}}>
                 <button className="chip" onClick={() => setPage("rooms")}>Opportunities</button>
                 <button className="chip" onClick={() => setPage("artist-db")}>Artist Database</button>
-                <button className="chip on" onClick={() => { setPage("rooms"); setShowNewRoom(true); }}>+ New Opportunity</button>
+                <button className="chip on" onClick={() => { setPage("rooms"); tryOpenNewRoom(); }}>+ New Opportunity</button>
               </div>
 
               <div className="dash-grid">
@@ -9350,7 +9528,25 @@ export default function AgencyShell() {
                   {artistPools.map(p => (
                     <button key={p.id} className={`pool-chip${activePoolId === p.id ? " on" : ""}`} onClick={() => setActivePoolId(p.id)}>{p.name} <span style={{opacity:.55,marginLeft:4}}>{p.artistIds.length}</span></button>
                   ))}
-                  <button className="pool-chip pool-chip-add" onClick={() => setShowNewPoolModal(true)}><I n="plus" s={11}/> New Pool</button>
+                  <button
+                    className="pool-chip pool-chip-add"
+                    onClick={() => {
+                      if (!ent.canCreateCustomPools) {
+                        upgrade.promptUpgrade({
+                          feature: "artist_pools",
+                          title: "Custom pools need a Company plan",
+                          body: ent.poolsTier === "basic"
+                            ? "Season includes basic pools, but custom-named pools are part of Company (€3,999/yr)."
+                            : "Artist pools are part of Season and above. Upgrade to keep saving artists into named groups.",
+                        });
+                        return;
+                      }
+                      setShowNewPoolModal(true);
+                    }}
+                  >
+                    <I n="plus" s={11}/> New Pool
+                    {!ent.canCreateCustomPools && <I n="lock" s={10} />}
+                  </button>
                 </div>
 
                 {/* Section head — only for custom pools */}
@@ -9456,8 +9652,19 @@ export default function AgencyShell() {
               </div>
 
               <div className="tab-bar">
-                {[{key:"profile",label:"Company Profile"},{key:"account",label:"My Account"},{key:"plan",label:"Plan & Billing"},{key:"team",label:"Team"},{key:"notifications",label:"Notifications"}].map(t => (
-                  <button key={t.key} className={`tab-btn${agencySettingsTab===t.key?" on":""}`} onClick={() => setAgencySettingsTab(t.key)}>{t.label}</button>
+                {[
+                  {key:"profile",label:"Company Profile"},
+                  {key:"account",label:"My Account"},
+                  {key:"plan",label:"Plan & Billing"},
+                  {key:"team",label:"Team"},
+                  {key:"contracts",label:"Contracts & Onboarding", locked: !ent.hasFeature("contract_signing")},
+                  {key:"privacy",label:"Privacy & Compliance"},
+                  {key:"annual_review",label:"Annual Review", locked: !ent.hasFeature("annual_review")},
+                  {key:"notifications",label:"Notifications"},
+                ].map(t => (
+                  <button key={t.key} className={`tab-btn${agencySettingsTab===t.key?" on":""}`} onClick={() => setAgencySettingsTab(t.key)}>
+                    {t.label}{t.locked && <span style={{marginLeft:6, display:"inline-flex", verticalAlign:"middle", opacity:.7}}><I n="lock" s={10}/></span>}
+                  </button>
                 ))}
               </div>
 
@@ -9611,73 +9818,167 @@ export default function AgencyShell() {
                 </>
               )}
 
-              {/* Plan & Billing tab */}
+              {/* Plan & Billing tab — driven by entitlements */}
               {agencySettingsTab === "plan" && (() => {
-                const currentPlanKey = "studio";
-                const plans = [
-                  {key:"starter", name:"Starter", price:"€0", features:["1 active room","1 showcase","1 team seat","Basic templates","Standard branding"]},
-                  {key:"studio", name:"Studio", price:"€49", features:["Up to 10 active rooms","5 showcases","3 team seats","Broadcast comms","Branded client view","Tracking & insights"]},
-                  {key:"agency", name:"Agency", price:"€149", features:["Everything in Studio","Unlimited rooms & showcases","Unlimited team seats","Custom domain","Advanced analytics","Priority support"]},
-                ];
-                const currentPlan = plans.find(p => p.key === currentPlanKey);
+                const currentPlan = ent.plan;
+                const usageCalls = rooms.length;
+                const usageTeam = teamMembers.length;
+                const usageArtists = artists.length;
+                const usageMessages = 12; // demo
+                const fmtLimit = (l) => l === -1 ? "∞" : l;
+                const meter = (label, used, limitKey) => {
+                  const ck = ent.checkLimit(limitKey, used);
+                  const pct = ck.isUnlimited ? 30 : Math.min(100, Math.round((used / Math.max(1, ck.limit)) * 100));
+                  const overage = !ck.isUnlimited && used > ck.limit;
+                  return (
+                    <div style={{padding:"10px 0", borderBottom:"1px solid var(--g1)"}} key={label}>
+                      <div style={{display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:6}}>
+                        <span style={{color:"var(--g5)", fontWeight:500}}>{label}</span>
+                        <span style={{color: overage ? "var(--red)" : "var(--tx)", fontFamily:"var(--mono, monospace)", fontWeight:600}}>
+                          {used} <span style={{color:"var(--g4)", fontWeight:400}}>/ {fmtLimit(ck.limit)}</span>
+                        </span>
+                      </div>
+                      <div style={{height:6, borderRadius:4, background:"var(--g1)", overflow:"hidden"}}>
+                        <div style={{
+                          width: `${pct}%`, height:"100%",
+                          background: overage ? "var(--red)" : (pct > 80 ? "linear-gradient(90deg, var(--ac), #F5A623)" : "var(--ac)"),
+                          transition:"width .3s",
+                        }}/>
+                      </div>
+                      {overage && (
+                        <div style={{fontSize:11, color:"var(--red)", marginTop:4}}>
+                          Over limit — upgrade to keep going.
+                        </div>
+                      )}
+                    </div>
+                  );
+                };
+
                 return (
                   <div style={{animation:"slideInUp .2s ease"}}>
+                    {/* Current plan card */}
                     <div className="settings-section">
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                         <h3 style={{margin:0}}>Current Plan</h3>
                         <span style={{padding:"4px 14px",borderRadius:20,background:"rgba(96,77,255,.1)",color:"var(--ac)",fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px"}}>
-                          {currentPlan.name}
+                          {currentPlan.display_name}
                         </span>
                       </div>
-                      <p className="ss-desc">Your {currentPlan.name} plan includes {currentPlan.features.slice(0,3).join(", ").toLowerCase()}, and more.</p>
+                      <p className="ss-desc">{currentPlan.description}</p>
                       <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--g1)",fontSize:13}}>
-                        <span style={{color:"var(--g4)"}}>Billing Period</span>
-                        <span style={{color:"var(--tx)",fontWeight:500}}>Monthly</span>
+                        <span style={{color:"var(--g4)"}}>Billing</span>
+                        <span style={{color:"var(--tx)",fontWeight:500}}>
+                          {currentPlan.billing_cycle === "one_time" ? "Pay per call" :
+                           currentPlan.billing_cycle === "annual" ? "Annual" : "Custom invoice"}
+                        </span>
                       </div>
-                      <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--g1)",fontSize:13}}>
-                        <span style={{color:"var(--g4)"}}>Next Billing</span>
-                        <span style={{color:"var(--tx)",fontWeight:500}}>May 30, 2026</span>
-                      </div>
+                      {currentPlan.price_eur != null && (
+                        <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--g1)",fontSize:13}}>
+                          <span style={{color:"var(--g4)"}}>Next Billing</span>
+                          <span style={{color:"var(--tx)",fontWeight:500}}>
+                            {currentPlan.billing_cycle === "one_time" ? "—" : "Jan 1, 2027"}
+                          </span>
+                        </div>
+                      )}
                       <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",fontSize:13}}>
                         <span style={{color:"var(--g4)"}}>Amount</span>
-                        <span style={{color:"var(--tx)",fontWeight:500,fontFamily:"var(--mono, monospace)"}}>{currentPlan.price}/month</span>
+                        <span style={{color:"var(--tx)",fontWeight:500,fontFamily:"var(--mono, monospace)"}}>
+                          {currentPlan.price_eur == null ? "Custom" : `€${currentPlan.price_eur}`}
+                          <span style={{color:"var(--g4)",fontWeight:400}}>
+                            {currentPlan.billing_cycle === "one_time" ? " one-time" :
+                             currentPlan.billing_cycle === "annual" ? "/yr" : ""}
+                          </span>
+                        </span>
                       </div>
-                      <button className="btn btn-p btn-sm" style={{marginTop:14}}>Upgrade Plan</button>
+                      {ent.auditionPassCreditActive && currentPlan.plan_id === "audition_pass" && (
+                        <div style={{
+                          marginTop:14, padding:"10px 12px", borderRadius:10,
+                          background:"rgba(96,77,255,.08)", border:"1px solid rgba(96,77,255,.25)",
+                          fontSize:12, color:"var(--ac)",
+                        }}>
+                          Your €500 Audition Pass credit is active — applies to any annual-plan upgrade for 60 days from purchase.
+                        </div>
+                      )}
                     </div>
 
+                    {/* Usage meters */}
+                    <div className="settings-section">
+                      <h3>Usage this season</h3>
+                      <p className="ss-desc">Live usage across your account.</p>
+                      {meter("Calls created", usageCalls, "calls_per_year")}
+                      {meter("Team members", usageTeam, "team_members_max")}
+                      {meter("Artists in database", usageArtists, "artist_database_size")}
+                      {meter("Network messages (this month)", usageMessages, "network_messages_per_month")}
+                    </div>
+
+                    {/* Available plans */}
                     <div className="settings-section">
                       <h3>Available Plans</h3>
                       <p className="ss-desc">Choose the plan that fits your company.</p>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:12,marginTop:8}}>
-                        {plans.map(plan => {
-                          const isCurrent = plan.key === currentPlanKey;
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:10,marginTop:8}}>
+                        {ent.PLANS.map(plan => {
+                          const isCurrent = plan.plan_id === ent.planId;
+                          const cost = ent.upgradeCost(plan.plan_id);
                           return (
-                            <div key={plan.key} style={{
-                              padding:16,
-                              border:isCurrent ? "2px solid var(--ac)" : "1px solid var(--g2)",
+                            <div key={plan.plan_id} style={{
+                              padding:14,
+                              border: isCurrent ? "2px solid var(--ac)" : (plan.is_most_popular ? "2px solid #F5A623" : "1px solid var(--g2)"),
                               borderRadius:14,
-                              textAlign:"center",
                               position:"relative",
-                              background:"var(--sf)"
+                              background:"var(--sf)",
+                              display:"flex", flexDirection:"column", gap:6,
                             }}>
                               {isCurrent && (
-                                <div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",padding:"3px 10px",borderRadius:20,background:"var(--ac)",color:"#fff"}}>
+                                <div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",padding:"3px 10px",borderRadius:20,background:"var(--ac)",color:"#fff",whiteSpace:"nowrap"}}>
                                   Current
                                 </div>
                               )}
-                              <div style={{fontSize:16,fontWeight:700,color:"var(--tx)",marginBottom:4,marginTop:isCurrent?4:0}}>{plan.name}</div>
-                              <div style={{fontSize:22,fontWeight:700,color:"var(--ac)",marginBottom:12,fontFamily:"var(--mono, monospace)"}}>
-                                {plan.price}<span style={{fontSize:11,color:"var(--g4)",fontWeight:400}}>/mo</span>
+                              {!isCurrent && plan.is_most_popular && (
+                                <div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",padding:"3px 10px",borderRadius:20,background:"#F5A623",color:"#3A2A00",whiteSpace:"nowrap"}}>
+                                  Most popular
+                                </div>
+                              )}
+                              <div style={{fontSize:14,fontWeight:700,color:"var(--tx)",marginTop:isCurrent||plan.is_most_popular?4:0}}>{plan.display_name}</div>
+                              <div style={{fontSize:18,fontWeight:700,color:"var(--ac)",fontFamily:"var(--mono, monospace)"}}>
+                                {plan.price_eur == null ? "Custom" : `€${plan.price_eur}`}
+                                <span style={{fontSize:10,color:"var(--g4)",fontWeight:400}}>
+                                  {plan.billing_cycle === "one_time" ? " one-time" : (plan.price_eur != null ? "/yr" : "")}
+                                </span>
                               </div>
-                              <div style={{textAlign:"left",marginBottom:14}}>
-                                {plan.features.map((f,i) => (
-                                  <div key={i} style={{fontSize:11,color:"var(--g5,var(--tx))",padding:"3px 0",display:"flex",gap:6}}>
-                                    <span style={{color:"var(--ac)"}}>{"\u2713"}</span> {f}
-                                  </div>
-                                ))}
+                              {cost.credit > 0 && !isCurrent && (
+                                <div style={{fontSize:10,color:"var(--ac)",fontWeight:600}}>
+                                  €{cost.amount} with €{cost.credit} credit
+                                </div>
+                              )}
+                              <div style={{fontSize:11,color:"var(--g5)",lineHeight:1.5,minHeight:60}}>
+                                {plan.tagline}
                               </div>
-                              <button className={`btn btn-sm ${isCurrent ? "btn-g" : "btn-p"}`} style={{width:"100%"}} disabled={isCurrent}>
-                                {isCurrent ? "Current Plan" : "Upgrade"}
+                              <div style={{fontSize:10,color:"var(--g4)",lineHeight:1.6,borderTop:"1px solid var(--g1)",paddingTop:8}}>
+                                <div>• {plan.limits.calls_per_year === -1 ? "Unlimited" : plan.limits.calls_per_year}{plan.plan_id==="institution"?"+":""} calls/year</div>
+                                <div>• {plan.limits.team_members_max === -1 ? "Unlimited" : plan.limits.team_members_max} team members</div>
+                                <div>• {plan.limits.artist_database_size === -1 ? "Unlimited" : (plan.limits.artist_database_size || "—")} artists in DB</div>
+                                {plan.overage_price_per_call_eur && (
+                                  <div>• Extra calls €{plan.overage_price_per_call_eur}</div>
+                                )}
+                              </div>
+                              <button
+                                className={`btn btn-sm ${isCurrent ? "btn-g" : "btn-p"}`}
+                                style={{width:"100%",marginTop:6}}
+                                disabled={isCurrent}
+                                onClick={() => {
+                                  if (isCurrent) return;
+                                  if (plan.price_eur == null) {
+                                    showToast("Sales team will be in touch about Institution plans");
+                                    return;
+                                  }
+                                  ent.setPlanId(plan.plan_id);
+                                  showToast(`Switched to ${plan.display_name}`);
+                                }}
+                              >
+                                {isCurrent ? "Current Plan" :
+                                 plan.price_eur == null ? "Talk to us" :
+                                 cost.credit > 0 ? `Upgrade · €${cost.amount}` :
+                                 "Upgrade"}
                               </button>
                             </div>
                           );
@@ -9685,20 +9986,72 @@ export default function AgencyShell() {
                       </div>
                     </div>
 
+                    {/* Add-ons */}
+                    <div className="settings-section">
+                      <h3>Add-ons</h3>
+                      <p className="ss-desc">Extend your plan without upgrading the whole tier.</p>
+                      {ent.ADDONS.map(addon => {
+                        const included = addon.included_in_plans.includes(ent.planId);
+                        const available = addon.available_for_plans.includes(ent.planId);
+                        const active = ent.hasAddon(addon.addon_id);
+                        return (
+                          <div key={addon.addon_id} style={{
+                            display:"flex", gap:14, padding:14,
+                            borderRadius:12, border:"1px solid var(--g2)", marginBottom:10,
+                          }}>
+                            <div style={{flex:1}}>
+                              <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:4}}>
+                                <div style={{fontWeight:700, color:"var(--tx)"}}>{addon.display_name}</div>
+                                {included && (
+                                  <span style={{fontSize:9, padding:"2px 8px", borderRadius:12, background:"rgba(29,185,84,.12)", color:"var(--green)", fontWeight:700, textTransform:"uppercase", letterSpacing:".5px"}}>
+                                    Included
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{fontSize:12, color:"var(--g5)", marginBottom:6}}>{addon.description}</div>
+                              <div style={{fontSize:11, color:"var(--g4)"}}>
+                                Unlocks: {addon.features_unlocked.map(f => FEATURE_LABELS[f] || f).join(" · ")}
+                              </div>
+                            </div>
+                            <div style={{display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6, minWidth:140}}>
+                              <div style={{fontSize:18, fontWeight:700, color:"var(--tx)", fontFamily:"var(--mono, monospace)"}}>
+                                €{addon.price_eur}<span style={{fontSize:10, color:"var(--g4)", fontWeight:400}}>/yr</span>
+                              </div>
+                              {included ? (
+                                <span style={{fontSize:11, color:"var(--g4)"}}>Bundled in {ent.plan.display_name}</span>
+                              ) : available ? (
+                                <button
+                                  className={`btn btn-sm ${active ? "btn-g" : "btn-p"}`}
+                                  onClick={() => { ent.toggleAddon(addon.addon_id); showToast(active ? "Add-on removed" : "Add-on activated"); }}
+                                >
+                                  {active ? "Remove" : "Add to plan"}
+                                </button>
+                              ) : (
+                                <span style={{fontSize:11, color:"var(--g4)"}}>
+                                  {ent.planId === "audition_pass" ? "Not available on Audition Pass" : "Upgrade plan first"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Billing history */}
                     <div className="settings-section">
                       <h3>Billing History</h3>
                       <p className="ss-desc">Past invoices and receipts.</p>
                       <div style={{display:"flex",flexDirection:"column",gap:6,marginTop:4}}>
-                        {[
-                          {date:"Apr 1, 2026",amount:"€49.00",status:"Paid"},
-                          {date:"Mar 1, 2026",amount:"€49.00",status:"Paid"},
-                          {date:"Feb 1, 2026",amount:"€49.00",status:"Paid"},
-                          {date:"Jan 1, 2026",amount:"€49.00",status:"Paid"},
-                        ].map((inv,i) => (
+                        {(currentPlan.price_eur != null ? [
+                          {date:"Jan 1, 2026", amount:`€${currentPlan.price_eur}.00`, label:`${currentPlan.display_name} — annual`, status:"Paid"},
+                        ] : [
+                          {date:"—", amount:"—", label:"Custom contract — invoiced separately", status:"Active"},
+                        ]).map((inv,i) => (
                           <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",border:"1px solid var(--g2)",borderRadius:10,fontSize:12}}>
                             <span style={{color:"var(--tx)"}}>{inv.date}</span>
-                            <span style={{fontFamily:"var(--mono, monospace)",color:"var(--tx)"}}>{inv.amount}</span>
-                            <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"#E6FFF0",color:"var(--green)",fontWeight:600}}>
+                            <span style={{color:"var(--g5)", flex:1, marginLeft:14}}>{inv.label}</span>
+                            <span style={{fontFamily:"var(--mono, monospace)",color:"var(--tx)",marginRight:14}}>{inv.amount}</span>
+                            <span style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"rgba(29,185,84,.12)",color:"var(--green)",fontWeight:600}}>
                               {inv.status}
                             </span>
                           </div>
@@ -9743,6 +10096,282 @@ export default function AgencyShell() {
                       </button>
                     </div>
                   </div>
+                </>
+              )}
+
+              {/* Contracts & Onboarding tab — add-on for Season, included in Company/Institution */}
+              {agencySettingsTab === "contracts" && (
+                <>
+                  {!ent.hasFeature("contract_signing") ? (
+                    <div className="settings-section">
+                      <h3>Contracts & Onboarding</h3>
+                      <p className="ss-desc">Send and sign artist contracts, collect new-hire documents, and run an onboarding workflow.</p>
+                      <UpgradeBanner
+                        feature="contract_signing"
+                        message="Contracts & Onboarding isn't included on your plan."
+                        onUpgrade={() => upgrade.promptUpgrade({ feature: "contract_signing", body: "Send and sign artist contracts, collect new-hire documents (tax forms, IDs, insurance), and run an onboarding workflow. Add to Season for €399/yr, or upgrade to Company where it's included." })}
+                      />
+                      <div style={{marginTop:18, display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:12}}>
+                        {[
+                          {title:"Contract Signing", desc:"Send contracts to hired artists, collect e-signatures, store fully-executed copies.", icon:"check"},
+                          {title:"Document Collection", desc:"Collect tax forms, ID copies, and insurance documents during onboarding.", icon:"inbox"},
+                          {title:"New-Hire Onboarding", desc:"Step-by-step workflow for each new hire — contract → documents → induction.", icon:"users"},
+                        ].map(f => (
+                          <div key={f.title} style={{padding:14, borderRadius:12, border:"1px solid var(--g2)", background:"var(--sf)", opacity:.7}}>
+                            <I n={f.icon} s={18}/>
+                            <div style={{fontWeight:700, marginTop:8, color:"var(--tx)"}}>{f.title}</div>
+                            <div style={{fontSize:12, color:"var(--g5)", marginTop:4, lineHeight:1.5}}>{f.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="settings-section">
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                          <h3 style={{margin:0}}>Contract Signing</h3>
+                          <button className="btn btn-p btn-sm" onClick={() => showToast("Contract sent (demo)")}>
+                            <I n="plus" s={14}/> New Contract
+                          </button>
+                        </div>
+                        <p className="ss-desc">Active artist contracts. Each contract is e-signed and stored against the artist record.</p>
+                        <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                          {[
+                            {name:"Sophie Laurent", role:"Lead Dancer — Othello", status:"Signed", date:"May 12, 2026"},
+                            {name:"James Chen", role:"Ensemble — Season 2027", status:"Awaiting signature", date:"Sent May 28"},
+                            {name:"Mira Ostrowska", role:"Choreographer — Spring premiere", status:"Draft", date:"—"},
+                          ].map((c,i) => (
+                            <div key={i} style={{display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", borderRadius:10, border:"1px solid var(--g2)", fontSize:13}}>
+                              <div>
+                                <div style={{fontWeight:600, color:"var(--tx)"}}>{c.name}</div>
+                                <div style={{fontSize:11, color:"var(--g4)", marginTop:2}}>{c.role}</div>
+                              </div>
+                              <div style={{display:"flex", alignItems:"center", gap:14}}>
+                                <span style={{fontSize:11, color:"var(--g4)"}}>{c.date}</span>
+                                <span style={{
+                                  fontSize:10, padding:"3px 10px", borderRadius:20, fontWeight:600,
+                                  background: c.status === "Signed" ? "rgba(29,185,84,.12)" : c.status === "Awaiting signature" ? "rgba(245,166,35,.15)" : "var(--g1)",
+                                  color: c.status === "Signed" ? "var(--green)" : c.status === "Awaiting signature" ? "#B5760E" : "var(--g4)",
+                                }}>{c.status}</span>
+                                <button className="btn btn-g btn-sm">Open</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="settings-section">
+                        <h3>Document Collection</h3>
+                        <p className="ss-desc">Required documents for new hires. Configure which artifacts to collect during onboarding.</p>
+                        {[
+                          {doc:"Tax Form (W-9 / IB47)", required:true},
+                          {doc:"Government-issued ID", required:true},
+                          {doc:"Bank details for payroll", required:true},
+                          {doc:"Insurance certificate", required:false},
+                          {doc:"Right-to-work documentation", required:true},
+                        ].map((d,i) => (
+                          <div key={i} className="settings-row">
+                            <div>
+                              <div className="sr-label">{d.doc}</div>
+                              <div className="sr-sub">{d.required ? "Required for all new hires" : "Optional — request per-artist"}</div>
+                            </div>
+                            <button className={`toggle ${d.required?"on":""}`} />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="settings-section">
+                        <h3>New-Hire Onboarding Workflow</h3>
+                        <p className="ss-desc">Steps each new hire goes through, in order.</p>
+                        <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                          {[
+                            {step:1, title:"Send welcome email + offer letter", auto:true},
+                            {step:2, title:"Collect signed contract", auto:false},
+                            {step:3, title:"Collect required documents", auto:false},
+                            {step:4, title:"Add to payroll system", auto:true},
+                            {step:5, title:"Schedule rehearsal/induction call", auto:false},
+                            {step:6, title:"Mark onboarding complete", auto:false},
+                          ].map(s => (
+                            <div key={s.step} style={{display:"flex", alignItems:"center", gap:14, padding:"10px 14px", borderRadius:10, background:"var(--sf)"}}>
+                              <div style={{width:24, height:24, borderRadius:12, background:"var(--ac)", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700}}>{s.step}</div>
+                              <div style={{flex:1, fontSize:13, color:"var(--tx)"}}>{s.title}</div>
+                              {s.auto && <span style={{fontSize:10, padding:"2px 8px", borderRadius:10, background:"rgba(96,77,255,.10)", color:"var(--ac)", fontWeight:600}}>AUTO</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Privacy & Compliance tab — admin features tiered by plan */}
+              {agencySettingsTab === "privacy" && (
+                <>
+                  <div className="settings-section">
+                    <h3>Data Privacy & Compliance</h3>
+                    <p className="ss-desc">Your data privacy controls scale with your plan. Current tier: <strong style={{color:"var(--tx)"}}>{ent.plan.data_privacy_tier === "basic" ? "Basic" : ent.plan.data_privacy_tier === "enhanced" ? "Enhanced" : "Full"}</strong>.</p>
+                  </div>
+
+                  <div className="settings-section">
+                    <h3>GDPR Tools</h3>
+                    <p className="ss-desc">Export or delete applicant data on request. Included on every plan.</p>
+                    <div style={{display:"flex", gap:8}}>
+                      <button className="btn btn-s btn-sm" onClick={() => showToast("Export started (demo)")}><I n="download" s={14}/> Export applicant data</button>
+                      <button className="btn btn-s btn-sm" onClick={() => showToast("Deletion queued (demo)")}><I n="trash" s={14}/> Right-to-erasure request</button>
+                    </div>
+                  </div>
+
+                  {/* Audit Logs — Company + Institution */}
+                  <div className="settings-section">
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
+                      <h3 style={{margin:0}}>Audit Logs</h3>
+                      {!ent.hasFeature("audit_logs") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "audit_logs", body: "Audit logs record every action taken in your workspace — who reviewed which applicant, who sent which contract. Included on Company plans (€3,999/yr)." })}>Company</LockPill>}
+                    </div>
+                    <p className="ss-desc">Tamper-evident log of every action in your workspace.</p>
+                    {ent.hasFeature("audit_logs") ? (
+                      <div style={{display:"flex", flexDirection:"column", gap:6, marginTop:8}}>
+                        {[
+                          {who:"Sophie Laurent", what:"Marked Othello casting as Open", when:"2h ago"},
+                          {who:"Daniel Frey", what:"Sent contract to Mira Ostrowska", when:"5h ago"},
+                          {who:"James Chen", what:"Updated rejection reason for Marcus Webb", when:"Yesterday"},
+                          {who:"You", what:"Switched plan to Company", when:"Yesterday"},
+                        ].map((l,i) => (
+                          <div key={i} style={{display:"flex", justifyContent:"space-between", padding:"8px 12px", borderRadius:8, background:"var(--sf)", fontSize:12}}>
+                            <span><strong style={{color:"var(--tx)"}}>{l.who}</strong> <span style={{color:"var(--g5)"}}>· {l.what}</span></span>
+                            <span style={{color:"var(--g4)"}}>{l.when}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <UpgradeBanner compact feature="audit_logs" message="Audit logs are available on Company and above." onUpgrade={() => upgrade.promptUpgrade({ feature: "audit_logs" })} />
+                    )}
+                  </div>
+
+                  {/* Custom Retention — Company + Institution */}
+                  <div className="settings-section">
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
+                      <h3 style={{margin:0}}>Custom Retention Policies</h3>
+                      {!ent.hasFeature("custom_retention_policies") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "custom_retention_policies" })}>Company</LockPill>}
+                    </div>
+                    <p className="ss-desc">Set how long applicant data is kept after a call closes.</p>
+                    {ent.hasFeature("custom_retention_policies") ? (
+                      <div className="settings-row">
+                        <div>
+                          <div className="sr-label">Applicant data retention</div>
+                          <div className="sr-sub">Auto-delete unselected applicants after this period</div>
+                        </div>
+                        <select defaultValue="365" style={{padding:"6px 10px", borderRadius:8, border:"1px solid var(--g2)"}}>
+                          <option value="90">90 days</option>
+                          <option value="180">180 days</option>
+                          <option value="365">1 year</option>
+                          <option value="730">2 years</option>
+                          <option value="forever">Keep forever</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <UpgradeBanner compact feature="custom_retention_policies" message="Custom retention is available on Company and above." onUpgrade={() => upgrade.promptUpgrade({ feature: "custom_retention_policies" })} />
+                    )}
+                  </div>
+
+                  {/* SSO — Institution only */}
+                  <div className="settings-section">
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
+                      <h3 style={{margin:0}}>Single Sign-On (SSO)</h3>
+                      {!ent.hasFeature("sso_access") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "sso_access" })}>Institution</LockPill>}
+                    </div>
+                    <p className="ss-desc">SAML / OIDC SSO for your whole team.</p>
+                    {ent.hasFeature("sso_access") ? (
+                      <button className="btn btn-s">Configure SSO →</button>
+                    ) : (
+                      <UpgradeBanner compact feature="sso_access" message="SSO is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "sso_access" })} />
+                    )}
+                  </div>
+
+                  {/* Data residency — Institution only */}
+                  <div className="settings-section">
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
+                      <h3 style={{margin:0}}>Data Residency</h3>
+                      {!ent.hasFeature("data_residency_choice") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })}>Institution</LockPill>}
+                    </div>
+                    <p className="ss-desc">Choose where your data is stored — EU, UK, or US.</p>
+                    {ent.hasFeature("data_residency_choice") ? (
+                      <select defaultValue="eu" style={{padding:"6px 10px", borderRadius:8, border:"1px solid var(--g2)"}}>
+                        <option value="eu">European Union (Frankfurt)</option>
+                        <option value="uk">United Kingdom (London)</option>
+                        <option value="us">United States (Virginia)</option>
+                      </select>
+                    ) : (
+                      <UpgradeBanner compact feature="data_residency_choice" message="Data residency is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "data_residency_choice" })} />
+                    )}
+                  </div>
+
+                  {/* Custom DPA — Institution only */}
+                  <div className="settings-section">
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
+                      <h3 style={{margin:0}}>Custom Data Processing Agreement</h3>
+                      {!ent.hasFeature("custom_dpa") && <LockPill onClick={() => upgrade.promptUpgrade({ feature: "custom_dpa" })}>Institution</LockPill>}
+                    </div>
+                    <p className="ss-desc">Negotiated DPA tailored to your institution's legal team.</p>
+                    {ent.hasFeature("custom_dpa") ? (
+                      <button className="btn btn-s">Download executed DPA →</button>
+                    ) : (
+                      <UpgradeBanner compact feature="custom_dpa" message="Custom DPA is an Institution-tier feature." onUpgrade={() => upgrade.promptUpgrade({ feature: "custom_dpa" })} />
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Annual Review tab — Company plan only */}
+              {agencySettingsTab === "annual_review" && (
+                <>
+                  {!ent.hasFeature("annual_review") ? (
+                    <div className="settings-section">
+                      <h3>Annual Review</h3>
+                      <p className="ss-desc">An end-of-year report on your hiring season — calls run, applicants reviewed, hires made.</p>
+                      <UpgradeBanner
+                        feature="annual_review"
+                        message="Annual Review is part of the Company plan."
+                        onUpgrade={() => upgrade.promptUpgrade({ feature: "annual_review", body: "Get a year-end review summarising your calls, applicants, hires, and team activity. Included with Company (€3,999/yr)." })}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="settings-section">
+                        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12}}>
+                          <h3 style={{margin:0}}>2026 Season Review</h3>
+                          <button className="btn btn-s btn-sm" onClick={() => showToast("Report exported (demo)")}>Download PDF</button>
+                        </div>
+                        <p className="ss-desc">Your year at a glance.</p>
+                        <div style={{display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginTop:8}}>
+                          {[
+                            {label:"Calls run", value: rooms.length, sub:"this season"},
+                            {label:"Applicants reviewed", value:"1,284", sub:"across all calls"},
+                            {label:"Hires made", value:"23", sub:"contracts signed"},
+                            {label:"Avg time to hire", value:"18", sub:"days"},
+                          ].map(s => (
+                            <div key={s.label} style={{padding:14, borderRadius:12, background:"var(--sf)", border:"1px solid var(--g1)"}}>
+                              <div style={{fontSize:11, color:"var(--g4)", fontWeight:600, textTransform:"uppercase", letterSpacing:".5px"}}>{s.label}</div>
+                              <div style={{fontSize:26, fontWeight:700, color:"var(--tx)", margin:"4px 0"}}>{s.value}</div>
+                              <div style={{fontSize:11, color:"var(--g5)"}}>{s.sub}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="settings-section">
+                        <h3>Top productions</h3>
+                        <p className="ss-desc">Calls with the most engagement this season.</p>
+                        <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                          {rooms.slice(0,5).map(r => (
+                            <div key={r.id} style={{display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", borderRadius:10, background:"var(--sf)"}}>
+                              <span style={{fontSize:13, color:"var(--tx)"}}>{r.title}</span>
+                              <span style={{fontSize:11, color:"var(--g4)"}}>{Math.floor(Math.random()*120+40)} applicants</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
@@ -11274,7 +11903,7 @@ export default function AgencyShell() {
                   <button className={roomListView==="grid"?"active":""} onClick={()=>setRoomListView("grid")}><I n="grid" s={14}/></button>
                   <button className={roomListView==="list"?"active":""} onClick={()=>setRoomListView("list")}><I n="list" s={14}/></button>
                 </div>
-                <button className="btn btn-p" onClick={() => setShowNewRoom(true)}>
+                <button className="btn btn-p" onClick={() => tryOpenNewRoom()}>
                   <I n="plus" s={14}/> New Opportunity
                 </button>
               </div>
@@ -19532,6 +20161,17 @@ export default function AgencyShell() {
 
       {/* ═══ TOAST ═══ */}
       {toast && <div className="toast"><I n="check" s={14}/> {toast}</div>}
+
+      {/* ═══ GLOBAL UPGRADE MODAL ═══ */}
+      <UpgradeModal
+        open={upgrade.state.open}
+        onClose={upgrade.close}
+        feature={upgrade.state.feature}
+        title={upgrade.state.title}
+        body={upgrade.state.body}
+        trigger={upgrade.state.trigger}
+        onGoToBilling={() => { setPage("agency-settings"); setAgencySettingsTab("plan"); }}
+      />
 
       {interestedBtnPopup}
     </div>

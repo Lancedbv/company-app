@@ -23,20 +23,17 @@ function useTypewriter(text, speed = 35, startDelay = 0, enabled = true) {
   return { displayed, done };
 }
 
-/* ━━━ BLOB BACKGROUND (login/auth + Studio-entrance style — slow drifting blobs that appear & disappear) ━━━ */
+/* ━━━ BRUSH BACKGROUND (matches the auth/login page — animated brush-stroke sweeps) ━━━ */
 function OnboardingBlobBg() {
   return (
-    <div className="ob-blob-field" aria-hidden="true">
-      <span className="ob-blob ob-blob-1" />
-      <span className="ob-blob ob-blob-2" />
-      <span className="ob-blob ob-blob-3" />
-      <span className="ob-blob ob-blob-4" />
-      <span className="ob-blob ob-blob-5" />
-      <span className="ob-blob ob-blob-6" />
-      <span className="ob-blob ob-blob-7" />
-      <span className="ob-blob ob-blob-8" />
-      <span className="ob-blob ob-blob-9" />
-      <span className="ob-blob-grain" />
+    <div className="ob-brush-field" aria-hidden="true">
+      <div className="ob-brush a" />
+      <div className="ob-brush b" />
+      <div className="ob-brush c" />
+      <div className="ob-brush d" />
+      <div className="ob-brush e" />
+      <div className="ob-brush f" />
+      <div className="ob-brush-grain" />
     </div>
   );
 }
@@ -81,6 +78,7 @@ const OI = ({ n, s = 20 }) => {
   const icons = {
     check: <svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
     arrow: <svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    chevron: <svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polyline points="6 9 12 15 18 9"/></svg>,
     skip: <svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>,
     play: <svg style={p} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
     home: <svg style={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -169,7 +167,6 @@ function OnboardingWelcome({ config, firstName, userType, onContinue }) {
 
   return (
     <div className="ob-welcome">
-      <OnboardingBlobBg />
       <div className="ob-welcome-content">
         {lines.map((line, idx) => {
           if (idx > lineIdx) return null;
@@ -202,7 +199,6 @@ function OnboardingPurpose({ config, selected, onSelect, onContinue }) {
 
   return (
     <div className="ob-purpose">
-      <OnboardingBlobBg />
       <div className="ob-purpose-content">
       <div className="ob-purpose-header">
         <span className="ob-purpose-typed">{tw.displayed}</span>
@@ -319,14 +315,37 @@ function stepDisplayStatus(step, rawStatus, idx, activeStepIdx, data) {
   return { kind: "pending", label: "Not yet started" };
 }
 
-function OnboardingStepsPanel({ config, state, activeStepIdx, onJumpTo }) {
-  const allSteps = config.dataSteps;
-  const total = allSteps.length;
-  const doneCount = allSteps.filter(s => {
-    const st = state.steps[s.id]?.status;
-    return st === "complete" || st === "skipped";
-  }).length;
+function OnboardingStepsPanel({ steps, state, activeStepIdx, onJumpTo }) {
+  // Collapse the learning step + its trailing tips into ONE expandable "Learn how to use Lanced"
+  // panel entry (with subsections), so the rail stays compact.
+  const entries = [];
+  for (let i = 0; i < steps.length;) {
+    const s = steps[i];
+    if (s.kind === "learning") {
+      const subs = [{ step: s, idx: i }];
+      let j = i + 1;
+      while (j < steps.length && steps[j].kind === "tip") { subs.push({ step: steps[j], idx: j }); j++; }
+      entries.push({ type: "group", id: s.id, title: s.title, icon: stepIconName(s), subs });
+      i = j;
+    } else {
+      entries.push({ type: "single", id: s.id, step: s, idx: i });
+      i++;
+    }
+  }
+
+  const isDoneStatus = (st) => st === "complete" || st === "skipped";
+  const entryDone = (e) => e.type === "single"
+    ? isDoneStatus(state.steps[e.step.id]?.status)
+    : e.subs.every(su => isDoneStatus(state.steps[su.step.id]?.status));
+
+  const total = entries.length;
+  const doneCount = entries.filter(entryDone).length;
   const pct = Math.round((doneCount / total) * 100);
+
+  const group = entries.find(e => e.type === "group");
+  const groupActive = !!group && group.subs.some(su => su.idx === activeStepIdx);
+  const [openGroup, setOpenGroup] = useState(false);
+  useEffect(() => { if (groupActive) setOpenGroup(true); }, [groupActive]);
 
   return (
     <aside className="ob-steps-panel">
@@ -336,29 +355,82 @@ function OnboardingStepsPanel({ config, state, activeStepIdx, onJumpTo }) {
         <div className="ob-sp-bar"><span style={{ width: `${pct}%` }} /></div>
       </div>
       <div className="ob-sp-list">
-        {allSteps.map((step, idx) => {
-          const rawStatus = state.steps[step.id]?.status || "pending";
-          const { kind, label } = stepDisplayStatus(step, rawStatus, idx, activeStepIdx, state.steps[step.id]?.data);
-          const clickable = idx <= activeStepIdx || rawStatus === "complete" || rawStatus === "skipped";
-          const isActive = idx === activeStepIdx;
+        {entries.map((e) => {
+          if (e.type === "single") {
+            const { step, idx } = e;
+            const rawStatus = state.steps[step.id]?.status || "pending";
+            const { kind, label } = stepDisplayStatus(step, rawStatus, idx, activeStepIdx, state.steps[step.id]?.data);
+            const clickable = idx <= activeStepIdx || rawStatus === "complete" || rawStatus === "skipped";
+            const isActive = idx === activeStepIdx;
+            return (
+              <button
+                key={step.id}
+                className={`ob-sp-item ob-sp-${kind}${isActive ? " ob-sp-current" : ""}`}
+                onClick={() => clickable && onJumpTo(step.id)}
+                disabled={!clickable}
+              >
+                <span className="ob-sp-ic">
+                  {kind === "completed" || kind === "verified"
+                    ? <OI n="check" s={15} />
+                    : <OI n={stepIconName(step)} s={16} />}
+                </span>
+                <span className="ob-sp-body">
+                  <span className="ob-sp-name">{step.title}</span>
+                  <span className={`ob-sp-status ob-sp-st-${kind}`}>{label}</span>
+                </span>
+                {clickable && <span className="ob-sp-chev"><OI n="arrow" s={14} /></span>}
+              </button>
+            );
+          }
+          // Grouped "Learn how to use Lanced" entry with expandable subsections
+          const done = entryDone(e);
+          const active = e.subs.some(su => su.idx === activeStepIdx);
+          const kind = done ? "completed" : active ? "attention" : "pending";
+          const label = done ? "Completed" : active ? "Need attention" : `${e.subs.length} quick reads`;
+          const reachable = e.subs[0].idx <= activeStepIdx || done;
+          const open = openGroup && reachable;
           return (
-            <button
-              key={step.id}
-              className={`ob-sp-item ob-sp-${kind}${isActive ? " ob-sp-current" : ""}`}
-              onClick={() => clickable && onJumpTo(step.id)}
-              disabled={!clickable}
-            >
-              <span className="ob-sp-ic">
-                {kind === "completed" || kind === "verified"
-                  ? <OI n="check" s={15} />
-                  : <OI n={stepIconName(step)} s={16} />}
-              </span>
-              <span className="ob-sp-body">
-                <span className="ob-sp-name">{step.title}</span>
-                <span className={`ob-sp-status ob-sp-st-${kind}`}>{label}</span>
-              </span>
-              {clickable && <span className="ob-sp-chev"><OI n="arrow" s={14} /></span>}
-            </button>
+            <div key={e.id} className={`ob-sp-group${open ? " open" : ""}`}>
+              <button
+                className={`ob-sp-item ob-sp-${kind}${active ? " ob-sp-current" : ""}`}
+                onClick={() => reachable && setOpenGroup(o => !o)}
+                disabled={!reachable}
+                aria-expanded={open}
+              >
+                <span className="ob-sp-ic">
+                  {done ? <OI n="check" s={15} /> : <OI n={e.icon} s={16} />}
+                </span>
+                <span className="ob-sp-body">
+                  <span className="ob-sp-name">{e.title}</span>
+                  <span className={`ob-sp-status ob-sp-st-${kind}`}>{label}</span>
+                </span>
+                {reachable && <span className={`ob-sp-chev ob-sp-chev-toggle${open ? " open" : ""}`}><OI n="chevron" s={16} /></span>}
+              </button>
+              {open && (
+                <div className="ob-sp-subs">
+                  {e.subs.map((su) => {
+                    const rawStatus = state.steps[su.step.id]?.status || "pending";
+                    const ss = stepDisplayStatus(su.step, rawStatus, su.idx, activeStepIdx, state.steps[su.step.id]?.data);
+                    const sClickable = su.idx <= activeStepIdx || rawStatus === "complete" || rawStatus === "skipped";
+                    const sActive = su.idx === activeStepIdx;
+                    const sDone = ss.kind === "completed" || ss.kind === "verified";
+                    return (
+                      <button
+                        key={su.step.id}
+                        className={`ob-sp-sub ob-sp-sub-${ss.kind}${sActive ? " ob-sp-sub-current" : ""}`}
+                        onClick={() => sClickable && onJumpTo(su.step.id)}
+                        disabled={!sClickable}
+                      >
+                        <span className={`ob-sp-sub-dot${sDone ? " done" : ""}${sActive ? " active" : ""}`}>
+                          {sDone ? <OI n="check" s={11} /> : null}
+                        </span>
+                        <span className="ob-sp-sub-name">{su.step.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -453,66 +525,287 @@ function OnboardingSidebar({ config, firstName }) {
   );
 }
 
-/* ━━━ MAIN CONVERSATION ENGINE ━━━ */
+/* ━━━ DEFAULT FINAL TIPS (used when a config doesn't supply its own) ━━━ */
+const DEFAULT_TIPS = [
+  { id: "tip-search", title: "Quick navigation", prompt: "A little tip — press ⌘K (or Ctrl+K) anywhere to jump straight to any section, person, or setting." },
+  { id: "tip-help", title: "Help when you need it", prompt: "Ever stuck? The Academy and live chat live in your sidebar — we're always one click away." },
+  { id: "tip-mobile", title: "Take it anywhere", prompt: "Lanced works beautifully on mobile too, so you can stay on top of things wherever you are." },
+];
+
+/* ━━━ BUILD THE COMBINED FLOW (setup → learning → tips → enter) ━━━ */
+function buildFlowSteps(config, state) {
+  const existing = state.userType === "existing";
+  const dataSteps = config.dataSteps.map(s => ({
+    ...s,
+    kind: "form",
+    // Returning users see a review-and-confirm framing (falls back to the new-user copy).
+    intro: existing ? (s.introExisting ?? s.intro) : s.intro,
+    prompt: existing ? (s.promptExisting ?? s.prompt) : s.prompt,
+    cta: existing ? (s.ctaExisting ?? "Review") : s.cta,
+    successMessage: existing ? (s.successMessageExisting ?? s.successMessage) : s.successMessage,
+  }));
+
+  const guides = (config.learningSteps || []).filter(ls =>
+    ls.purposes.some(p => state.purposes?.includes(p))
+  );
+  const learningStep = {
+    kind: "learning",
+    id: "learn-lanced",
+    title: "Learn how to use Lanced",
+    icon: "star",
+    intro: config.learningIntro || "You've got the essentials down. Here are a few quick guides, picked just for you.",
+    emptyMessage: config.learningEmpty || "You're all set — no extra guides needed right now. You can always find tutorials in the Academy.",
+    guides,
+    successMessage: config.learningSuccess || "Nice — you know your way around now.",
+  };
+
+  const tips = (config.tips || DEFAULT_TIPS).map(t => ({ ...t, kind: "tip", icon: "sparkle" }));
+
+  const completeStep = {
+    kind: "complete",
+    id: "enter-lanced",
+    title: "Enter Lanced",
+    icon: "home",
+    prompt: config.completeMessage || "That's everything — your workspace is ready. Welcome aboard.",
+    cta: config.completeCta || "Enter Lanced",
+  };
+
+  return [...dataSteps, learningStep, ...tips, completeStep];
+}
+
+/* ━━━ LEARNING STEP (runs the picked guides as a sub-thread inside the chat) ━━━ */
+function LearningStep({ step, state, setState, onDone, scrollToBottom }) {
+  const guides = step.guides || [];
+  // Resume-safe: skip guides already recorded in state.learning
+  const learningMap = state.learning || {};
+  const [idx, setIdx] = useState(() => {
+    let i = 0;
+    while (i < guides.length && learningMap[guides[i].id]) i++;
+    return i;
+  });
+  const [localHist, setLocalHist] = useState(() =>
+    guides.filter(g => learningMap[g.id]).map(g => ({
+      id: g.id, prompt: g.prompt, mode: learningMap[g.id], label: g.videoTitle || g.cta || "Quick guide",
+    }))
+  );
+  const [msgReady, setMsgReady] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+
+  const done = guides.length === 0 || idx >= guides.length;
+  const guide = done ? null : guides[idx];
+
+  useEffect(() => { scrollToBottom(); }, [idx, msgReady, showVideo, done, scrollToBottom]);
+
+  const advance = (mode) => {
+    if (guide) {
+      setLocalHist(h => [...h, { id: guide.id, prompt: guide.prompt, mode, label: guide.videoTitle || guide.cta || "Quick guide" }]);
+      setState(prev => ({
+        ...prev,
+        learning: { ...(prev.learning || {}), [guide.id]: mode },
+        learningCompleted: [...new Set([...(prev.learningCompleted || []), guide.id])],
+      }));
+    }
+    setMsgReady(false);
+    setShowVideo(false);
+    setIdx(i => i + 1);
+  };
+
+  return (
+    <>
+      <StaticMessage text={step.intro} />
+
+      {/* Already-handled guides stay in the thread */}
+      {localHist.map(h => (
+        <div key={h.id}>
+          <StaticMessage text={h.prompt} />
+          <ConversationCompleted label={h.mode === "watched" ? `Watched · ${h.label}` : `Skipped · ${h.label}`} />
+        </div>
+      ))}
+
+      {/* Current guide */}
+      {guide && (
+        <>
+          <ConversationMessage key={guide.id} text={guide.prompt} delay={300} onDone={() => setMsgReady(true)} />
+          {msgReady && !showVideo && (
+            <div className="ob-msg ob-msg-actions ob-chat-in">
+              <button className="ob-action-btn ob-action-primary" onClick={() => setShowVideo(true)}>
+                <OI n="play" s={13} /> {guide.cta || "Watch quick guide"}
+              </button>
+              <button className="ob-action-btn ob-action-secondary" onClick={() => advance("skipped")}>{guide.skipLabel || "I'll explore on my own"}</button>
+            </div>
+          )}
+          {showVideo && (
+            <div className="ob-msg ob-msg-video ob-chat-in">
+              <div className="ob-video-card">
+                <div className="ob-video-frame">
+                  {guide.videoSrc ? (
+                    <video src={guide.videoSrc} controls autoPlay className="ob-video-el" />
+                  ) : (
+                    <div className="ob-video-placeholder">
+                      <div className="ob-video-play"><OI n="play" s={22} /></div>
+                      <div className="ob-video-ph-label">{guide.videoTitle || guide.cta || "Quick guide"}</div>
+                      <div className="ob-video-ph-sub">Video coming soon</div>
+                    </div>
+                  )}
+                </div>
+                <div className="ob-form-actions">
+                  <button className="ob-action-btn ob-action-primary" onClick={() => advance("watched")}>Continue <OI n="arrow" s={14} /></button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* All guides handled → continue into the final tips */}
+      {done && (
+        <>
+          {guides.length === 0 && <StaticMessage text={step.emptyMessage} />}
+          <div className="ob-msg ob-msg-actions ob-chat-in">
+            <button className="ob-action-btn ob-action-primary" onClick={onDone}>Continue <OI n="arrow" s={14} /></button>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/* ━━━ MESSAGE + SINGLE CONTINUE (used for tips & the final "enter" step) ━━━ */
+function MessageWithContinue({ text, ctaLabel, onContinue, scrollToBottom }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { scrollToBottom(); }, [ready, scrollToBottom]);
+  return (
+    <>
+      <ConversationMessage text={text} delay={300} onDone={() => setReady(true)} />
+      {ready && (
+        <div className="ob-msg ob-msg-actions ob-chat-in">
+          <button className="ob-action-btn ob-action-primary" onClick={onContinue}>{ctaLabel} <OI n="arrow" s={14} /></button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ━━━ HISTORY RENDERER (a completed flow step, frozen in the thread) ━━━ */
+function FlowStepHistory({ step, state }) {
+  if (step.kind === "form") {
+    const status = state.steps[step.id]?.status || "complete";
+    return (
+      <>
+        <ConversationCompleted label={step.title} />
+        {status !== "skipped" && step.successMessage && <StaticMessage text={step.successMessage} />}
+      </>
+    );
+  }
+  if (step.kind === "learning") {
+    const learningMap = state.learning || {};
+    return (
+      <>
+        <StaticMessage text={step.intro} />
+        {(step.guides || []).filter(g => learningMap[g.id]).map(g => (
+          <div key={g.id}>
+            <StaticMessage text={g.prompt} />
+            <ConversationCompleted label={learningMap[g.id] === "watched"
+              ? `Watched · ${g.videoTitle || g.cta || "Quick guide"}`
+              : `Skipped · ${g.videoTitle || g.cta || "Quick guide"}`} />
+          </div>
+        ))}
+        {step.successMessage && <StaticMessage text={step.successMessage} />}
+      </>
+    );
+  }
+  if (step.kind === "tip") {
+    return <StaticMessage text={step.prompt} />;
+  }
+  return null;
+}
+
+/* ━━━ MAIN CONVERSATION ENGINE (setup + learning + tips + enter — one continuous chat) ━━━ */
 function OnboardingConversation({ config, state, setState, onComplete, firstName }) {
   const scrollRef = useRef(null);
-  const [activeStepIdx, setActiveStepIdx] = useState(() => {
+  const anchorRef = useRef(null);
+  const flowSteps = buildFlowSteps(config, state);
+
+  const firstUnfinished = () => {
     const idx = config.dataSteps.findIndex(s => {
       const st = state.steps[s.id]?.status;
       return !st || st === "pending" || st === "in-progress";
     });
     return idx >= 0 ? idx : 0;
-  });
+  };
+
+  const [activeStepIdx, setActiveStepIdx] = useState(firstUnfinished);
   const [phase, setPhase] = useState("intro");
   const [showForm, setShowForm] = useState(false);
   const [returnIdx, setReturnIdx] = useState(null);
   const [confettiKey, setConfettiKey] = useState(0);
   const [formData, setFormData] = useState(() => {
-    const step = config.dataSteps[activeStepIdx];
+    const step = flowSteps[activeStepIdx];
     return { ...(step?.defaults || {}), ...(state.steps[step?.id]?.data || {}) };
   });
   const isEditing = returnIdx !== null;
 
-  const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      setTimeout(() => scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 120);
-    }
+  // Keep the newest content comfortably centered. Like a chat thread: messages fill
+  // downward, and once the latest content drops past ~75% of the viewport (≈25% from the
+  // bottom) we glide it back up so it sits around 60% — never glued to the bottom edge.
+  const recenter = useCallback((force = false) => {
+    const c = scrollRef.current, a = anchorRef.current;
+    if (!c || !a) return;
+    const cRect = c.getBoundingClientRect();
+    const aRect = a.getBoundingClientRect();
+    const anchorFromTop = aRect.top - cRect.top;       // anchor's current position in the viewport
+    const triggerAt = c.clientHeight * 0.75;            // 25% from the bottom
+    if (!force && anchorFromTop <= triggerAt) return;   // still comfortably in view — leave it
+    const target = (anchorFromTop + c.scrollTop) - c.clientHeight * 0.6;
+    c.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [phase, showForm, activeStepIdx, scrollToBottom]);
+  // Kept name for the many child callsites; now recenters instead of slamming to the bottom.
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => recenter(false), 120);
+  }, [recenter]);
 
-  const currentStep = config.dataSteps[activeStepIdx];
-  const isLastStep = activeStepIdx >= config.dataSteps.length - 1;
+  useEffect(() => { const t = setTimeout(() => recenter(false), 140); return () => clearTimeout(t); }, [phase, showForm, activeStepIdx, recenter]);
 
-  const completedSteps = config.dataSteps.slice(0, activeStepIdx).map(s => ({
-    id: s.id,
-    title: s.title,
-    successMessage: s.successMessage,
-    status: state.steps[s.id]?.status || "complete",
-  }));
+  // React to content growth (typewriter reveals, forms expanding, new messages) so the
+  // newest line is nudged up the moment it crosses the threshold — no manual scrolling.
+  useEffect(() => {
+    const inner = scrollRef.current?.querySelector(".ob-conversation-inner");
+    if (!inner || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => recenter(false));
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [recenter]);
+
+  const currentStep = flowSteps[activeStepIdx];
+  const isLastStep = activeStepIdx >= flowSteps.length - 1;
+  const historySteps = flowSteps.slice(0, activeStepIdx);
 
   const handleFormChange = (field, value) => {
     setFormData(d => ({ ...d, [field]: value }));
   };
 
   const goToStep = (idx) => {
-    const step = config.dataSteps[idx];
+    const step = flowSteps[idx];
     const st = state.steps[step?.id]?.status;
     const alreadyDone = st === "complete" || st === "skipped";
     setActiveStepIdx(idx);
     setFormData({ ...(step?.defaults || {}), ...(state.steps[step?.id]?.data || {}) });
-    // Revisiting a finished step → open its form straight away for editing
-    setShowForm(alreadyDone);
-    setPhase(alreadyDone ? "form" : "intro");
+    // Revisiting a finished form → open it straight away for editing
+    const isForm = (step?.kind || "form") === "form";
+    setShowForm(isForm && alreadyDone);
+    setPhase(isForm && alreadyDone ? "form" : "intro");
   };
 
-  const advanceStep = (status = "complete") => {
+  // Mark a step done in state, then move on (or finish)
+  const advanceStep = (status = "complete", data = null) => {
+    const stepId = currentStep.id;
     setState(prev => ({
       ...prev,
-      steps: { ...prev.steps, [currentStep.id]: { status, data: status === "skipped" ? null : formData } },
+      steps: { ...prev.steps, [stepId]: { status, data: status === "skipped" ? null : data } },
     }));
 
-    if (status === "complete") setConfettiKey(k => k + 1);
+    if (status === "complete" && currentStep.kind === "form") setConfettiKey(k => k + 1);
 
     // If editing an earlier step, jump back to where we left off
     if (isEditing && returnIdx > activeStepIdx) {
@@ -531,9 +824,8 @@ function OnboardingConversation({ config, state, setState, onComplete, firstName
   };
 
   const handleJumpTo = (stepId) => {
-    const idx = config.dataSteps.findIndex(s => s.id === stepId);
+    const idx = flowSteps.findIndex(s => s.id === stepId);
     if (idx < 0 || idx === activeStepIdx) return;
-    // Jumping backward to edit a finished step — remember where to return
     if (idx < activeStepIdx) setReturnIdx(prev => Math.max(prev ?? 0, activeStepIdx));
     else setReturnIdx(null);
     goToStep(idx);
@@ -541,27 +833,24 @@ function OnboardingConversation({ config, state, setState, onComplete, firstName
 
   return (
     <div className="ob-conversation-layout">
-      <OnboardingBlobBg />
       {confettiKey > 0 && <ConfettiBurst key={confettiKey} />}
+      {currentStep?.kind === "complete" && <ConfettiBurst key={`done-${activeStepIdx}`} />}
       <div className="ob-conversation-main">
       <div className="ob-conversation-area" ref={scrollRef}>
         <div className="ob-conversation-inner">
-          {/* Completed steps as static history */}
-          {completedSteps.map(s => (
-            <div key={s.id}>
-              <ConversationCompleted label={s.title} />
-              {s.successMessage && <StaticMessage text={s.successMessage} />}
-            </div>
+          {/* Everything already done stays frozen in the thread */}
+          {historySteps.map(s => (
+            <div key={s.id}><FlowStepHistory step={s} state={state} /></div>
           ))}
 
-          {/* Current step messages — accumulate, never unmount */}
-          {currentStep && (
+          {/* The active step */}
+          {currentStep && currentStep.kind === "form" && (
             <>
               {currentStep.intro && (
                 <ConversationMessage
                   key={`intro-${currentStep.id}`}
                   text={currentStep.intro}
-                  delay={completedSteps.length > 0 ? 200 : 400}
+                  delay={historySteps.length > 0 ? 200 : 400}
                   onDone={() => { if (phase === "intro") setPhase("prompt"); }}
                 />
               )}
@@ -569,7 +858,7 @@ function OnboardingConversation({ config, state, setState, onComplete, firstName
                 <ConversationMessage
                   key={`prompt-${currentStep.id}`}
                   text={currentStep.prompt}
-                  delay={currentStep.intro ? 300 : (completedSteps.length > 0 ? 200 : 400)}
+                  delay={currentStep.intro ? 300 : (historySteps.length > 0 ? 200 : 400)}
                   onDone={() => { if (phase === "prompt" || phase === "intro") setPhase("action"); }}
                 />
               )}
@@ -590,7 +879,7 @@ function OnboardingConversation({ config, state, setState, onComplete, firstName
                   step={currentStep}
                   data={formData}
                   onChange={handleFormChange}
-                  onSubmit={() => advanceStep("complete")}
+                  onSubmit={() => advanceStep("complete", formData)}
                   onSkip={() => advanceStep("skipped")}
                   isEditing={isEditing}
                   onCancel={isEditing ? () => { const r = returnIdx; setReturnIdx(null); goToStep(r); } : null}
@@ -598,109 +887,43 @@ function OnboardingConversation({ config, state, setState, onComplete, firstName
               )}
             </>
           )}
+
+          {currentStep && currentStep.kind === "learning" && (
+            <LearningStep
+              key={`learning-${currentStep.id}`}
+              step={currentStep}
+              state={state}
+              setState={setState}
+              onDone={() => advanceStep("complete")}
+              scrollToBottom={scrollToBottom}
+            />
+          )}
+
+          {currentStep && currentStep.kind === "tip" && (
+            <MessageWithContinue
+              key={`tip-${currentStep.id}`}
+              text={currentStep.prompt}
+              ctaLabel="Got it"
+              onContinue={() => advanceStep("complete")}
+              scrollToBottom={scrollToBottom}
+            />
+          )}
+
+          {currentStep && currentStep.kind === "complete" && (
+            <MessageWithContinue
+              key={`complete-${currentStep.id}`}
+              text={currentStep.prompt}
+              ctaLabel={currentStep.cta}
+              onContinue={() => advanceStep("complete")}
+              scrollToBottom={scrollToBottom}
+            />
+          )}
+          <div ref={anchorRef} className="ob-conversation-anchor" aria-hidden="true" />
         </div>
       </div>
       </div>
 
-      <OnboardingStepsPanel config={config} state={state} activeStepIdx={activeStepIdx} onJumpTo={handleJumpTo} />
-    </div>
-  );
-}
-
-/* ━━━ LEARNING CONVERSATION (chat thread — accumulates & scrolls) ━━━ */
-function OnboardingLearning({ config, state, setState, onDone }) {
-  const relevantSteps = config.learningSteps.filter(ls =>
-    ls.purposes.some(p => state.purposes?.includes(p))
-  );
-  const scrollRef = useRef(null);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [msgReady, setMsgReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-  const [history, setHistory] = useState([]); // [{ id, prompt, mode, label }]
-
-  const allDone = relevantSteps.length === 0 || currentIdx >= relevantSteps.length;
-  const step = allDone ? null : relevantSteps[currentIdx];
-
-  const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      setTimeout(() => scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 120);
-    }
-  }, []);
-  useEffect(() => { scrollToBottom(); }, [currentIdx, msgReady, showVideo, allDone, scrollToBottom]);
-
-  const advance = (mode) => {
-    if (step) {
-      setHistory(h => [...h, { id: step.id, prompt: step.prompt, mode, label: step.videoTitle || step.cta || "Quick guide" }]);
-      setState(prev => ({ ...prev, learningCompleted: [...(prev.learningCompleted || []), step.id] }));
-    }
-    setMsgReady(false);
-    setShowVideo(false);
-    setCurrentIdx(i => i + 1);
-  };
-
-  return (
-    <div className="ob-conversation-layout ob-learning-layout">
-      <OnboardingBlobBg />
-      <div className="ob-conversation-main">
-        <div className="ob-conversation-area" ref={scrollRef}>
-          <div className="ob-conversation-inner">
-            <StaticMessage text={config.learningIntro || "You've got the essentials down. Here are a few quick guides picked just for you."} />
-
-            {/* Watched / skipped guides stay in the thread */}
-            {history.map(h => (
-              <div key={h.id}>
-                <StaticMessage text={h.prompt} />
-                <ConversationCompleted label={h.mode === "watched" ? `Watched · ${h.label}` : `Skipped · ${h.label}`} />
-              </div>
-            ))}
-
-            {/* Current guide */}
-            {step && (
-              <>
-                <ConversationMessage key={step.id} text={step.prompt} delay={300} onDone={() => setMsgReady(true)} />
-                {msgReady && !showVideo && (
-                  <div className="ob-msg ob-msg-actions ob-chat-in">
-                    <button className="ob-action-btn ob-action-primary" onClick={() => setShowVideo(true)}>
-                      <OI n="play" s={13} /> {step.cta || "Watch quick guide"}
-                    </button>
-                    <button className="ob-action-btn ob-action-secondary" onClick={() => advance("skipped")}>{step.skipLabel || "I'll explore on my own"}</button>
-                  </div>
-                )}
-                {showVideo && (
-                  <div className="ob-msg ob-msg-video ob-chat-in">
-                    <div className="ob-video-card">
-                      <div className="ob-video-frame">
-                        {step.videoSrc ? (
-                          <video src={step.videoSrc} controls autoPlay className="ob-video-el" />
-                        ) : (
-                          <div className="ob-video-placeholder">
-                            <div className="ob-video-play"><OI n="play" s={22} /></div>
-                            <div className="ob-video-ph-label">{step.videoTitle || step.cta || "Quick guide"}</div>
-                            <div className="ob-video-ph-sub">Video coming soon</div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="ob-form-actions">
-                        <button className="ob-action-btn ob-action-primary" onClick={() => advance("watched")}>Continue <OI n="arrow" s={14} /></button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Wrap-up */}
-            {allDone && (
-              <>
-                <StaticMessage text="That's everything! You're ready to explore Lanced." />
-                <div className="ob-msg ob-msg-actions ob-chat-in">
-                  <button className="ob-action-btn ob-action-primary" onClick={onDone}>Start using Lanced <OI n="arrow" s={14} /></button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <OnboardingStepsPanel steps={flowSteps} state={state} activeStepIdx={activeStepIdx} onJumpTo={handleJumpTo} />
     </div>
   );
 }
@@ -725,17 +948,18 @@ export default function UniversalOnboarding({ config, state, setState, onComplet
   };
 
   const handleConversationComplete = () => {
-    setState(prev => ({ ...prev, stage: "learning" }));
-  };
-
-  const handleLearningDone = () => {
     setState(prev => ({ ...prev, stage: "complete" }));
     if (onComplete) onComplete();
   };
 
   return (
-    <div className={embedded ? "ob-root ob-embedded" : "ob-root"}>
+    <div className={embedded ? `ob-root ob-embedded${(state.stage === "welcome" || state.stage === "purpose") ? " ob-fullscreen" : ""}` : "ob-root"}>
       <style>{ONBOARDING_CSS}</style>
+
+      {/* Single, persistent motion background — mounted once at the root so it never
+          resets between stages (welcome → purpose → conversation). Elements slide in/out
+          over one continuous field. */}
+      <OnboardingBlobBg />
 
       {state.stage === "welcome" && (
         <OnboardingWelcome
@@ -755,7 +979,7 @@ export default function UniversalOnboarding({ config, state, setState, onComplet
         />
       )}
 
-      {state.stage === "conversation" && (
+      {(state.stage === "conversation" || state.stage === "learning") && (
         <OnboardingConversation
           config={config}
           state={state}
@@ -764,28 +988,25 @@ export default function UniversalOnboarding({ config, state, setState, onComplet
           firstName={firstName}
         />
       )}
-
-      {state.stage === "learning" && (
-        <OnboardingLearning
-          config={config}
-          state={state}
-          setState={setState}
-          onDone={handleLearningDone}
-        />
-      )}
     </div>
   );
 }
 
 /* ━━━ HELPER: Create initial state ━━━ */
 export function createOnboardingState(config, userType = "new", firstName = "") {
+  // Returning users (the "What's New" / 2.0 flow) get their existing data pre-filled from a stored
+  // profile, so the steps become a quick review-and-confirm rather than blank forms.
+  const profile = userType === "existing" ? config.existingProfile : null;
   const steps = {};
-  config.dataSteps.forEach(s => { steps[s.id] = { status: "pending", data: null }; });
+  config.dataSteps.forEach(s => {
+    const data = profile && typeof s.mapFromProfile === "function" ? s.mapFromProfile(profile) : null;
+    steps[s.id] = { status: "pending", data: data && Object.keys(data).length ? data : null };
+  });
   return {
     userType,
     firstName,
     stage: "welcome",
-    purposes: [],
+    purposes: profile?.purposes ? [...profile.purposes] : [],
     steps,
     learningCompleted: [],
     dismissed: false,
@@ -797,38 +1018,48 @@ const ONBOARDING_CSS = `
 /* ── Root ── */
 .ob-root{position:fixed;inset:0;z-index:200;background:var(--bg);font-family:var(--sans);color:var(--tx);display:flex;flex-direction:column;overflow:hidden}
 /* Embedded mode — onboarding lives inside the real app's .main (real sidebar stays visible) */
-.ob-embedded{position:absolute;inset:0;z-index:80}
+.ob-embedded{position:fixed;top:0;right:0;bottom:0;left:var(--sb-wc,64px);z-index:80;overflow:hidden}
+/* Welcome + purpose: cinematic full-screen takeover (covers the sidebar) within the SAME mount,
+   so the motion background carries straight through into the embedded conversation with no reset. */
+.ob-embedded.ob-fullscreen{left:0;z-index:200}
 .ob-main-host{position:relative}
 .ob-embedded .ob-conversation-layout{padding-left:0}
 
-/* ── Blob Background (auth + Studio-entrance style — slow drift, appear & disappear) ── */
-.ob-blob-field{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#f8f6ff}
-.dark .ob-blob-field{background:var(--bg)}
-.ob-blob{position:absolute;border-radius:50%;filter:blur(110px) saturate(1.2);will-change:transform,opacity;opacity:0;mix-blend-mode:multiply}
-.dark .ob-blob{mix-blend-mode:screen}
-.ob-blob-1{width:560px;height:560px;background:radial-gradient(circle,rgba(96,77,255,.55),rgba(96,77,255,.04) 70%);top:-12%;left:-6%;animation:ob-drift-a 30s ease-in-out infinite}
-.ob-blob-2{width:480px;height:480px;background:radial-gradient(circle,rgba(139,122,255,.5),rgba(139,122,255,.04) 70%);top:8%;right:-8%;animation:ob-drift-b 38s ease-in-out infinite;animation-delay:-6s}
-.ob-blob-3{width:420px;height:420px;background:radial-gradient(circle,rgba(162,148,255,.45),rgba(120,100,240,.04) 70%);bottom:-14%;left:24%;animation:ob-drift-c 34s ease-in-out infinite;animation-delay:-12s}
-.ob-blob-4{width:360px;height:360px;background:radial-gradient(circle,rgba(120,100,230,.45),rgba(96,77,255,.04) 70%);top:34%;left:46%;animation:ob-drift-d 42s ease-in-out infinite;animation-delay:-3s}
-.ob-blob-5{width:320px;height:320px;background:radial-gradient(circle,rgba(167,139,250,.42),rgba(120,100,240,.04) 70%);bottom:14%;right:18%;animation:ob-drift-a 36s ease-in-out infinite;animation-delay:-18s}
-.ob-blob-6{width:300px;height:300px;background:radial-gradient(circle,rgba(96,77,255,.4),rgba(139,122,255,.04) 70%);top:6%;left:36%;animation:ob-drift-b 32s ease-in-out infinite;animation-delay:-9s}
-.ob-blob-7{width:380px;height:380px;background:radial-gradient(circle,rgba(139,122,255,.4),rgba(96,77,255,.03) 70%);bottom:2%;left:4%;animation:ob-drift-c 44s ease-in-out infinite;animation-delay:-22s}
-.ob-blob-8{width:280px;height:280px;background:radial-gradient(circle,rgba(180,165,255,.4),rgba(150,130,240,.03) 70%);top:46%;right:6%;animation:ob-drift-d 28s ease-in-out infinite;animation-delay:-15s}
-.ob-blob-9{width:240px;height:240px;background:radial-gradient(circle,rgba(120,100,230,.38),rgba(96,77,255,.03) 70%);top:60%;left:14%;animation:ob-drift-a 40s ease-in-out infinite;animation-delay:-26s}
-@keyframes ob-drift-a{0%{transform:translate3d(0,0,0) scale(.85);opacity:0}20%{opacity:.6}50%{transform:translate3d(70px,50px,0) scale(1.12);opacity:.7}80%{opacity:.45}100%{transform:translate3d(-30px,90px,0) scale(.9);opacity:0}}
-@keyframes ob-drift-b{0%{transform:translate3d(0,0,0) scale(.9);opacity:0}22%{opacity:.55}50%{transform:translate3d(-60px,40px,0) scale(1.15);opacity:.68}78%{opacity:.4}100%{transform:translate3d(40px,-50px,0) scale(.92);opacity:0}}
-@keyframes ob-drift-c{0%{transform:translate3d(0,0,0) scale(.88);opacity:0}25%{opacity:.5}50%{transform:translate3d(50px,-60px,0) scale(1.1);opacity:.62}80%{opacity:.4}100%{transform:translate3d(-50px,30px,0) scale(.95);opacity:0}}
-@keyframes ob-drift-d{0%{transform:translate3d(0,0,0) scale(.92);opacity:0}24%{opacity:.5}50%{transform:translate3d(-40px,-50px,0) scale(1.08);opacity:.6}78%{opacity:.38}100%{transform:translate3d(60px,40px,0) scale(.9);opacity:0}}
-.ob-blob-grain{position:absolute;inset:-10%;pointer-events:none;opacity:.22;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
-@media(prefers-reduced-motion:reduce){.ob-blob{animation:none!important;opacity:.5!important}}
+/* ── Brush Background (matches the auth/login page — animated brush-stroke sweeps) ── */
+/* Soft off-white greyish base — never goes fully white anywhere, so cards/text stay legible.
+   The mask is a gentle vignette that keeps ~85% opacity at the edges (no hard white corners). */
+.ob-brush-field{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#ecebf2;--brush-intensity:0.7;-webkit-mask-image:radial-gradient(ellipse at center,#000 50%,rgba(0,0,0,.85) 100%);mask-image:radial-gradient(ellipse at center,#000 50%,rgba(0,0,0,.85) 100%)}
+.dark .ob-brush-field{background:var(--bg)}
+.ob-brush{position:absolute;top:50%;left:50%;background-repeat:no-repeat;background-size:100% 100%;background-position:center;opacity:0;will-change:transform,opacity;transform:translate3d(-50%,-50%,0);border-radius:50%;filter:blur(40px) saturate(1.5) contrast(1.15);mix-blend-mode:multiply}
+.dark .ob-brush{mix-blend-mode:screen}
+.ob-brush.a{background-image:radial-gradient(ellipse 60% 45% at 50% 50%,color-mix(in oklab,var(--ac) 95%,transparent) 0%,color-mix(in oklab,var(--ac) 70%,transparent) 35%,color-mix(in oklab,var(--ac) 25%,transparent) 65%,transparent 80%)}
+.ob-brush.b{background-image:radial-gradient(ellipse 70% 40% at 45% 55%,color-mix(in oklab,var(--ac) 90%,transparent) 0%,color-mix(in oklab,var(--ac) 60%,transparent) 40%,color-mix(in oklab,var(--ac) 20%,transparent) 70%,transparent 82%)}
+.ob-brush.c{background-image:radial-gradient(ellipse 55% 50% at 55% 45%,color-mix(in oklab,var(--ac) 95%,transparent) 0%,color-mix(in oklab,var(--ac) 65%,transparent) 38%,color-mix(in oklab,var(--ac) 25%,transparent) 68%,transparent 80%)}
+.ob-brush.d{background-image:radial-gradient(ellipse 65% 35% at 50% 50%,color-mix(in oklab,var(--ac) 85%,transparent) 0%,color-mix(in oklab,var(--ac) 55%,transparent) 42%,color-mix(in oklab,var(--ac) 20%,transparent) 72%,transparent 85%)}
+.ob-brush.e{background-image:radial-gradient(ellipse 60% 60% at 50% 50%,color-mix(in oklab,var(--ac) 80%,transparent) 0%,color-mix(in oklab,var(--ac) 40%,transparent) 45%,transparent 78%)}
+.ob-brush.f{background-image:radial-gradient(ellipse 65% 55% at 50% 50%,color-mix(in oklab,var(--ac) 75%,transparent) 0%,color-mix(in oklab,var(--ac) 35%,transparent) 50%,transparent 80%)}
+.ob-brush-grain{position:absolute;inset:-10%;pointer-events:none;opacity:.28;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+@keyframes ob-sweep-a{0%{transform:translate3d(-90%,-40%,0) rotate(-8deg) scale(1.05);opacity:0}15%{opacity:calc(0.85 * var(--brush-intensity))}50%{transform:translate3d(0%,-10%,0) rotate(4deg) scale(1.25);opacity:calc(1 * var(--brush-intensity))}85%{opacity:calc(0.7 * var(--brush-intensity))}100%{transform:translate3d(90%,20%,0) rotate(12deg) scale(1.1);opacity:0}}
+@keyframes ob-sweep-b{0%{transform:translate3d(80%,30%,0) rotate(8deg) scale(1.1);opacity:0}20%{opacity:calc(0.8 * var(--brush-intensity))}50%{transform:translate3d(-10%,10%,0) rotate(-6deg) scale(1.3);opacity:calc(1 * var(--brush-intensity))}80%{opacity:calc(0.75 * var(--brush-intensity))}100%{transform:translate3d(-100%,40%,0) rotate(-14deg) scale(1.15);opacity:0}}
+@keyframes ob-sweep-c{0%{transform:translate3d(-80%,50%,0) rotate(-4deg) scale(0.95);opacity:0}18%{opacity:calc(0.85 * var(--brush-intensity))}50%{transform:translate3d(20%,30%,0) rotate(6deg) scale(1.2);opacity:calc(0.95 * var(--brush-intensity))}82%{opacity:calc(0.75 * var(--brush-intensity))}100%{transform:translate3d(100%,60%,0) rotate(14deg) scale(1.05);opacity:0}}
+@keyframes ob-sweep-d{0%{transform:translate3d(80%,-50%,0) rotate(10deg) scale(1.0);opacity:0}20%{opacity:calc(0.75 * var(--brush-intensity))}50%{transform:translate3d(0%,0%,0) rotate(-8deg) scale(1.25);opacity:calc(0.9 * var(--brush-intensity))}80%{opacity:calc(0.7 * var(--brush-intensity))}100%{transform:translate3d(-90%,30%,0) rotate(-18deg) scale(1.1);opacity:0}}
+@keyframes ob-sweep-e{0%{transform:translate3d(-70%,-70%,0) rotate(15deg) scale(0.9);opacity:0}20%{opacity:calc(0.7 * var(--brush-intensity))}50%{transform:translate3d(30%,-50%,0) rotate(-10deg) scale(1.15);opacity:calc(0.85 * var(--brush-intensity))}80%{opacity:calc(0.65 * var(--brush-intensity))}100%{transform:translate3d(110%,-30%,0) rotate(-22deg) scale(1.0);opacity:0}}
+@keyframes ob-sweep-f{0%{transform:translate3d(60%,70%,0) rotate(-12deg) scale(1.0);opacity:0}22%{opacity:calc(0.7 * var(--brush-intensity))}50%{transform:translate3d(-20%,50%,0) rotate(8deg) scale(1.2);opacity:calc(0.9 * var(--brush-intensity))}80%{opacity:calc(0.6 * var(--brush-intensity))}100%{transform:translate3d(-100%,30%,0) rotate(20deg) scale(1.05);opacity:0}}
+.ob-brush.a{width:80%;aspect-ratio:16/9;animation:ob-sweep-a 32s linear infinite}
+.ob-brush.b{width:70%;aspect-ratio:5/3;animation:ob-sweep-b 44s linear infinite;animation-delay:-10s}
+.ob-brush.c{width:90%;aspect-ratio:16/9;animation:ob-sweep-c 38s linear infinite;animation-delay:-22s}
+.ob-brush.d{width:65%;aspect-ratio:4/3;animation:ob-sweep-d 50s linear infinite;animation-delay:-16s}
+.ob-brush.e{width:55%;aspect-ratio:1/1;animation:ob-sweep-e 56s linear infinite;animation-delay:-28s}
+.ob-brush.f{width:60%;aspect-ratio:6/5;animation:ob-sweep-f 48s linear infinite;animation-delay:-8s}
+@media(prefers-reduced-motion:reduce){.ob-brush{animation:none!important;opacity:.6!important;transform:translate3d(-50%,-50%,0)!important}}
 
 /* ── Welcome Screen ── */
 .ob-welcome{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.ob-welcome-content{position:relative;z-index:1;text-align:center;max-width:640px;padding:40px}
-.ob-welcome-line{font-size:clamp(26px,3.6vw,42px);font-weight:300;line-height:1.22;margin-bottom:6px;letter-spacing:-.02em;color:var(--tx);min-height:1.2em}
+.ob-welcome-content{position:relative;z-index:1;text-align:center;max-width:min(1100px,94vw);padding:40px}
+.ob-welcome-line{font-size:clamp(26px,3.6vw,42px);font-weight:300;line-height:1.22;margin-bottom:6px;letter-spacing:-.02em;color:var(--tx);min-height:1.2em;white-space:nowrap}
 .ob-welcome-hero{font-size:clamp(30px,4.4vw,50px);font-weight:400;letter-spacing:-.03em;color:var(--tx)}
 .ob-welcome-brand{font-size:clamp(38px,5.6vw,64px);font-weight:500;letter-spacing:-.035em;line-height:1.06;margin-bottom:16px;background:linear-gradient(120deg,var(--ac) 0%,#8B7AFF 55%,#A294FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.ob-welcome-tagline{font-size:clamp(15px,1.7vw,20px);font-weight:300;letter-spacing:.01em;line-height:1.5;color:var(--g4);max-width:32ch;margin:14px auto 4px}
+.ob-welcome-tagline{font-size:clamp(15px,1.7vw,20px);font-weight:300;letter-spacing:.01em;line-height:1.5;color:var(--g4);max-width:none;margin:14px auto 4px;white-space:nowrap}
 .ob-welcome-line.ob-fade-up{animation:ob-welcome-rise .9s cubic-bezier(.16,1,.3,1) both}
 @keyframes ob-welcome-rise{from{opacity:0;transform:translateY(26px);filter:blur(6px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 .ob-welcome-cta{display:inline-flex;align-items:center;gap:8px;padding:13px 30px;background:linear-gradient(135deg,#7A66FF,#4A35E0);color:#fff;border:none;border-radius:14px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;margin-top:30px;transition:transform .2s,box-shadow .2s}
@@ -866,8 +1097,13 @@ const ONBOARDING_CSS = `
 /* ── Conversation Layout (sits to the right of the fixed app sidebar) ── */
 .ob-conversation-layout{position:relative;width:100%;height:100%;display:flex;flex-direction:row;overflow:hidden;padding-left:var(--sb-w,240px)}
 .ob-conversation-main{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
-.ob-conversation-area{position:relative;z-index:1;flex:1;overflow-y:auto;padding:48px 28px 80px;display:flex;justify-content:center}
-.ob-conversation-inner{width:100%;max-width:640px;display:flex;flex-direction:column;gap:16px}
+/* Block (not flex) scroll container: a flex parent stretches the inner to the container's
+   height (align-items:stretch), so the inner's tall padding-bottom overflows the flex item
+   instead of becoming real scroll room — the newest message then can't be lifted off the
+   bottom. Block layout + margin-auto centering lets scrollHeight honor the full inner height
+   (content + breathing room), so auto-recenter can pull the latest line up to ~60%. */
+.ob-conversation-area{position:relative;z-index:1;flex:1;overflow-y:auto;padding:48px 28px 0}
+.ob-conversation-inner{width:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-bottom:42vh}
 
 /* ── Onboarding Sidebar (real .sidebar classes; locked during setup) ── */
 .ob-sidebar{animation:ob-rail-in .5s cubic-bezier(.16,1,.3,1)}
@@ -985,6 +1221,22 @@ const ONBOARDING_CSS = `
 .ob-sp-st-pending{color:var(--g3)}
 .ob-sp-chev{color:var(--g3);flex-shrink:0;display:flex;align-items:center}
 .ob-sp-current .ob-sp-chev{color:var(--ac)}
+.ob-sp-chev-toggle{transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.ob-sp-chev-toggle.open{transform:rotate(180deg)}
+/* Grouped "Learn how to use Lanced" subsections */
+.ob-sp-group{display:flex;flex-direction:column}
+.ob-sp-subs{display:flex;flex-direction:column;gap:2px;margin:4px 0 2px 19px;padding-left:15px;border-left:1.5px solid var(--g2);animation:ob-subs-in .22s cubic-bezier(.16,1,.3,1)}
+@keyframes ob-subs-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.ob-sp-sub{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:none;border:1px solid transparent;font-family:var(--sans);cursor:pointer;text-align:left;width:100%;color:var(--g5);transition:background .14s,color .14s}
+.ob-sp-sub:not(:disabled):hover{background:color-mix(in oklab,var(--g1) 60%,transparent);color:var(--tx)}
+.ob-sp-sub:disabled{cursor:default;opacity:.55}
+.ob-sp-sub-current{background:color-mix(in oklab,var(--ac) 7%,transparent);color:var(--tx)}
+.ob-sp-sub-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--g3);color:#fff;box-sizing:border-box}
+.ob-sp-sub-dot.done{background:var(--green);border-color:var(--green)}
+.ob-sp-sub-dot.active{border-color:var(--ac);background:color-mix(in oklab,var(--ac) 16%,transparent)}
+.ob-sp-sub-name{font-size:12.5px;font-weight:500;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ob-sp-sub-current .ob-sp-sub-name{font-weight:600}
+.dark .ob-sp-subs{border-color:var(--g2)}
 
 /* ── Learning Section ── */
 .ob-learning,.ob-learning-done{position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:16px;overflow:hidden}
@@ -1035,17 +1287,22 @@ const ONBOARDING_CSS = `
   .ob-steps-panel{width:288px}
 }
 @media(max-width:768px){
-  .ob-welcome-line{font-size:clamp(22px,6vw,36px)}
+  .ob-welcome-line{font-size:clamp(22px,6vw,36px);white-space:normal}
+  .ob-welcome-tagline{white-space:normal;max-width:32ch}
   .ob-purpose-header{font-size:clamp(20px,5vw,32px)}
   .ob-conversation-layout{flex-direction:column;padding-left:0}
+  .ob-embedded{left:0}
   .ob-sidebar{display:none}
   .ob-conversation-main{order:2;flex:1}
-  .ob-conversation-area{padding:20px 12px 80px}
+  .ob-conversation-area{padding:20px 12px 0}
+  .ob-conversation-inner{padding-bottom:40vh}
   .ob-form-card{padding:16px}
   .ob-msg-bubble{max-width:90%}
   .ob-steps-panel{order:1;width:auto;flex-direction:column;max-height:34vh;margin:12px 12px 0;border-radius:18px}
   .ob-sp-list{flex-direction:row;overflow-x:auto;padding:12px;gap:8px}
   .ob-sp-item{flex-direction:column;align-items:flex-start;min-width:150px;width:auto}
   .ob-sp-chev{display:none}
+  .ob-sp-group{flex-direction:row}
+  .ob-sp-subs{display:none}
 }
 `;
